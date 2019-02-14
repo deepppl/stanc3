@@ -364,6 +364,9 @@ let stats_untyped_program prog =
       Option.fold o ~init:acc
         ~f:(fun acc x -> List.fold_left x ~init:acc ~f)
     in
-    olfold Parameters.untyped_statement stats prog.parametersblock
+    let stats =
+      olfold Parameters.untyped_statement stats prog.parametersblock
+    in
+    olfold Parameters.untyped_statement stats prog.transformedparametersblock
   in
   stats
