@@ -27,7 +27,9 @@ type stats =
   ; left_expr: int
   ; functions: SSet.t
   ; sampled: (string * SSet.t) list
-  ; resampled: (string * SSet.t) list }
+  ; resampled: (string * SSet.t) list
+  ; improper_prior: bool
+  ; parameters_transformation: bool }
 [@@deriving yojson]
 
 module Target : sig
@@ -302,14 +304,66 @@ end = struct
 
 end
 
+module Parameters : sig
+  val untyped_statement : stats -> untyped_statement -> stats
+end = struct
+
+  let untyped_expression stats _ = stats
+
+  let rec untyped_statement stats stmt =
+    begin match stmt.stmt_untyped with
+    | VarDecl { transformation = t; _} ->
+      begin match t with
+      | Identity | Lower _ | Upper _ -> { stats with improper_prior = true }
+      | LowerUpper _ -> stats
+      | _ -> { stats with parameters_transformation = true }
+      end
+    | Assignment _
+    | NRFunApp (_, _)
+    | TargetPE _
+    | IncrementLogProb _
+    | Tilde _
+    | Break
+    | Continue
+    | Return _
+    | ReturnVoid
+    | Print _
+    | Reject _
+    | Skip
+    | IfThenElse (_, _, _)
+    | While (_, _)
+    | For _
+    | ForEach (_, _, _)
+    | Block _
+    | FunDef _ ->
+      fold_untyped_statement untyped_expression untyped_statement stats stmt
+    end
+
+end
+
+
 let stats_untyped_program prog =
-  fold_untyped_program
-    (fun acc stmt ->
-       let acc = Target.untyped_statement acc stmt in
-       let acc = Left_expr.untyped_statement acc stmt in
-       let acc = Calls.untyped_statement acc stmt in
-       let acc = Resampling.untyped_statement acc stmt in
-       acc)
+  let stats =
     { target = 0; left_expr = 0; functions = SSet.empty;
-      sampled = []; resampled = [] }
-    prog
+      sampled = []; resampled = [];
+      improper_prior = false; parameters_transformation = false; }
+  in
+  let stats =
+    fold_untyped_program
+      (fun acc stmt ->
+         let acc = Target.untyped_statement acc stmt in
+         let acc = Left_expr.untyped_statement acc stmt in
+         let acc = Calls.untyped_statement acc stmt in
+         let acc = Resampling.untyped_statement acc stmt in
+         acc)
+      stats
+      prog
+  in
+  let stats =
+    let olfold f acc o =
+      Option.fold o ~init:acc
+        ~f:(fun acc x -> List.fold_left x ~init:acc ~f)
+    in
+    olfold Parameters.untyped_statement stats prog.parametersblock
+  in
+  stats
