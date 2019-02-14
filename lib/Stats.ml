@@ -31,13 +31,13 @@ type stats =
 [@@deriving yojson]
 
 module Target : sig
-  val typed_statement : stats -> typed_statement -> stats
+  val untyped_statement : stats -> untyped_statement -> stats
 end = struct
 
-  let typed_expression stats _ = stats
+  let untyped_expression stats _ = stats
 
-  let rec typed_statement stats stmt =
-    begin match stmt.stmt_typed with
+  let rec untyped_statement stats stmt =
+    begin match stmt.stmt_untyped with
     | IncrementLogProb _
     | TargetPE _ ->  { stats with target = stats.target + 1 }
     | Assignment _
@@ -57,13 +57,13 @@ end = struct
     | Block _
     | VarDecl _
     | FunDef _ ->
-      fold_typed_statement typed_expression typed_statement stats stmt
+      fold_untyped_statement untyped_expression untyped_statement stats stmt
     end
 
 end
 
 module Left_expr : sig
-  val typed_statement : stats -> typed_statement -> stats
+  val untyped_statement : stats -> untyped_statement -> stats
 end = struct
 
   let is_lvalue e =
@@ -85,12 +85,12 @@ end = struct
     | Paren _-> false
     end
 
-  let typed_expression stats _ = stats
+  let untyped_expression stats _ = stats
 
-  let rec typed_statement stats stmt =
-    begin match stmt.stmt_typed with
+  let rec untyped_statement stats stmt =
+    begin match stmt.stmt_untyped with
     | Tilde { arg = e; _ } ->
-      if is_lvalue e.expr_typed then stats
+      if is_lvalue e.expr_untyped then stats
       else { stats with left_expr = stats.left_expr + 1; }
     | Assignment _
     | NRFunApp (_, _)
@@ -110,21 +110,21 @@ end = struct
     | Block _
     | VarDecl _
     | FunDef _ ->
-      fold_typed_statement typed_expression typed_statement stats stmt
+      fold_untyped_statement untyped_expression untyped_statement stats stmt
     end
 
 end
 
 
 module Calls : sig
-  val typed_statement : stats -> typed_statement -> stats
+  val untyped_statement : stats -> untyped_statement -> stats
 end = struct
 
-  let rec typed_expression stats expr =
-    begin match expr.expr_typed with
+  let rec untyped_expression stats expr =
+    begin match expr.expr_untyped with
     | FunApp (f, _) ->
       let stats = { stats with functions = SSet.add stats.functions f.name } in
-      fold_typed_expression typed_expression stats expr
+      fold_untyped_expression untyped_expression stats expr
     | TernaryIf _
     | BinOp _
     | PrefixOp _
@@ -139,14 +139,14 @@ end = struct
     | RowVectorExpr _
     | Paren _
     | Indexed _ ->
-      fold_typed_expression typed_expression stats expr
+      fold_untyped_expression untyped_expression stats expr
     end
 
-  let rec typed_statement stats stmt =
-    begin match stmt.stmt_typed with
+  let rec untyped_statement stats stmt =
+    begin match stmt.stmt_untyped with
     | NRFunApp (f, _) ->
       let stats = { stats with functions = SSet.add stats.functions f.name } in
-      fold_typed_statement typed_expression typed_statement stats stmt
+      fold_untyped_statement untyped_expression untyped_statement stats stmt
     | Assignment _
     | TargetPE _
     | IncrementLogProb _
@@ -165,19 +165,19 @@ end = struct
     | Block _
     | VarDecl _
     | FunDef _ ->
-      fold_typed_statement typed_expression typed_statement stats stmt
+      fold_untyped_statement untyped_expression untyped_statement stats stmt
     end
 
 end
 
 
 module Resampling : sig
-  val typed_statement : stats -> typed_statement -> stats
+  val untyped_statement : stats -> untyped_statement -> stats
 end = struct
 
   let fv =
     let rec fv acc expr =
-      begin match expr.expr_typed with
+      begin match expr.expr_untyped with
         | Variable x -> SSet.add acc x.name
         | TernaryIf _
         | BinOp _
@@ -193,14 +193,14 @@ end = struct
         | RowVectorExpr _
         | Paren _
         | Indexed _ ->
-          fold_typed_expression fv acc expr
+          fold_untyped_expression fv acc expr
       end
     in
     fv SSet.empty
 
   let deps =
     let rec deps acc expr =
-      begin match expr.expr_typed with
+      begin match expr.expr_untyped with
         | Variable x -> (x.name, SSet.empty) :: acc
         | Indexed (e, l) ->
           let d = deps [] e in
@@ -226,16 +226,16 @@ end = struct
         | ArrayExpr _
         | RowVectorExpr _
         | Paren _ ->
-          fold_typed_expression deps acc expr
+          fold_untyped_expression deps acc expr
       end
     in
     deps []
 
 
-  let typed_expression stats _ = stats
+  let untyped_expression stats _ = stats
 
-  let rec typed_statement_aux (curr_idx, sampled, resampled) stmt =
-    begin match stmt.stmt_typed with
+  let rec untyped_statement_aux (curr_idx, sampled, resampled) stmt =
+    begin match stmt.stmt_untyped with
     | Tilde { arg = e; _ } ->
         let vars = deps e in
         let t, f =
@@ -259,19 +259,19 @@ end = struct
         (curr_idx, sampled, resampled)
     | While (_, _) ->
       let _, sampled, resampled =
-        fold_typed_statement typed_expression typed_statement_aux
+        fold_untyped_statement untyped_expression untyped_statement_aux
           (Some "", sampled, resampled) stmt
       in
       (curr_idx, sampled, resampled)
     | For { loop_variable = i; _} ->
       let _, sampled, resampled =
-        fold_typed_statement typed_expression typed_statement_aux
+        fold_untyped_statement untyped_expression untyped_statement_aux
           (Some i.name, sampled, resampled) stmt
       in
       (curr_idx, sampled, resampled)
     | ForEach (i, _, _) ->
       let _, sampled, resampled =
-        fold_typed_statement typed_expression typed_statement_aux
+        fold_untyped_statement untyped_expression untyped_statement_aux
           (Some i.name, sampled, resampled) stmt
       in
       (curr_idx, sampled, resampled)
@@ -290,25 +290,25 @@ end = struct
     | Block _
     | VarDecl _
     | FunDef _ ->
-      fold_typed_statement typed_expression typed_statement_aux
+      fold_untyped_statement untyped_expression untyped_statement_aux
         (curr_idx, sampled, resampled) stmt
     end
 
-  let typed_statement stats stmt =
+  let untyped_statement stats stmt =
     let _, sampled, resampled =
-      typed_statement_aux (None, stats.sampled, stats.resampled) stmt
+      untyped_statement_aux (None, stats.sampled, stats.resampled) stmt
     in
     { stats with sampled; resampled }
 
 end
 
-let stats_typed_program prog =
-  fold_typed_program
+let stats_untyped_program prog =
+  fold_untyped_program
     (fun acc stmt ->
-       let acc = Target.typed_statement acc stmt in
-       let acc = Left_expr.typed_statement acc stmt in
-       let acc = Calls.typed_statement acc stmt in
-       let acc = Resampling.typed_statement acc stmt in
+       let acc = Target.untyped_statement acc stmt in
+       let acc = Left_expr.untyped_statement acc stmt in
+       let acc = Calls.untyped_statement acc stmt in
+       let acc = Resampling.untyped_statement acc stmt in
        acc)
     { target = 0; left_expr = 0; functions = SSet.empty;
       sampled = []; resampled = [] }

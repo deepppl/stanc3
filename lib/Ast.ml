@@ -85,12 +85,13 @@ and 'e expression =
   | RowVectorExpr of 'e list
   | Paren of 'e
   | Indexed of 'e * 'e index list
+[@@deriving sexp, compare, map, hash, fold]
 
 (** Untyped expressions, which have location_spans as meta-data *)
-and untyped_expression =
+type untyped_expression =
   { expr_untyped: untyped_expression expression
   ; expr_untyped_loc: location_span sexp_opaque [@compare.ignore] }
-[@@deriving sexp, compare, map, hash, fold]
+[@@deriving sexp, compare, map, hash]
 
 (** Typed expressions also have meta-data after type checking: a location_span, as well as a type
     and an origin block (lub of the origin blocks of the identifiers in it) *)
@@ -100,6 +101,9 @@ type typed_expression =
   ; expr_typed_ad_level: autodifftype
   ; expr_typed_type: unsizedtype }
 [@@deriving sexp, compare, map, hash]
+
+let fold_untyped_expression f acc e =
+  fold_expression f acc e.expr_untyped
 
 let fold_typed_expression f acc e =
   fold_expression f acc e.expr_typed
@@ -239,6 +243,9 @@ type typed_statement =
   ; stmt_typed_returntype: statement_returntype }
 [@@deriving sexp, compare, map, hash]
 
+let rec fold_untyped_statement f_exp f_stmt acc stmt =
+  fold_statement f_exp f_stmt acc stmt.stmt_untyped
+
 let rec fold_typed_statement f_exp f_stmt acc stmt =
   fold_statement f_exp f_stmt acc stmt.stmt_typed
 
@@ -273,6 +280,9 @@ let fold_program f acc p =
   let acc = olfold f acc p.modelblock in
   let acc = olfold f acc p.generatedquantitiesblock in
   acc
+
+let fold_untyped_program f_stmt acc p =
+  fold_program f_stmt acc p
 
 let fold_typed_program f_stmt acc p =
   fold_program f_stmt acc p

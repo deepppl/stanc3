@@ -90,6 +90,14 @@ let use_file filename =
   let _ = Debugging.ast_logger ast in
   if !pretty_print_program then
     print_endline (Pretty_printing.pretty_print_program ast) ;
+  let _ =
+    if !print_stats then
+      let s = Stats.stats_untyped_program ast in
+      Format.printf "{ \"file\": \"%s\", \"info\": %s }@."
+        filename
+        (Yojson.Safe.to_string (Stats.stats_to_yojson s));
+      exit 0
+  in
   let typed_ast =
     try Semantic_check.semantic_check_program ast
     with Errors.SemanticError err ->
@@ -97,14 +105,6 @@ let use_file filename =
       exit 1
   in
   let _ = Debugging.typed_ast_logger typed_ast in
-  let _ =
-    if !print_stats then
-      let s = Stats.stats_typed_program typed_ast in
-      Format.printf "{ \"file\": \"%s\", \"info\": %s }@."
-        filename
-        (Yojson.Safe.to_string (Stats.stats_to_yojson s));
-      exit 0
-  in
   if not !pretty_print_program then (
     let mir = Ast_to_Mir.trans_prog filename typed_ast in
     if !dump_mir then
