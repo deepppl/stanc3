@@ -16,6 +16,7 @@ let pretty_print_program = ref false
 let print_model_cpp = ref false
 let dump_mir = ref false
 let output_file = ref ""
+let print_stats = ref false
 
 (** Some example command-line options here *)
 let options =
@@ -40,6 +41,9 @@ let options =
     ; ( "--auto-format"
       , Arg.Set pretty_print_program
       , " Pretty prints the program to the console" )
+    ; ("--stats"
+      , Arg.Set print_stats
+      , " Print informations about the program")
     ; ( "--version"
       , Arg.Unit
           (fun _ ->
@@ -93,6 +97,14 @@ let use_file filename =
       exit 1
   in
   let _ = Debugging.typed_ast_logger typed_ast in
+  let _ =
+    if !print_stats then
+      let s = Stats.stats_typed_program typed_ast in
+      Format.printf "{ \"file\": \"%s\", \"info\": %s }@."
+        filename
+        (Yojson.Safe.to_string (Stats.stats_to_yojson s));
+      exit 0
+  in
   if not !pretty_print_program then (
     let mir = Ast_to_Mir.trans_prog filename typed_ast in
     if !dump_mir then

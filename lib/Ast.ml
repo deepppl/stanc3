@@ -90,15 +90,19 @@ and 'e expression =
 and untyped_expression =
   { expr_untyped: untyped_expression expression
   ; expr_untyped_loc: location_span sexp_opaque [@compare.ignore] }
+[@@deriving sexp, compare, map, hash, fold]
 
 (** Typed expressions also have meta-data after type checking: a location_span, as well as a type
     and an origin block (lub of the origin blocks of the identifiers in it) *)
-and typed_expression =
+type typed_expression =
   { expr_typed: typed_expression expression
   ; expr_typed_loc: location_span sexp_opaque [@compare.ignore]
   ; expr_typed_ad_level: autodifftype
   ; expr_typed_type: unsizedtype }
 [@@deriving sexp, compare, map, hash]
+
+let fold_typed_expression f acc e =
+  fold_expression f acc e.expr_typed
 
 (* This directive silences some spurious warnings from ppx_deriving *)
 [@@@ocaml.warning "-A"]
@@ -119,7 +123,7 @@ and 'e truncation =
 
 (** Things that can be printed *)
 and 'e printable = PString of string | PExpr of 'e
-[@@deriving sexp, compare, map, hash]
+[@@deriving sexp, compare, map, fold, hash]
 
 (** Sized types, for variable declarations *)
 type 'e sizedtype =
@@ -129,7 +133,7 @@ type 'e sizedtype =
   | SRowVector of 'e
   | SMatrix of 'e * 'e
   | SArray of 'e sizedtype * 'e
-[@@deriving sexp, compare, map, hash]
+[@@deriving sexp, compare, map, fold, hash]
 
 (** remove_size [st] converts st from a sizedtype to an unsizedtype. *)
 let rec remove_size = function
@@ -157,7 +161,7 @@ type 'e transformation =
   | CholeskyCov
   | Correlation
   | Covariance
-[@@deriving sexp, compare, map, hash]
+[@@deriving sexp, compare, map, fold, hash]
 
 (** Statement shapes, where we substitute untyped_expression and untyped_statement
     for 'e and 's respectively to get untyped_statement and typed_expression and
@@ -204,6 +208,7 @@ and ('e, 's) statement =
       ; funname: identifier
       ; arguments: (autodifftype * unsizedtype * identifier) list
       ; body: 's }
+[@@deriving map, fold]
 
 (** Statement return types which we will decorate statements with during type
     checking: the purpose is to check that function bodies have the correct
@@ -218,19 +223,24 @@ and statement_returntype =
   | Incomplete of returntype
   | Complete of returntype
   | AnyReturnType
+[@@deriving sexp, compare, map, hash, fold]
 
 (** Untyped statements, which have location_spans as meta-data *)
-and untyped_statement =
+type untyped_statement =
   { stmt_untyped: (untyped_expression, untyped_statement) statement
   ; stmt_untyped_loc: location_span sexp_opaque [@compare.ignore] }
+[@@deriving sexp, compare, map, hash]
 
 (** Typed statements also have meta-data after type checking: a location_span, as well as a statement returntype
     to check that function bodies have the right return type*)
-and typed_statement =
+type typed_statement =
   { stmt_typed: (typed_expression, typed_statement) statement
   ; stmt_typed_loc: location_span sexp_opaque [@compare.ignore]
   ; stmt_typed_returntype: statement_returntype }
 [@@deriving sexp, compare, map, hash]
+
+let rec fold_typed_statement f_exp f_stmt acc stmt =
+  fold_statement f_exp f_stmt acc stmt.stmt_typed
 
 (** Program shapes, where we obtain types of programs if we substitute typed or untyped
     statements for 's *)
@@ -247,7 +257,25 @@ type 's program =
 and untyped_program = untyped_statement program
 
 (** Typed programs (after type checking) *)
-and typed_program = typed_statement program [@@deriving sexp, compare, map]
+and typed_program = typed_statement program
+[@@deriving sexp, compare, map]
+
+let fold_program f acc p =
+  let olfold f acc o =
+    Option.fold o ~init:acc
+      ~f:(fun acc x -> List.fold_left x ~init:acc ~f)
+  in
+  let acc = olfold f acc p.functionblock in
+  let acc = olfold f acc p.datablock in
+  let acc = olfold f acc p.transformeddatablock in
+  let acc = olfold f acc p.parametersblock in
+  let acc = olfold f acc p.transformedparametersblock in
+  let acc = olfold f acc p.modelblock in
+  let acc = olfold f acc p.generatedquantitiesblock in
+  acc
+
+let fold_typed_program f_stmt acc p =
+  fold_program f_stmt acc p
 
 (** Forgetful function from typed to untyped expressions *)
 let rec untyped_expression_of_typed_expression {expr_typed; expr_typed_loc; _}
