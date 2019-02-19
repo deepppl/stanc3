@@ -367,6 +367,7 @@ let stats_untyped_program prog =
     let stats =
       olfold Parameters.untyped_statement stats prog.parametersblock
     in
-    olfold Parameters.untyped_statement stats prog.transformedparametersblock
+    (* olfold Parameters.untyped_statement stats prog.transformedparametersblock *)
+    stats
   in
   stats
