@@ -26,14 +26,16 @@ type stats =
   { target: int
   ; left_expr: int
   ; functions: SSet.t
-  ; sampled: (string * SSet.t) list
+  ; unsampled: SSet.t
+  ; sampled_under: (string * SSet.t) list
+  ; sampled_over: (string * SSet.t) list
   ; resampled: (string * SSet.t) list
   ; improper_prior: bool
   ; parameters_transformation: bool }
 [@@deriving yojson]
 
 module Target : sig
-  val untyped_statement : stats -> untyped_statement -> stats
+  val untyped_program : stats -> untyped_program -> stats
 end = struct
 
   let untyped_expression stats _ = stats
@@ -62,10 +64,13 @@ end = struct
       fold_untyped_statement untyped_expression untyped_statement stats stmt
     end
 
+  let untyped_program stats prog =
+    fold_untyped_program untyped_statement stats prog
+
 end
 
 module Left_expr : sig
-  val untyped_statement : stats -> untyped_statement -> stats
+  val untyped_program : stats -> untyped_program -> stats
 end = struct
 
   let is_lvalue e =
@@ -115,11 +120,14 @@ end = struct
       fold_untyped_statement untyped_expression untyped_statement stats stmt
     end
 
+  let untyped_program stats prog =
+    fold_untyped_program untyped_statement stats prog
+
 end
 
 
 module Calls : sig
-  val untyped_statement : stats -> untyped_statement -> stats
+  val untyped_program : stats -> untyped_program -> stats
 end = struct
 
   let rec untyped_expression stats expr =
@@ -170,11 +178,14 @@ end = struct
       fold_untyped_statement untyped_expression untyped_statement stats stmt
     end
 
+  let untyped_program stats prog =
+    fold_untyped_program untyped_statement stats prog
+
 end
 
 
 module Resampling : sig
-  val untyped_statement : stats -> untyped_statement -> stats
+  val untyped_program : stats -> untyped_program -> stats
 end = struct
 
   let fv =
@@ -236,7 +247,8 @@ end = struct
 
   let untyped_expression stats _ = stats
 
-  let rec untyped_statement_aux (curr_idx, sampled, resampled) stmt =
+  let rec untyped_statement_aux
+      (curr_idx, sampled_under, sampled_over, resampled) stmt =
     begin match stmt.stmt_untyped with
     | Tilde { arg = e; _ } ->
         let vars = deps e in
@@ -245,38 +257,59 @@ end = struct
             ~f:(fun x ->
                 List.mem
                   ~equal:(fun (x,i) (y,j) -> x = y && SSet.equal i j)
-                  sampled x)
+                  sampled_over x)
         in
-        let sampled, resampled = (f @ sampled, t @ resampled) in
-        let sampled, resampled =
+        let sampled_under, sampled_over, resampled =
+          (vars @ sampled_under, f @ sampled_over, t @ resampled)
+        in
+        let sampled_under, sampled_over, resampled =
           begin match curr_idx with
-          | None -> (sampled, resampled)
+          | None -> (sampled_under, sampled_over, resampled)
           | Some i ->
             let r =
               List.filter vars ~f:(fun (_, idx) -> not (SSet.mem idx i))
             in
-            (sampled, r @ resampled)
+            (sampled_under, sampled_over, r @ resampled)
           end
         in
-        (curr_idx, sampled, resampled)
+        (curr_idx, sampled_under, sampled_over, resampled)
     | While (_, _) ->
-      let _, sampled, resampled =
+      let _, sampled_under, sampled_over, resampled =
         fold_untyped_statement untyped_expression untyped_statement_aux
-          (Some "", sampled, resampled) stmt
+          (Some "", sampled_under, sampled_over, resampled) stmt
       in
-      (curr_idx, sampled, resampled)
+      (curr_idx, sampled_under, sampled_over, resampled)
     | For { loop_variable = i; _} ->
-      let _, sampled, resampled =
+      let _, sampled_under, sampled_over, resampled =
         fold_untyped_statement untyped_expression untyped_statement_aux
-          (Some i.name, sampled, resampled) stmt
+          (Some i.name, sampled_under, sampled_over, resampled) stmt
       in
-      (curr_idx, sampled, resampled)
+      (curr_idx, sampled_under, sampled_over, resampled)
     | ForEach (i, _, _) ->
-      let _, sampled, resampled =
+      let _, sampled_under, sampled_over, resampled =
         fold_untyped_statement untyped_expression untyped_statement_aux
-          (Some i.name, sampled, resampled) stmt
+          (Some i.name, sampled_under, sampled_over, resampled) stmt
       in
-      (curr_idx, sampled, resampled)
+      (curr_idx, sampled_under, sampled_over, resampled)
+    | IfThenElse (_, s1, None) ->
+      let _, _, sampled_over, resampled =
+        fold_untyped_statement untyped_expression untyped_statement_aux
+          (curr_idx, [], sampled_over, resampled) s1
+      in
+      (curr_idx, sampled_under, sampled_over, resampled)
+    | IfThenElse (_, s1, Some s2) ->
+      let _, sampled_under1, sampled_over, resampled =
+        fold_untyped_statement untyped_expression untyped_statement_aux
+          (curr_idx, [], sampled_over, resampled) s1
+      in
+      let _, sampled_under2, sampled_over, resampled =
+        fold_untyped_statement untyped_expression untyped_statement_aux
+          (curr_idx, [], sampled_over, resampled) s2
+      in
+      let sampled_under =
+        List.dedup_and_sort ~compare:compare (sampled_under1 @ sampled_under2)
+      in
+      (curr_idx, sampled_under, sampled_over, resampled)
     | Assignment _
     | NRFunApp (_, _)
     | TargetPE _
@@ -288,24 +321,59 @@ end = struct
     | Print _
     | Reject _
     | Skip
-    | IfThenElse (_, _, _)
     | Block _
     | VarDecl _
     | FunDef _ ->
       fold_untyped_statement untyped_expression untyped_statement_aux
-        (curr_idx, sampled, resampled) stmt
+        (curr_idx, sampled_under, sampled_over, resampled) stmt
     end
 
-  let untyped_statement stats stmt =
-    let _, sampled, resampled =
-      untyped_statement_aux (None, stats.sampled, stats.resampled) stmt
+  let get_parameters prog =
+    let rec fold_stmt acc stmt =
+      begin match stmt.stmt_untyped with
+        | VarDecl { identifier = id; _ } -> SSet.add acc id.name
+        | Tilde _
+        | While _
+        | For _
+        | ForEach _
+        | IfThenElse _
+        | Assignment _
+        | NRFunApp (_, _)
+        | TargetPE _
+        | IncrementLogProb _
+        | Break
+        | Continue
+        | Return _
+        | ReturnVoid
+        | Print _
+        | Reject _
+        | Skip
+        | Block _
+        | FunDef _ ->
+          fold_untyped_statement untyped_expression fold_stmt acc stmt
+      end
     in
-    { stats with sampled; resampled }
+    let olfold f acc o =
+      Option.fold o ~init:acc
+        ~f:(fun acc x -> List.fold_left x ~init:acc ~f)
+    in
+    olfold fold_stmt SSet.empty prog.parametersblock
+
+  let untyped_program stats prog =
+    let _, sampled_under, sampled_over, resampled =
+      fold_untyped_program untyped_statement_aux
+      (None, stats.sampled_under, stats.sampled_over, stats.resampled) prog
+    in
+    let unsampled =
+      SSet.filter (get_parameters prog)
+        ~f:(fun x -> not (List.exists sampled_under ~f:(fun (y, _) -> x = y)))
+    in
+    { stats with unsampled; sampled_under; sampled_over; resampled }
 
 end
 
 module Parameters : sig
-  val untyped_statement : stats -> untyped_statement -> stats
+  val untyped_program : stats -> untyped_program -> stats
 end = struct
 
   let untyped_expression stats _ = stats
@@ -339,35 +407,30 @@ end = struct
       fold_untyped_statement untyped_expression untyped_statement stats stmt
     end
 
+  let untyped_program stats prog =
+    let olfold f acc o =
+      Option.fold o ~init:acc
+        ~f:(fun acc x -> List.fold_left x ~init:acc ~f)
+    in
+    let stats =
+      olfold untyped_statement stats prog.parametersblock
+    in
+    (* olfold Parameters.untyped_statement stats prog.transformedparametersblock *)
+    stats
+
 end
 
 
 let stats_untyped_program prog =
   let stats =
     { target = 0; left_expr = 0; functions = SSet.empty;
-      sampled = []; resampled = [];
+      unsampled = SSet.empty;
+      sampled_under = []; sampled_over = []; resampled = [];
       improper_prior = false; parameters_transformation = false; }
   in
-  let stats =
-    fold_untyped_program
-      (fun acc stmt ->
-         let acc = Target.untyped_statement acc stmt in
-         let acc = Left_expr.untyped_statement acc stmt in
-         let acc = Calls.untyped_statement acc stmt in
-         let acc = Resampling.untyped_statement acc stmt in
-         acc)
-      stats
-      prog
-  in
-  let stats =
-    let olfold f acc o =
-      Option.fold o ~init:acc
-        ~f:(fun acc x -> List.fold_left x ~init:acc ~f)
-    in
-    let stats =
-      olfold Parameters.untyped_statement stats prog.parametersblock
-    in
-    (* olfold Parameters.untyped_statement stats prog.transformedparametersblock *)
-    stats
-  in
+  let stats = Target.untyped_program stats prog in
+  let stats = Left_expr.untyped_program stats prog in
+  let stats = Calls.untyped_program stats prog in
+  let stats = Resampling.untyped_program stats prog in
+  let stats = Parameters.untyped_program stats prog in
   stats
