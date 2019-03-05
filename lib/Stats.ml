@@ -307,6 +307,7 @@ end = struct
           (curr_idx, [], sampled_over, resampled) s2
       in
       let sampled_under =
+        sampled_under @
         List.dedup_and_sort ~compare:compare (sampled_under1 @ sampled_under2)
       in
       (curr_idx, sampled_under, sampled_over, resampled)
