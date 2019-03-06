@@ -329,10 +329,15 @@ end = struct
         (curr_idx, sampled_under, sampled_over, resampled) stmt
     end
 
-  let get_parameters prog =
+  let get_parameters ?only_unconstrained:(o_u=false) prog =
     let rec fold_stmt acc stmt =
       begin match stmt.stmt_untyped with
-        | VarDecl { identifier = id; _ } -> SSet.add acc id.name
+        | VarDecl { identifier = id; transformation = t; _ } ->
+          begin match t with
+            | Identity | Lower _ | Upper _ -> SSet.add acc id.name
+            | LowerUpper _ -> if o_u then acc else SSet.add acc id.name
+            | _ -> if o_u then acc else SSet.add acc id.name
+          end
         | Tilde _
         | While _
         | For _
@@ -366,7 +371,7 @@ end = struct
       (None, stats.sampled_under, stats.sampled_over, stats.resampled) prog
     in
     let unsampled =
-      SSet.filter (get_parameters prog)
+      SSet.filter (get_parameters ~only_unconstrained:false prog)
         ~f:(fun x -> not (List.exists sampled_under ~f:(fun (y, _) -> x = y)))
     in
     { stats with unsampled; sampled_under; sampled_over; resampled }
