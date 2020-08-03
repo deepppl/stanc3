@@ -41,7 +41,37 @@ let op_to_fun op =
   | PNot -> "not"
   | Transpose -> "np.transpose" (* XXX TODO XXX *)
 
-let rec trans_expr ff ({Ast.expr; _}: Ast.typed_expression) : unit =
+let rec base_type ff = function
+  | UnsizedType.UInt -> fprintf ff "long"
+  | UReal
+  | UVector
+  | URowVector
+  | UMatrix -> fprintf ff "float"
+  | UArray t -> base_type ff t
+  | _ -> assert false
+
+let rec dims ff _t =
+  fprintf ff "XXX TODO, TODO XXX"
+
+let trans_numeral (type_: UnsizedType.t) ff x =
+  begin match type_ with
+  | UInt -> fprintf ff "%s" (format_number x)
+  | UReal -> fprintf ff "%s" (format_number x)
+  | UVector (* s *) ->
+      fprintf ff "%s * ones(%a)" (format_number x) (fun ff () -> fprintf ff "XXX TODO XXX") ()
+  | URowVector (* s *) ->
+      fprintf ff "%s * ones(1, %a)" (format_number x) (fun ff () -> fprintf ff "XXX TODO XXX") ()
+  | UMatrix (* s1, s2 *) ->
+      fprintf ff "%s * ones(%a)" (format_number x) (fun ff () -> fprintf ff "XXX TODO XXX") ()
+  | UArray t ->
+      fprintf ff "%s * ones(%a, dtype=%a)"
+        x dims t base_type t
+  (* | UFun of (autodifftype * t) list * returntype
+  | UMathLibraryFunction *)
+  | _ -> assert false 
+  end
+
+let rec trans_expr ff ({Ast.expr; emeta }: Ast.typed_expression) : unit =
   match expr with
   | Ast.Paren x -> fprintf ff "(%a)" trans_expr x
   | BinOp (lhs, And, rhs) -> fprintf ff "%a && %a" trans_expr lhs trans_expr rhs
@@ -54,24 +84,24 @@ let rec trans_expr ff ({Ast.expr; _}: Ast.typed_expression) : unit =
       fprintf ff "%a if %a else %a"
         trans_expr ifb trans_expr cond trans_expr elseb
   | Variable {name; _} -> fprintf ff "%s" name
-  | IntNumeral x -> fprintf ff "%s" (format_number x)
+  | IntNumeral x -> trans_int emeta.type_ ff x
   | RealNumeral x -> fprintf ff "%s" (format_number x)
   | FunApp (fn_kind, {name; _}, args) | CondDistApp (fn_kind, {name; _}, args)
     ->
       trans_fun_app ff fn_kind name args
   | GetLP | GetTarget -> fprintf ff "stanlib.target()" (* XXX TODO XXX *)
   | ArrayExpr eles ->
-      fprintf ff "np.array([%a])" trans_exprs eles
+      fprintf ff "array([%a])" trans_exprs eles
   | RowVectorExpr eles ->
-      fprintf ff "np.array([%a])" trans_exprs eles
+      fprintf ff "array([%a])" trans_exprs eles
   | Indexed (lhs, indices) ->
       fprintf ff "%a%a" trans_expr lhs (pp_print_list trans_idx) indices
 
 and trans_idx ff = function
   | Ast.All -> fprintf ff "[:]"
-  | Ast.Upfrom e -> fprintf ff "[(%a) - 1:]" trans_expr e
+  | Ast.Upfrom e -> fprintf ff "[%a - 1:]" trans_expr e
   | Ast.Downfrom e -> fprintf ff "[:%a]" trans_expr e
-  | Ast.Between (lb, ub) -> fprintf ff "[(%a) - 1:%a]" trans_expr lb trans_expr ub
+  | Ast.Between (lb, ub) -> fprintf ff "[%a - 1:%a]" trans_expr lb trans_expr ub
   | Ast.Single e -> (
     match e.emeta.type_ with
     | UInt -> fprintf ff "[%a]" trans_expr e
@@ -791,7 +821,8 @@ let trans_modelblock ff modelblock =
 let trans_prog ff (p : Ast.typed_program) =
   let {Ast.functionblock; datablock; modelblock; _} =
     p
-  in  Option.iter ~f:(trans_functionblock ff) functionblock;
+  in
+  Option.iter ~f:(trans_functionblock ff) functionblock;
   fprintf ff "@[<v 4>def model(%a):@,%a@]@."
       trans_datablock datablock
       trans_modelblock modelblock
