@@ -30,6 +30,7 @@ let output_file = ref ""
 let generate_data = ref false
 let warn_uninitialized = ref false
 let warn_pedantic = ref false
+let gen_pyro = ref false
 
 (** Some example command-line options here *)
 let options =
@@ -133,7 +134,10 @@ let options =
       , " Deprecated. Same as --include-paths." )
     ; ( "--use-opencl"
       , Arg.Set Transform_Mir.use_opencl
-      , " If set, try to use matrix_cl signatures." ) ]
+      , " If set, try to use matrix_cl signatures." )
+    ; ( "--pyro"
+      , Arg.Set gen_pyro
+      , " If set, generate Pyro code." ) ]
 
 let print_deprecated_arg_warning =
   (* is_prefix is used to also cover the --include-paths=... *)
@@ -193,9 +197,14 @@ let use_file filename =
         opt )
       else tx_mir
     in
-    let cpp = Fmt.strf "%a" Stan_math_code_gen.pp_prog opt_mir in
-    Out_channel.write_all !output_file ~data:cpp ;
-    if !print_model_cpp then print_endline cpp )
+    match !gen_pyro with
+    | false ->
+      let cpp = Fmt.strf "%a" Stan_math_code_gen.pp_prog opt_mir in
+      Out_channel.write_all !output_file ~data:cpp ;
+      if !print_model_cpp then print_endline cpp
+    | true ->
+      let py = Fmt.strf "%a" Frontend.Ast_to_Pyro.trans_prog typed_ast in
+      Out_channel.write_all !output_file ~data:py)
 
 let remove_dotstan s = String.drop_suffix s 5
 
@@ -222,7 +231,9 @@ let main () =
         (remove_dotstan List.(hd_exn (rev (String.split !model_file ~on:'/'))))
       ^ "_model"
   else Semantic_check.model_name := mangle !Semantic_check.model_name ;
-  if !output_file = "" then output_file := remove_dotstan !model_file ^ ".hpp" ;
+  if !output_file = "" then
+   if !gen_pyro then output_file := remove_dotstan !model_file ^ ".py"
+   else output_file := remove_dotstan !model_file ^ ".hpp" ;
   use_file !model_file
 
 let () = main ()
