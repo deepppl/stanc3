@@ -2,6 +2,17 @@ open Core_kernel
 open Middle
 open Format
 
+let gen_id =
+  let cpt = ref 0 in
+  fun ff e ->
+    incr cpt;
+    let s =
+      match e.Ast.expr with
+      | Ast.Variable {name; _} -> name
+      | _ -> "expr"
+    in
+    fprintf ff "%s__%d" s !cpt
+
 let without_underscores = String.filter ~f:(( <> ) '_')
 
 let drop_leading_zeros s =
@@ -50,7 +61,16 @@ let rec base_type ff = function
   | UArray t -> base_type ff t
   | _ -> assert false
 
-let rec dims ff _t =
+let rec dims_of_sizedtype t =
+  match t with
+  | SizedType.SInt
+  | SReal -> []
+  | SVector e -> [e]
+  | SRowVector e -> [e; 1]
+  | SMatrix (e1, e2) -> [e1; e2]
+  | SArray (t, e) -> e :: dims_of_sizedtype t
+
+let dims ff _t =
   fprintf ff "XXX TODO, TODO XXX"
 
 let trans_numeral (type_: UnsizedType.t) ff x =
@@ -84,8 +104,8 @@ let rec trans_expr ff ({Ast.expr; emeta }: Ast.typed_expression) : unit =
       fprintf ff "%a if %a else %a"
         trans_expr ifb trans_expr cond trans_expr elseb
   | Variable {name; _} -> fprintf ff "%s" name
-  | IntNumeral x -> trans_int emeta.type_ ff x
-  | RealNumeral x -> fprintf ff "%s" (format_number x)
+  | IntNumeral x -> trans_numeral emeta.type_ ff x
+  | RealNumeral x -> trans_numeral emeta.type_ ff x
   | FunApp (fn_kind, {name; _}, args) | CondDistApp (fn_kind, {name; _}, args)
     ->
       trans_fun_app ff fn_kind name args
@@ -562,7 +582,9 @@ let rec trans_stmt ff (ts : Ast.typed_statement) =
   | Ast.NRFunApp (fn_kind, {name; _}, args) ->
       trans_fun_app ff fn_kind name args
   | Ast.IncrementLogProb e | Ast.TargetPE e ->
-      fprintf ff "factor(%a)" trans_expr e
+      fprintf ff "sample(\"%a\", dist.Exponential(1.0), obs=-%a)"
+        gen_id e
+        trans_expr e
   | Ast.Tilde {arg; distribution; args; truncation} ->
       let trans_distribution ff dist =
         fprintf ff "%s" dist.Ast.name
@@ -571,7 +593,8 @@ let rec trans_stmt ff (ts : Ast.typed_statement) =
         | Ast.NoTruncate -> ()
         | _ -> assert false (* XXX TODO XXX *)
       in
-      fprintf ff "observe(%a(%a), %a)%a"
+      fprintf ff "sample(\"%a\", %a(%a), obs=%a)%a"
+        gen_id arg
         trans_distribution distribution
         trans_exprs args
         trans_expr arg
@@ -812,17 +835,53 @@ let trans_datablock ff datablock =
          (pp_print_list ~pp_sep:(fun ff () -> fprintf ff ",@ ") trans))
     datablock
 
-(* let trans_parametersblock ff parametersblock =
-  () *)
+let trans_prior (decl_type: _ Type.t) ff transformation =
+  match transformation with
+  | Program.Identity -> fprintf ff "ImproperUniform(%a)" dims decl_type
+  | Lower lb ->
+     fprintf ff "LowerConstrainedImproperUniform(%a, shape=%a)"
+       trans_expr lb dims decl_type
+  | Upper ub ->
+     fprintf ff "UpperConstrainedImproperUniform(%a, shape=%a)"
+       trans_expr ub dims decl_type
+  | LowerUpper (lb, ub) ->
+      fprintf ff "dist.Uniform(%a, %a, shape=%a)"
+        trans_expr lb trans_expr ub dims decl_type
+  | Offset _
+  | Multiplier _
+  | OffsetMultiplier _
+  | Ordered
+  | PositiveOrdered
+  | Simplex
+  | UnitVector
+  | CholeskyCorr
+  | CholeskyCov
+  | Correlation
+  | Covariance -> assert false (* XXX TODO XXX *)
 
-let trans_modelblock ff modelblock =
-  Option.iter ~f:(trans_stmts ff) modelblock 
+let trans_parameter ff p =
+  match p.Ast.stmt with
+  | Ast.VarDecl {identifier; initial_value = None; decl_type; transformation; _} ->
+    fprintf ff "%s = sample(\"%s\", %a)" identifier.name identifier.name
+      (trans_prior decl_type) transformation
+  | _ -> assert false
+
+let trans_parametersblock ff parametersblock =
+  Option.iter
+    ~f:(fprintf ff "@[<v 0>%a@]"
+          (pp_print_list ~pp_sep:(fun ff () -> fprintf ff "@,")
+             trans_parameter))
+    parametersblock
+
+let trans_block ff block =
+  Option.iter ~f:(trans_stmts ff) block
 
 let trans_prog ff (p : Ast.typed_program) =
-  let {Ast.functionblock; datablock; modelblock; _} =
+  let {Ast.functionblock; datablock; parametersblock; modelblock; _} =
     p
   in
   Option.iter ~f:(trans_functionblock ff) functionblock;
-  fprintf ff "@[<v 4>def model(%a):@,%a@]@."
+  fprintf ff "@[<v 4>def model(%a):@,%a@,%a@]@."
       trans_datablock datablock
-      trans_modelblock modelblock
+      trans_parametersblock parametersblock
+      trans_block modelblock
