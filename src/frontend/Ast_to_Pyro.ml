@@ -2,6 +2,16 @@ open Core_kernel
 open Middle
 open Format
 
+let print_list_comma printer ff l =
+  fprintf ff "@[<hov 0>%a@]"
+    (pp_print_list ~pp_sep:(fun ff () -> fprintf ff ",@ ") printer)
+    l
+
+let print_list_newline printer ff l =
+  fprintf ff "@[<v 0>%a@]"
+  (pp_print_list ~pp_sep:(fun ff () -> fprintf ff "@,") printer)
+  l
+
 let gen_id =
   let cpt = ref 0 in
   fun ff e ->
@@ -131,9 +141,7 @@ and trans_idx ff = function
           [%message "Expecting int or array" (e.emeta.type_ : UnsizedType.t)] )
 
 and trans_exprs ff exprs =
-  fprintf ff "@[<hov 0>%a@]"
-    (pp_print_list ~pp_sep:(fun ff () -> fprintf ff ",@ ") trans_expr)
-    exprs
+  fprintf ff "%a" (print_list_comma trans_expr) exprs
 
 and trans_fun_app ff fn_kind name args =
   fprintf ff "%s%s(%a)"
@@ -157,8 +165,7 @@ let trans_arg ff (_, _, ident) =
   pp_print_string ff ident.Ast.name
 
 let trans_args ff args =
-  fprintf ff "@[<hov 0>%a@]"
-    (pp_print_list ~pp_sep:(fun ff () -> fprintf ff ",@ ") trans_arg) args
+  fprintf ff "%a" (print_list_comma trans_arg) args
 
 (* let truncate_dist ud_dists (id : Ast.identifier) ast_obs ast_args t =
   let cdf_suffices = ["_lcdf"; "_cdf_log"] in
@@ -236,11 +243,11 @@ let trans_args ff args =
     ; meta= Typed.Meta.create ~type_:UReal ~loc ~adlevel:DataOnly () } *)
 
 let trans_printables ff (ps : Ast.typed_expression Ast.printable list) =
-  fprintf ff "@[<hov 0>%a@]"
-    (pp_print_list ~pp_sep:(fun ff () -> fprintf ff ",@ ")
-    (fun ff -> function
-        | Ast.PString s -> fprintf ff "%s" s
-        | Ast.PExpr e -> trans_expr ff e))
+  fprintf ff "%a"
+    (print_list_comma
+       (fun ff -> function
+          | Ast.PString s -> fprintf ff "%s" s
+          | Ast.PExpr e -> trans_expr ff e))
     ps
 
 (* These types signal the context for a declaration during statement translation.
@@ -582,7 +589,7 @@ let rec trans_stmt ff (ts : Ast.typed_statement) =
   | Ast.NRFunApp (fn_kind, {name; _}, args) ->
       trans_fun_app ff fn_kind name args
   | Ast.IncrementLogProb e | Ast.TargetPE e ->
-      fprintf ff "sample(\"%a\", dist.Exponential(1.0), obs=-%a)"
+      fprintf ff "sample('%a', dist.Exponential(1.0), obs=-%a)"
         gen_id e
         trans_expr e
   | Ast.Tilde {arg; distribution; args; truncation} ->
@@ -593,7 +600,7 @@ let rec trans_stmt ff (ts : Ast.typed_statement) =
         | Ast.NoTruncate -> ()
         | _ -> assert false (* XXX TODO XXX *)
       in
-      fprintf ff "sample(\"%a\", %a(%a), obs=%a)%a"
+      fprintf ff "sample('%a', %a(%a), obs=%a)%a"
         gen_id arg
         trans_distribution distribution
         trans_exprs args
@@ -633,8 +640,7 @@ let rec trans_stmt ff (ts : Ast.typed_statement) =
       fprintf ff "%s = %a" identifier.name
         trans_expr_opt initial_value
   | Ast.Block stmts ->
-      fprintf ff "@[<v 0>%a@]"
-        (pp_print_list ~pp_sep:(fun ff () -> fprintf ff "@,") trans_stmt) stmts
+      fprintf ff "%a" (print_list_newline trans_stmt) stmts
   | Ast.Return e ->
       fprintf ff "return %a" trans_expr e
   | Ast.ReturnVoid ->
@@ -647,23 +653,19 @@ let rec trans_stmt ff (ts : Ast.typed_statement) =
       fprintf ff "pass"
 
 let trans_stmts ff stmts =
-  fprintf ff "@[<v 0>%a@]"
-    (pp_print_list ~pp_sep:(fun ff () -> fprintf ff "@,") trans_stmt)
-    stmts
+  fprintf ff "%a" (print_list_newline trans_stmt) stmts
 
 let trans_fun_def ff (ts : Ast.typed_statement) =
   match ts.stmt with
   | Ast.FunDef {funname; arguments; body; _} ->
-      fprintf ff "@[<v 4>def %s(%a):@,%a@]"
+      fprintf ff "@[<v 0>@[<v 4>def %s(%a):@,%a@]@,@]"
         funname.name trans_args arguments trans_stmt body
   | _ ->
       raise_s
         [%message "Found non-function definition statement in function block"]
 
 let trans_functionblock ff functionblock =
-  fprintf ff "@[<v 0>%a@,@,@]"
-    (pp_print_list ~pp_sep:(fun ff () -> fprintf ff "@,@,") trans_fun_def)
-    functionblock
+  fprintf ff "@[<v 0>%a@,@]" (print_list_newline trans_fun_def) functionblock
 
 (* let get_block block prog =
   match block with
@@ -824,28 +826,31 @@ let migrate_checks_to_end_of_block stmts =
   let checks, not_checks = List.partition_tf ~f:is_check stmts in
   not_checks @ checks *)
 
+let get_var_decl_names stmts =
+  List.fold_left
+    ~f:(fun acc stmt ->
+          match stmt.Ast.stmt with
+          | Ast.VarDecl {identifier; _} -> identifier.Ast.name :: acc
+          | _ -> acc ) ~init:[] stmts
+
 let trans_datablock ff datablock =
-  let trans ff d =
-    match d.Ast.stmt with
-    | Ast.VarDecl {identifier; _} -> pp_print_string ff identifier.name
-    | _ -> assert false (* XXX TODO: better error message XXX *)
-  in
+  let trans ff name = fprintf ff "%s=None" name in
   Option.iter
-    ~f:(fprintf ff "@[<hov 0>%a@]"
-         (pp_print_list ~pp_sep:(fun ff () -> fprintf ff ",@ ") trans))
+    ~f:(fun stmts ->
+          fprintf ff "%a" (print_list_comma trans) (get_var_decl_names stmts))
     datablock
 
 let trans_prior (decl_type: _ Type.t) ff transformation =
   match transformation with
   | Program.Identity -> fprintf ff "ImproperUniform(%a)" dims decl_type
   | Lower lb ->
-     fprintf ff "LowerConstrainedImproperUniform(%a, shape=%a)"
+     fprintf ff "LowerConstrainedImproperUniform(%a, shape='%a')"
        trans_expr lb dims decl_type
   | Upper ub ->
-     fprintf ff "UpperConstrainedImproperUniform(%a, shape=%a)"
+     fprintf ff "UpperConstrainedImproperUniform(%a, shape='%a')"
        trans_expr ub dims decl_type
   | LowerUpper (lb, ub) ->
-      fprintf ff "dist.Uniform(%a, %a, shape=%a)"
+      fprintf ff "dist.Uniform(%a, %a, shape='%a')"
         trans_expr lb trans_expr ub dims decl_type
   | Offset _
   | Multiplier _
@@ -859,29 +864,52 @@ let trans_prior (decl_type: _ Type.t) ff transformation =
   | Correlation
   | Covariance -> assert false (* XXX TODO XXX *)
 
-let trans_parameter ff p =
+let trans_block comment ff block =
+  Option.iter ~f:(fprintf ff "@[<v 0># %s@,%a@]" comment trans_stmts) block
+
+  let trans_parameter ff p =
   match p.Ast.stmt with
   | Ast.VarDecl {identifier; initial_value = None; decl_type; transformation; _} ->
-    fprintf ff "%s = sample(\"%s\", %a)" identifier.name identifier.name
+    fprintf ff "%s = sample('%s', %a)" identifier.name identifier.name
       (trans_prior decl_type) transformation
   | _ -> assert false
 
-let trans_parametersblock ff parametersblock =
+let trans_parametersblock ff parameters =
   Option.iter
-    ~f:(fprintf ff "@[<v 0>%a@]"
-          (pp_print_list ~pp_sep:(fun ff () -> fprintf ff "@,")
-             trans_parameter))
-    parametersblock
+    ~f:(fprintf ff "@[<v 0># Parameters@,%a@]"
+          (print_list_newline trans_parameter))
+    parameters
 
-let trans_block ff block =
-  Option.iter ~f:(trans_stmts ff) block
+let trans_modelblock ff data parameters transformedparameters model =
+  fprintf ff "@[<v 4>def model(%a):@,%a@,%a@,%a@]@."
+      trans_datablock data
+      trans_parametersblock parameters
+      (trans_block "Transformed parameters") transformedparameters
+      (trans_block "Model") model
+
+let trans_generatedquantitiesblock ff data parameters transformedparameters =
+  let param_names =
+    Option.fold ~f:(fun _ params -> (get_var_decl_names params)) ~init:[]
+      parameters
+  in
+  if transformedparameters <> None || false then begin
+    fprintf ff "@[<v 0>@,@[<v 4>def generated_quantities(%a, parameters=None):@,"
+      trans_datablock data;
+    fprintf ff "# Parameters@,%a@,"
+      (print_list_newline (fun ff name ->
+        fprintf ff "%s = parameters['%s']" name name))
+        param_names;
+    fprintf ff  "%a@," (trans_block "Transformed parameters")
+      transformedparameters;
+    fprintf ff "return { %a }"
+      (print_list_comma (fun ff x -> fprintf ff "'%s': %s" x x))
+      param_names;
+    fprintf ff "@]@,@]"
+  end
 
 let trans_prog ff (p : Ast.typed_program) =
-  let {Ast.functionblock; datablock; parametersblock; modelblock; _} =
-    p
-  in
-  Option.iter ~f:(trans_functionblock ff) functionblock;
-  fprintf ff "@[<v 4>def model(%a):@,%a@,%a@]@."
-      trans_datablock datablock
-      trans_parametersblock parametersblock
-      trans_block modelblock
+  Option.iter ~f:(trans_functionblock ff) p.functionblock;
+  trans_modelblock ff
+    p.datablock p.parametersblock p.transformedparametersblock p.modelblock;
+  trans_generatedquantitiesblock ff
+    p.datablock p.parametersblock p.transformedparametersblock
