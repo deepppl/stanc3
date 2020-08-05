@@ -874,7 +874,7 @@ let trans_transformeddatablock ff data transformeddata =
   in
   if transformeddata <> None then begin
       fprintf ff
-        "@[<v 0>@,@[<v 4>def transformed_data(%a):@,%a@,return { %a }@]@,@,@]"
+        "@[<v 0>@[<v 4>def transformed_data(%a):@,%a@,return { %a }@]@,@,@]"
         trans_datablock data
         (trans_block "Transformed data") transformeddata
         (print_list_comma (fun ff x -> fprintf ff "'%s': %s" x x)) td_names
@@ -908,16 +908,21 @@ let trans_modelblock ff data transformeddata parameters transformedparameters mo
     (trans_block "Transformed parameters") transformedparameters
     (trans_block "Model") model
 
-let trans_generatedquantitiesblock ff data transformeddata parameters transformedparameters =
+let trans_generatedquantitiesblock ff
+  data transformeddata parameters transformedparameters generatedquantities =
   let td_names =
-    Option.fold ~f:(fun _ params -> (get_var_decl_names params)) ~init:[]
+    Option.fold ~f:(fun _ stmts -> (get_var_decl_names stmts)) ~init:[]
       transformeddata
   in
   let param_names =
-    Option.fold ~f:(fun _ params -> (get_var_decl_names params)) ~init:[]
+    Option.fold ~f:(fun _ stmts -> (get_var_decl_names stmts)) ~init:[]
       parameters
   in
-  if transformedparameters <> None || false then begin
+  let genquant_names =
+    Option.fold ~f:(fun _ stmts -> (get_var_decl_names stmts)) ~init:[]
+    generatedquantities
+  in
+  if transformedparameters <> None || generatedquantities <> None then begin
     fprintf ff "@[<v 0>@,@[<v 4>def generated_quantities(%a, transformed_data=None, parameters=None):@,"
       trans_datablock data;
     fprintf ff "# Transformed data@,%a@,"
@@ -930,9 +935,11 @@ let trans_generatedquantitiesblock ff data transformeddata parameters transforme
         param_names;
     fprintf ff  "%a@," (trans_block "Transformed parameters")
       transformedparameters;
+    fprintf ff "%a@," (trans_block "Generated quantities")
+      generatedquantities;
     fprintf ff "return { %a }"
       (print_list_comma (fun ff x -> fprintf ff "'%s': %s" x x))
-      param_names;
+      (param_names @ genquant_names);
     fprintf ff "@]@,@]"
   end
 
@@ -944,4 +951,4 @@ let trans_prog ff (p : Ast.typed_program) =
     p.parametersblock p.transformedparametersblock p.modelblock;
   trans_generatedquantitiesblock ff
     p.datablock p.transformeddatablock
-    p.parametersblock p.transformedparametersblock
+    p.parametersblock p.transformedparametersblock p.generatedquantitiesblock
