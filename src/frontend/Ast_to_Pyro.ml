@@ -843,6 +843,14 @@ let trans_block_as_args ff block =
             (print_list_comma pp_print_string) (get_var_decl_names stmts))
     block
 
+let trans_block_as_return ff block =
+  Option.iter
+    ~f:(fun stmts ->
+          fprintf ff "return { %a }"
+            (print_list_comma (fun ff x -> fprintf ff "'%s': %s" x x))
+            (get_var_decl_names stmts))
+    block
+
 let trans_prior (decl_type: _ Type.t) ff transformation =
   match transformation with
   | Program.Identity -> fprintf ff "ImproperUniform('%a')" dims decl_type
@@ -867,21 +875,24 @@ let trans_prior (decl_type: _ Type.t) ff transformation =
   | Correlation
   | Covariance -> assert false (* XXX TODO XXX *)
 
-let trans_block comment ff block =
-  Option.iter ~f:(fprintf ff "@[<v 0># %s@,%a@]" comment (trans_stmts [])) block
+let pp_print_nothing _ () = ()
+
+let trans_block ?(eol=true) comment ff block =
+  Option.iter
+    ~f:(fun stmts ->
+          fprintf ff "@[<v 0># %s@,%a@]%a"
+            comment (trans_stmts []) stmts
+            (if eol then pp_print_cut else pp_print_nothing) ())
+    block
 
 let trans_transformeddatablock ff data transformeddata =
-  let td_names =
-    Option.fold ~f:(fun _ params -> (get_var_decl_names params)) ~init:[]
-      transformeddata
-  in
   if transformeddata <> None then begin
-      fprintf ff
-        "@[<v 0>@[<v 4>def transformed_data(*, %a):@,%a@,return { %a }@]@,@,@]"
-        trans_block_as_args data
-        (trans_block "Transformed data") transformeddata
-        (print_list_comma (fun ff x -> fprintf ff "'%s': %s" x x)) td_names
-    end
+    fprintf ff
+      "@[<v 0>@[<v 4>def transformed_data(%a):@,%a%a@]@,@,@]"
+      trans_block_as_args data
+      (trans_block "Transformed data") transformeddata
+      trans_block_as_return transformeddata
+  end
 
 let trans_parameter ff p =
   match p.stmt with
@@ -896,53 +907,21 @@ let trans_parametersblock ff parameters =
           (print_list_newline trans_parameter))
     parameters
 
-let trans_modelblock ff data transformeddata parameters transformedparameters model =
-  let td_names =
-    Option.fold ~f:(fun _ params -> (get_var_decl_names params)) ~init:[]
-      transformeddata
-  in
-  fprintf ff "@[<v 4>def model(%a, transformed_data=None):@,%s@,%a@,%a@,%a@,%a@]@."
-    trans_block_as_args data
-    "# Transformed data"
-    (print_list_newline (fun ff name ->
-      fprintf ff "%s = transformed_data['%s']" name name))
-      td_names
+let trans_modelblock ff data tdata parameters tparameters model =
+  fprintf ff "@[<v 4>def model(%a):@,%a@,%a%a@]@."
+    trans_block_as_args (Option.merge ~f:(@) data tdata)
     trans_parametersblock parameters
-    (trans_block "Transformed parameters") transformedparameters
-    (trans_block "Model") model
+    (trans_block "Transformed parameters") tparameters
+    (trans_block ~eol:false "Model") model
 
-let trans_generatedquantitiesblock ff
-  data transformeddata parameters transformedparameters generatedquantities =
-  let td_names =
-    Option.fold ~f:(fun _ stmts -> (get_var_decl_names stmts)) ~init:[]
-      transformeddata
-  in
-  let param_names =
-    Option.fold ~f:(fun _ stmts -> (get_var_decl_names stmts)) ~init:[]
-      parameters
-  in
-  let genquant_names =
-    Option.fold ~f:(fun _ stmts -> (get_var_decl_names stmts)) ~init:[]
-    generatedquantities
-  in
-  if transformedparameters <> None || generatedquantities <> None then begin
-    fprintf ff "@[<v 0>@,@[<v 4>def generated_quantities(%a, transformed_data=None, parameters=None):@,"
-      trans_block_as_args data;
-    fprintf ff "# Transformed data@,%a@,"
-      (print_list_newline (fun ff name ->
-        fprintf ff "%s = transformed_data['%s']" name name))
-        td_names;
-    fprintf ff "# Parameters@,%a@,"
-      (print_list_newline (fun ff name ->
-        fprintf ff "%s = parameters['%s']" name name))
-        param_names;
-    fprintf ff  "%a@," (trans_block "Transformed parameters")
-      transformedparameters;
-    fprintf ff "%a@," (trans_block "Generated quantities")
-      generatedquantities;
-    fprintf ff "return { %a }"
-      (print_list_comma (fun ff x -> fprintf ff "'%s': %s" x x))
-      (param_names @ genquant_names);
+let trans_generatedquantitiesblock ff data tdata params tparams genquantities =
+  if tparams <> None || genquantities <> None then begin
+    fprintf ff
+      "@[<v 0>@,@[<v 4>def generated_quantities(%a):@,%a%a%a"
+      trans_block_as_args Option.(merge ~f:(@) data (merge ~f:(@) tdata params))
+      (trans_block "Transformed parameters") tparams
+      (trans_block "Generated quantities") genquantities
+      trans_block_as_return (Option.merge ~f:(@) tparams genquantities);
     fprintf ff "@]@,@]"
   end
 
