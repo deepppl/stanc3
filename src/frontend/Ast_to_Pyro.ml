@@ -72,7 +72,7 @@ let rec base_type ff = function
   | URowVector
   | UMatrix -> fprintf ff "float"
   | UArray t -> base_type ff t
-  | _ -> assert false
+  | _ -> raise_s [%message "Unexpected base type"]
 
 let rec dims_of_sizedtype t =
   match t with
@@ -99,9 +99,8 @@ let trans_numeral (type_: UnsizedType.t) ff x =
   | UArray t ->
       fprintf ff "%s * ones(%a, dtype=%a)"
         x dims t base_type t
-  (* | UFun of (autodifftype * t) list * returntype
-  | UMathLibraryFunction *)
-  | _ -> assert false 
+  | _ ->
+     raise_s [%message "Unexpected type for a numeral" (type_ : UnsizedType.t)]
   end
 
 let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
@@ -138,7 +137,7 @@ and trans_idx ff = function
   | Single e -> (
     match e.emeta.type_ with
     | UInt -> fprintf ff "[%a - 1]" trans_expr e
-    | UArray _ -> assert false (* XXX TODO XXX *)
+    | UArray _ -> fprintf ff "[%a - 1]" trans_expr e
     | _ ->
         raise_s
           [%message "Expecting int or array" (e.emeta.type_ : UnsizedType.t)] )
