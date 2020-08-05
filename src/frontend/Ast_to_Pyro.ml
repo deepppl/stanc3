@@ -842,7 +842,7 @@ let trans_datablock ff datablock =
 
 let trans_prior (decl_type: _ Type.t) ff transformation =
   match transformation with
-  | Program.Identity -> fprintf ff "ImproperUniform(%a)" dims decl_type
+  | Program.Identity -> fprintf ff "ImproperUniform('%a')" dims decl_type
   | Lower lb ->
      fprintf ff "LowerConstrainedImproperUniform(%a, shape='%a')"
        trans_expr lb dims decl_type
@@ -867,7 +867,20 @@ let trans_prior (decl_type: _ Type.t) ff transformation =
 let trans_block comment ff block =
   Option.iter ~f:(fprintf ff "@[<v 0># %s@,%a@]" comment trans_stmts) block
 
-  let trans_parameter ff p =
+let trans_transformeddatablock ff data transformeddata =
+  let td_names =
+    Option.fold ~f:(fun _ params -> (get_var_decl_names params)) ~init:[]
+      transformeddata
+  in
+  if transformeddata <> None then begin
+      fprintf ff
+        "@[<v 0>@,@[<v 4>def transformed_data(%a):@,%a@,return { %a }@]@,@,@]"
+        trans_datablock data
+        (trans_block "Transformed data") transformeddata
+        (print_list_comma (fun ff x -> fprintf ff "'%s': %s" x x)) td_names
+    end
+
+let trans_parameter ff p =
   match p.Ast.stmt with
   | Ast.VarDecl {identifier; initial_value = None; decl_type; transformation; _} ->
     fprintf ff "%s = sample('%s', %a)" identifier.name identifier.name
@@ -880,21 +893,37 @@ let trans_parametersblock ff parameters =
           (print_list_newline trans_parameter))
     parameters
 
-let trans_modelblock ff data parameters transformedparameters model =
-  fprintf ff "@[<v 4>def model(%a):@,%a@,%a@,%a@]@."
-      trans_datablock data
-      trans_parametersblock parameters
-      (trans_block "Transformed parameters") transformedparameters
-      (trans_block "Model") model
+let trans_modelblock ff data transformeddata parameters transformedparameters model =
+  let td_names =
+    Option.fold ~f:(fun _ params -> (get_var_decl_names params)) ~init:[]
+      transformeddata
+  in
+  fprintf ff "@[<v 4>def model(%a, transformed_data=None):@,%s@,%a@,%a@,%a@,%a@]@."
+    trans_datablock data
+    "# Transformed data"
+    (print_list_newline (fun ff name ->
+      fprintf ff "%s = transformed_data['%s']" name name))
+      td_names
+    trans_parametersblock parameters
+    (trans_block "Transformed parameters") transformedparameters
+    (trans_block "Model") model
 
-let trans_generatedquantitiesblock ff data parameters transformedparameters =
+let trans_generatedquantitiesblock ff data transformeddata parameters transformedparameters =
+  let td_names =
+    Option.fold ~f:(fun _ params -> (get_var_decl_names params)) ~init:[]
+      transformeddata
+  in
   let param_names =
     Option.fold ~f:(fun _ params -> (get_var_decl_names params)) ~init:[]
       parameters
   in
   if transformedparameters <> None || false then begin
-    fprintf ff "@[<v 0>@,@[<v 4>def generated_quantities(%a, parameters=None):@,"
+    fprintf ff "@[<v 0>@,@[<v 4>def generated_quantities(%a, transformed_data=None, parameters=None):@,"
       trans_datablock data;
+    fprintf ff "# Transformed data@,%a@,"
+      (print_list_newline (fun ff name ->
+        fprintf ff "%s = transformed_data['%s']" name name))
+        td_names;
     fprintf ff "# Parameters@,%a@,"
       (print_list_newline (fun ff name ->
         fprintf ff "%s = parameters['%s']" name name))
@@ -909,7 +938,10 @@ let trans_generatedquantitiesblock ff data parameters transformedparameters =
 
 let trans_prog ff (p : Ast.typed_program) =
   Option.iter ~f:(trans_functionblock ff) p.functionblock;
+  trans_transformeddatablock ff p.datablock p.transformeddatablock;
   trans_modelblock ff
-    p.datablock p.parametersblock p.transformedparametersblock p.modelblock;
+    p.datablock p.transformeddatablock
+    p.parametersblock p.transformedparametersblock p.modelblock;
   trans_generatedquantitiesblock ff
-    p.datablock p.parametersblock p.transformedparametersblock
+    p.datablock p.transformeddatablock
+    p.parametersblock p.transformedparametersblock
