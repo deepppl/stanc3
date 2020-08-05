@@ -39,32 +39,6 @@ let drop_leading_zeros s =
 
 let format_number s = s |> without_underscores |> drop_leading_zeros
 
-let op_to_fun op =
-  match op with
-  | Operator.Plus -> "add"
-  | PPlus -> "add"
-  | Minus -> "sub"
-  | PMinus -> "neg"
-  | Times -> "mul"
-  | Divide -> "truediv"
-  | IntDivide -> "floordiv"
-  | Modulo -> "mod"
-  | LDivide -> "\\" (* XXX TODO XXX *)
-  | EltTimes -> ".*" (* XXX TODO XXX *)
-  | EltDivide -> "./" (* XXX TODO XXX *)
-  | Pow -> "pow"
-  | EltPow -> ".^" (* XXX TODO XXX *)
-  | Or -> "or_"
-  | And -> "and_"
-  | Equals -> "eq"
-  | NEquals -> "ne"
-  | Less -> "lt"
-  | Leq -> "le"
-  | Greater -> "gt"
-  | Geq -> "ge"
-  | PNot -> "not"
-  | Transpose -> "np.transpose" (* XXX TODO XXX *)
-
 let rec base_type ff = function
   | UnsizedType.UInt -> fprintf ff "long"
   | UReal
@@ -106,12 +80,8 @@ let trans_numeral (type_: UnsizedType.t) ff x =
 let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
   match expr with
   | Paren x -> fprintf ff "(%a)" trans_expr x
-  | BinOp (lhs, And, rhs) -> fprintf ff "%a && %a" trans_expr lhs trans_expr rhs
-  | BinOp (lhs, Or, rhs) -> fprintf ff "%a || %a" trans_expr lhs trans_expr rhs
-  | BinOp (lhs, op, rhs) ->
-     fprintf ff "%s(@[<hov 0>%a,@ %a@])" (op_to_fun op) trans_expr lhs trans_expr rhs
-  | PrefixOp (op, e) | PostfixOp (e, op) ->
-     fprintf ff "%s(%a)" (op_to_fun op) trans_expr e
+  | BinOp (lhs, op, rhs) -> fprintf ff "%a" (trans_binop lhs rhs) op
+  | PrefixOp (op, e) | PostfixOp (e, op) -> fprintf ff "%a" (trans_unop e) op
   | TernaryIf (cond, ifb, elseb) ->
       fprintf ff "%a if %a else %a"
         trans_expr ifb trans_expr cond trans_expr elseb
@@ -128,6 +98,60 @@ let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
       fprintf ff "array([%a])" trans_exprs eles
   | Indexed (lhs, indices) ->
       fprintf ff "%a%a" trans_expr lhs (pp_print_list trans_idx) indices
+
+and trans_binop e1 e2 ff op =
+    match op with
+    | Operator.Plus -> fprintf ff "%a + %a" trans_expr e1 trans_expr e2
+    | Minus -> fprintf ff "%a - %a" trans_expr e1 trans_expr e2
+    | Times -> fprintf ff "%a * %a" trans_expr e1 trans_expr e2
+    | Divide -> fprintf ff "%a / %a" trans_expr e1 trans_expr e2
+    | IntDivide -> fprintf ff "%a // %a" trans_expr e1 trans_expr e2
+    | Modulo -> fprintf ff "%a %s %a" trans_expr e1 "%" trans_expr e2
+    | LDivide -> fprintf ff "%a / %a" trans_expr e2 trans_expr e1
+    | EltTimes -> fprintf ff "%a * %a" trans_expr e1 trans_expr e2 (* XXX TODO: check XXX *)
+    | EltDivide -> fprintf ff "%a / %a" trans_expr e1 trans_expr e2 (* XXX TODO: check XXX *)
+    | Pow -> fprintf ff "%a ** %a" trans_expr e1 trans_expr e2
+    | EltPow -> fprintf ff "%a ** %a" trans_expr e1 trans_expr e2 (* XXX TODO: check XXX *)
+    | Or -> fprintf ff "%a || %a" trans_expr e1 trans_expr e2
+    | And -> fprintf ff "%a && %a" trans_expr e1 trans_expr e2
+    | Equals -> fprintf ff "%a == %a" trans_expr e1 trans_expr e2
+    | NEquals -> fprintf ff "%a != %a" trans_expr e1 trans_expr e2
+    | Less -> fprintf ff "%a < %a" trans_expr e1 trans_expr e2
+    | Leq -> fprintf ff "%a <= %a" trans_expr e1 trans_expr e2
+    | Greater -> fprintf ff "%a > %a" trans_expr e1 trans_expr e2
+    | Geq -> fprintf ff "%a >= %a" trans_expr e1 trans_expr e2
+    | PNot
+    | PPlus
+    | PMinus
+    | Transpose ->
+        raise_s [%message "Binary operator expexter" (op: Operator.t)]
+
+and trans_unop e ff op =
+  match op with
+  | Operator.PNot -> fprintf ff "+ %a" trans_expr e
+  | PPlus -> fprintf ff "+ %a" trans_expr e
+  | PMinus -> fprintf ff "- %a" trans_expr e
+  | Transpose -> fprintf ff "torch.transpose(%a)" trans_expr e
+  | Plus
+  | Minus
+  | Times
+  | Divide
+  | IntDivide
+  | Modulo
+  | LDivide
+  | EltTimes
+  | EltDivide
+  | Pow
+  | EltPow
+  | Or
+  | And
+  | Equals
+  | NEquals
+  | Less
+  | Leq
+  | Greater
+  | Geq ->
+      raise_s [%message "Unary operator expexter" (op: Operator.t)]
 
 and trans_idx ff = function
   | All -> fprintf ff "[:]"
@@ -576,18 +600,19 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
   let stmt_typed = ts.stmt in
   match stmt_typed with
   | Assignment {assign_lhs; assign_rhs; assign_op} ->
-      let rec trans_lhs ff = function
-      | {lval= LVariable { name; _ }; _} -> fprintf ff "%s" name 
-      | {lval= LIndexed (l, i); _} ->
-          fprintf ff "%a%a" trans_lhs l (pp_print_list trans_idx) i
+      let rec expr_of_lval = function
+      | { lval= LVariable ident; lmeta } ->
+          { expr = Variable ident; emeta = lmeta } 
+      | { lval= LIndexed (l, i); lmeta } ->
+          { expr= Indexed (expr_of_lval l, i); emeta=lmeta }
       in
-      let trans_rhs ff rhs =
+      let trans_rhs lhs ff rhs =
         match assign_op with
         | Assign | ArrowAssign -> trans_expr ff rhs
-        | OperatorAssign op ->
-            fprintf ff "%s(%a, %a)" (op_to_fun op) trans_lhs assign_lhs trans_expr rhs
+        | OperatorAssign op -> trans_binop lhs rhs ff op
       in
-      fprintf ff "%a = %a" trans_lhs assign_lhs trans_rhs assign_rhs
+      let lhs = expr_of_lval assign_lhs in
+      fprintf ff "%a = %a" trans_expr lhs (trans_rhs lhs) assign_rhs
   | NRFunApp (fn_kind, {name; _}, args) ->
       trans_fun_app ff fn_kind name args
   | IncrementLogProb e | TargetPE e ->
