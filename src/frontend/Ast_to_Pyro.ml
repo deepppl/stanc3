@@ -58,7 +58,7 @@ let rec dims_of_sizedtype t =
   | SArray (t, e) -> e :: dims_of_sizedtype t
 
 let dims ff _t =
-  fprintf ff "XXX TODO, TODO XXX"
+  fprintf ff "XXX TODO XXX"
 
 let trans_numeral (type_: UnsizedType.t) ff x =
   begin match type_ with
@@ -616,7 +616,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
   | NRFunApp (fn_kind, {name; _}, args) ->
       trans_fun_app ff fn_kind name args
   | IncrementLogProb e | TargetPE e ->
-      fprintf ff "sample(%a, dist.Exponential(1.0), obs=-%a)"
+      fprintf ff "factor(%a, %a)"
         (gen_id ctx) e
         trans_expr e
   | Tilde {arg; distribution; args; truncation} ->
@@ -627,7 +627,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
         | NoTruncate -> ()
         | _ -> assert false (* XXX TODO XXX *)
       in
-      fprintf ff "sample(%a, %a(%a), obs=%a)%a"
+      fprintf ff "observe(%a, %a(%a), %a)%a"
         (gen_id ctx) arg
         trans_distribution distribution
         trans_exprs args
@@ -885,7 +885,7 @@ let trans_prior (decl_type: _ Type.t) ff transformation =
      fprintf ff "UpperConstrainedImproperUniform(%a, shape='%a')"
        trans_expr ub dims decl_type
   | LowerUpper (lb, ub) ->
-      fprintf ff "dist.Uniform(%a, %a)" (* XXX TODO: shape XXX *)
+      fprintf ff "uniform(%a, %a)" (* XXX TODO: shape XXX *)
         trans_expr lb trans_expr ub
   | Offset _
   | Multiplier _
@@ -950,6 +950,9 @@ let trans_generatedquantitiesblock ff data tdata params tparams genquantities =
   end
 
 let trans_prog ff (p : typed_program) =
+  fprintf ff "@[<v 0>%s@,%s@,@,@]"
+    "from distributions import *"
+    "from dppllib import sample, observe, factor";
   Option.iter ~f:(trans_functionblock ff) p.functionblock;
   trans_transformeddatablock ff p.datablock p.transformeddatablock;
   trans_modelblock ff
