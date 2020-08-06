@@ -2,12 +2,15 @@ from os.path import splitext, basename, dirname
 import importlib.util
 import pyro
 from collections import defaultdict
+import subprocess
 
 
 class PyroModel:
-    def __init__(self, filepath):
-        self.name = basename(filepath)
-        spec = importlib.util.spec_from_file_location(self.name, filepath)
+    def __init__(self, stanfile):
+        self.name = basename(stanfile)
+        subprocess.check_call(["dune","exec","stanc","--","--pyro",stanfile])
+        self.pyfile = splitext(stanfile)[0] + ".py" 
+        spec = importlib.util.spec_from_file_location(self.name, self.pyfile)
         Module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(Module)
         self._model = Module.model
