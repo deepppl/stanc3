@@ -103,15 +103,21 @@ and trans_binop e1 e2 ff op =
     match op with
     | Operator.Plus -> fprintf ff "%a + %a" trans_expr e1 trans_expr e2
     | Minus -> fprintf ff "%a - %a" trans_expr e1 trans_expr e2
-    | Times -> fprintf ff "%a * %a" trans_expr e1 trans_expr e2
+    | Times ->
+        begin match e1.emeta.type_, e2.emeta.type_ with
+        | ((UInt | UReal), _) | (_, (UInt | UReal)) ->
+            fprintf ff "%a * %a" trans_expr e1 trans_expr e2
+        | _ ->
+            fprintf ff "dot(%a, %a)" trans_expr e1 trans_expr e2
+        end
     | Divide -> fprintf ff "%a / %a" trans_expr e1 trans_expr e2
     | IntDivide -> fprintf ff "%a // %a" trans_expr e1 trans_expr e2
     | Modulo -> fprintf ff "%a %s %a" trans_expr e1 "%" trans_expr e2
     | LDivide -> fprintf ff "%a / %a" trans_expr e2 trans_expr e1
-    | EltTimes -> fprintf ff "%a * %a" trans_expr e1 trans_expr e2 (* XXX TODO: check XXX *)
-    | EltDivide -> fprintf ff "%a / %a" trans_expr e1 trans_expr e2 (* XXX TODO: check XXX *)
+    | EltTimes -> fprintf ff "%a * %a" trans_expr e1 trans_expr e2
+    | EltDivide -> fprintf ff "%a / %a" trans_expr e1 trans_expr e2
     | Pow -> fprintf ff "%a ** %a" trans_expr e1 trans_expr e2
-    | EltPow -> fprintf ff "%a ** %a" trans_expr e1 trans_expr e2 (* XXX TODO: check XXX *)
+    | EltPow -> fprintf ff "%a ** %a" trans_expr e1 trans_expr e2
     | Or -> fprintf ff "%a || %a" trans_expr e1 trans_expr e2
     | And -> fprintf ff "%a && %a" trans_expr e1 trans_expr e2
     | Equals -> fprintf ff "%a == %a" trans_expr e1 trans_expr e2
@@ -124,14 +130,14 @@ and trans_binop e1 e2 ff op =
     | PPlus
     | PMinus
     | Transpose ->
-        raise_s [%message "Binary operator expexter" (op: Operator.t)]
+        raise_s [%message "Binary operator expected" (op: Operator.t)]
 
 and trans_unop e ff op =
   match op with
   | Operator.PNot -> fprintf ff "+ %a" trans_expr e
   | PPlus -> fprintf ff "+ %a" trans_expr e
   | PMinus -> fprintf ff "- %a" trans_expr e
-  | Transpose -> fprintf ff "torch.transpose(%a)" trans_expr e
+  | Transpose -> fprintf ff "transpose(%a)" trans_expr e
   | Plus
   | Minus
   | Times
@@ -151,7 +157,7 @@ and trans_unop e ff op =
   | Leq
   | Greater
   | Geq ->
-      raise_s [%message "Unary operator expexter" (op: Operator.t)]
+      raise_s [%message "Unary operator expected" (op: Operator.t)]
 
 and trans_idx ff = function
   | All -> fprintf ff "[:]"
@@ -877,7 +883,7 @@ let trans_block_as_return ff block =
 
 let trans_prior (decl_type: _ Type.t) ff transformation =
   match transformation with
-  | Program.Identity -> fprintf ff "ImproperUniform('%a')" dims decl_type
+  | Program.Identity -> fprintf ff "ImproperUniform()" (* XXX TODO XXX *)
   | Lower lb ->
      fprintf ff "LowerConstrainedImproperUniform(%a, shape='%a')"
        trans_expr lb dims decl_type
