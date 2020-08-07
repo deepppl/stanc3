@@ -14,6 +14,11 @@ let name = "%%NAME%%"
 (** The usage message. *)
 let usage = "Usage: " ^ name ^ " [option] ... <model_file.stan>"
 
+type backend =
+  | CPP
+  | Pyro
+  | Numpyro
+
 let model_file = ref ""
 let pretty_print_program = ref false
 let canonicalize_program = ref false
@@ -30,7 +35,7 @@ let output_file = ref ""
 let generate_data = ref false
 let warn_uninitialized = ref false
 let warn_pedantic = ref false
-let gen_pyro = ref false
+let backend = ref CPP
 
 (** Some example command-line options here *)
 let options =
@@ -136,8 +141,11 @@ let options =
       , Arg.Set Transform_Mir.use_opencl
       , " If set, try to use matrix_cl signatures." )
     ; ( "--pyro"
-      , Arg.Set gen_pyro
-      , " If set, generate Pyro code." ) ]
+      , Arg.Unit (fun () -> backend := Pyro)
+      , " If set, generate Pyro code." )
+    ; ( "--numpyro"
+      , Arg.Unit (fun () -> backend := Numpyro)
+      , " If set, generate NumPyro code." ) ]
 
 let print_deprecated_arg_warning =
   (* is_prefix is used to also cover the --include-paths=... *)
@@ -197,13 +205,16 @@ let use_file filename =
         opt )
       else tx_mir
     in
-    match !gen_pyro with
-    | false ->
+    match !backend with
+    | CPP ->
       let cpp = Fmt.strf "%a" Stan_math_code_gen.pp_prog opt_mir in
       Out_channel.write_all !output_file ~data:cpp ;
       if !print_model_cpp then print_endline cpp
-    | true ->
-      let py = Fmt.strf "%a" Frontend.Ast_to_Pyro.trans_prog typed_ast in
+    | Pyro ->
+      let py = Fmt.strf "%a" (Frontend.Ast_to_Pyro.trans_prog "pyro") typed_ast in
+      Out_channel.write_all !output_file ~data:py
+    | Numpyro ->
+      let py = Fmt.strf "%a" (Frontend.Ast_to_Pyro.trans_prog "numpyro") typed_ast in
       Out_channel.write_all !output_file ~data:py)
 
 let remove_dotstan s = String.drop_suffix s 5
@@ -232,8 +243,10 @@ let main () =
       ^ "_model"
   else Semantic_check.model_name := mangle !Semantic_check.model_name ;
   if !output_file = "" then
-   if !gen_pyro then output_file := remove_dotstan !model_file ^ ".py"
-   else output_file := remove_dotstan !model_file ^ ".hpp" ;
+    begin match !backend with
+    | CPP -> output_file := remove_dotstan !model_file ^ ".hpp"
+    | Pyro | Numpyro -> output_file := remove_dotstan !model_file ^ ".py"
+    end;
   use_file !model_file
 
 let () = main ()

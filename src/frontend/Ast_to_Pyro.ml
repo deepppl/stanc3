@@ -955,10 +955,10 @@ let trans_generatedquantitiesblock ff data tdata params tparams genquantities =
     fprintf ff "@]@,@]"
   end
 
-let trans_prog ff (p : typed_program) =
+let trans_prog runtime ff (p : typed_program) =
   fprintf ff "@[<v 0>%s@,%s@,@,@]"
-    "from runtimes.pyro.distributions import *"
-    "from runtimes.pyro.dppllib import sample, observe, factor";
+    ("from runtimes."^runtime^".distributions import *")
+    ("from runtimes."^runtime^".dppllib import sample, observe, factor");
   Option.iter ~f:(trans_functionblock ff) p.functionblock;
   trans_transformeddatablock ff p.datablock p.transformeddatablock;
   trans_modelblock ff
