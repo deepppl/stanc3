@@ -1,5 +1,6 @@
 open Core_kernel
 open Ast
+open Vectorization
 open Middle
 open Format
 
@@ -60,24 +61,7 @@ let rec dims_of_sizedtype t =
 let dims ff _t =
   fprintf ff "XXX TODO XXX"
 
-let trans_numeral (type_: UnsizedType.t) ff x =
-  begin match type_ with
-  | UInt -> fprintf ff "%s" (format_number x)
-  | UReal -> fprintf ff "%s" (format_number x)
-  | UVector (* s *) ->
-      fprintf ff "%s * ones(%a)" (format_number x) (fun ff () -> fprintf ff "XXX TODO XXX") ()
-  | URowVector (* s *) ->
-      fprintf ff "%s * ones(1, %a)" (format_number x) (fun ff () -> fprintf ff "XXX TODO XXX") ()
-  | UMatrix (* s1, s2 *) ->
-      fprintf ff "%s * ones(%a)" (format_number x) (fun ff () -> fprintf ff "XXX TODO XXX") ()
-  | UArray t ->
-      fprintf ff "%s * ones(%a, dtype=%a)"
-        x dims t base_type t
-  | _ ->
-     raise_s [%message "Unexpected type for a numeral" (type_ : UnsizedType.t)]
-  end
-
-let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
+let rec trans_expr ff ({expr; emeta }: vectorized_expression) : unit =
   match expr with
   | Paren x -> fprintf ff "(%a)" trans_expr x
   | BinOp (lhs, op, rhs) -> fprintf ff "%a" (trans_binop lhs rhs) op
@@ -99,13 +83,36 @@ let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
   | Indexed (lhs, indices) ->
       fprintf ff "%a%a" trans_expr lhs (pp_print_list trans_idx) indices
 
+and trans_numeral (type_: vectorized_type) ff x =
+  begin match type_ with
+  | SInt -> fprintf ff "%s" (format_number x)
+  | SReal -> fprintf ff "%s" (format_number x)
+  | SVector s ->
+      fprintf ff "%s * ones(%a)" (format_number x) trans_size s
+  | SRowVector s ->
+      fprintf ff "%s * ones(1, %a)" (format_number x) trans_size s
+  | SMatrix (s1, s2) ->
+      fprintf ff "%s * ones(%a, %a)" (format_number x) trans_size s1 trans_size s2
+  | SArray (_t, _s) ->
+      assert false (* XXX TODO XXX *)
+      (* fprintf ff "%s * ones(%a, %a, dtype=%a)" *)
+      (*   x dims t trans_size s base_type t *)
+  (* | _ -> *)
+  (*    raise_s [%message "Unexpected type for a numeral" (type_ : vectorized_type)] *)
+  end
+
+and trans_size ff s =
+  match s with
+  | Sigma x -> fprintf ff "XXXsigma%d" x (* XXX TODO XXX *)
+  | SExpr e -> trans_expr ff e
+
 and trans_binop e1 e2 ff op =
     match op with
     | Operator.Plus -> fprintf ff "%a + %a" trans_expr e1 trans_expr e2
     | Minus -> fprintf ff "%a - %a" trans_expr e1 trans_expr e2
     | Times ->
         begin match e1.emeta.type_, e2.emeta.type_ with
-        | ((UInt | UReal), _) | (_, (UInt | UReal)) ->
+        | ((SInt | SReal), _) | (_, (SInt | SReal)) ->
             fprintf ff "%a * %a" trans_expr e1 trans_expr e2
         | _ ->
             fprintf ff "dot(%a, %a)" trans_expr e1 trans_expr e2
@@ -166,11 +173,11 @@ and trans_idx ff = function
   | Between (lb, ub) -> fprintf ff "[%a - 1:%a]" trans_expr lb trans_expr ub
   | Single e -> (
     match e.emeta.type_ with
-    | UInt -> fprintf ff "[%a - 1]" trans_expr e
-    | UArray _ -> fprintf ff "[%a - 1]" trans_expr e
+    | SInt -> fprintf ff "[%a - 1]" trans_expr e
+    | SArray _ -> fprintf ff "[%a - 1]" trans_expr e
     | _ ->
         raise_s
-          [%message "Expecting int or array" (e.emeta.type_ : UnsizedType.t)] )
+          [%message "Expecting int or array" (e.emeta.type_ : vectorized_type)] )
 
 and trans_exprs ff exprs =
   fprintf ff "%a" (print_list_comma trans_expr) exprs
@@ -274,7 +281,7 @@ let trans_args ff args =
     { Fixed.pattern= Lit (Str, s)
     ; meta= Typed.Meta.create ~type_:UReal ~loc ~adlevel:DataOnly () } *)
 
-let trans_printables ff (ps : typed_expression printable list) =
+let trans_printables ff (ps : vectorized_expression printable list) =
   fprintf ff "%a"
     (print_list_comma
        (fun ff -> function
@@ -602,13 +609,13 @@ let dist_name_suffix udf_names name =
   dist_name_suffix [] "normal" |> print_endline ;
   [%expect {| _lpdf |}] *)
 
-let rec trans_stmt ctx ff (ts : typed_statement) =
+let rec trans_stmt ctx ff (ts : vectorized_statement) =
   let stmt_typed = ts.stmt in
   match stmt_typed with
   | Assignment {assign_lhs; assign_rhs; assign_op} ->
       let rec expr_of_lval = function
       | { lval= LVariable ident; lmeta } ->
-          { expr = Variable ident; emeta = lmeta } 
+          { expr = Variable ident; emeta = lmeta }
       | { lval= LIndexed (l, i); lmeta } ->
           { expr= Indexed (expr_of_lval l, i); emeta=lmeta }
       in
@@ -688,7 +695,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
 let trans_stmts ctx ff stmts =
   fprintf ff "%a" (print_list_newline (trans_stmt ctx)) stmts
 
-let trans_fun_def ff (ts : typed_statement) =
+let trans_fun_def ff (ts : vectorized_statement) =
   match ts.stmt with
   | FunDef {funname; arguments; body; _} ->
       fprintf ff "@[<v 0>@[<v 4>def %s(%a):@,%a@]@,@]"
@@ -956,6 +963,7 @@ let trans_generatedquantitiesblock ff data tdata params tparams genquantities =
   end
 
 let trans_prog runtime ff (p : typed_program) =
+  let p = Vectorization.annotate_prog p in
   fprintf ff "@[<v 0>%s@,%s@,@,@]"
     ("from runtimes."^runtime^".distributions import *")
     ("from runtimes."^runtime^".dppllib import sample, observe, factor");
