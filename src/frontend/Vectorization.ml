@@ -3,19 +3,10 @@ open Ast
 open Middle
 open SizedType
 
-(* type t = size SizedType.t
-and size =
-  | Expr of vectorized_expr
-  | Sigma of size list ref
-and vectorized_expr = (vectorized_expr_meta, fun_kind) expr_with
-and vectorized_expr_meta =
-    { loc: Location_span.t sexp_opaque [@compare.ignore]
-    ; type_: t }
-  [@@deriving sexp, compare, map] *)
-
 type vectorized_type = size SizedType.t
 and size =
   | SExpr of vectorized_expression
+  | SConst of int
   (* | SIndex of size index *)
   | Sigma of int
 and vectorized_expression = (vectorized_expr_meta, fun_kind) expr_with
@@ -83,10 +74,20 @@ let rec vectorized_type_of_unsized_type (cstrs: 'a) (ut: UnsizedType.t) : 'a * '
 
 let unify_size cstrs actual expected =
   match actual, expected with
+  | SConst n1, SConst n2 ->
+      if n1 = n2 then
+        cstrs, SConst n1
+      else
+        (* XXX TODO: error message XXX *)
+        raise_s [%message "Sizes are not equal" (n1:int) (n2:int)]
   | Sigma s, SExpr e | SExpr e, Sigma s ->
       let s_cstrs =  IEnv.find_exn cstrs s in
       s_cstrs := SizeSet.add !s_cstrs (SExpr e);
       cstrs, Sigma s
+  | Sigma s, SConst n | SConst n, Sigma s ->
+      let s_cstrs =  IEnv.find_exn cstrs s in
+      s_cstrs := SizeSet.add !s_cstrs (SConst n);
+      cstrs, SConst n
   | Sigma s1, Sigma s2 ->
       let s1_cstrs = IEnv.find_exn cstrs s1 in
       let s2_cstrs = IEnv.find_exn cstrs s2 in
@@ -97,10 +98,24 @@ let unify_size cstrs actual expected =
       begin match compare_vectorized_expression e1 e2 with
       | 0 -> cstrs, SExpr e1
       | _ -> (* XXX TODO: improve XXX *)
-        Fmt.pf Fmt.stderr "Warning: you must check that %s = %s"
+        Fmt.pf Fmt.stderr "Warning: you must check that %s = %s@."
           (Sexp.to_string (sexp_of_vectorized_expression e1))
           (Sexp.to_string (sexp_of_vectorized_expression e2));
         cstrs, SExpr e1
+      end
+  | SExpr e, SConst n | SConst n, SExpr e ->
+      begin match e.expr with
+      | IntNumeral x ->
+          if x = string_of_int n then
+            cstrs, SConst n
+          else
+            (* XXX TODO: error message XXX *)
+            raise_s [%message "Sizes are not equal" (x:string) (n:int)]
+      | _ ->
+        Fmt.pf Fmt.stderr "Warning: you must check that %s = %d@."
+          (Sexp.to_string (sexp_of_vectorized_expression e))
+          n;
+        cstrs, SConst n
       end
 
 let rec unify cstrs actual expected =
@@ -203,8 +218,20 @@ let rec annotate_expr:
   | GetLP | GetTarget ->
       let cstrs, t = unify cstrs SReal expected in
       cstrs, vect_expr GetTarget t
-  (* | ArrayExpr eles -> *)
-  (*     fprintf ff "array([%a])" trans_exprs eles *)
+  | ArrayExpr eles ->
+      let t, s =
+        match expected with
+        | SArray(t, s) -> t, s
+        | s -> raise_s [%message "Array type expected" (s: vectorized_type)]
+      in
+      let cstrs, s = unify_size cstrs s (SConst (List.length eles)) in
+      let cstrs, eles =
+        List.fold_map
+          ~f:(fun cstrs e -> annotate_expr env cstrs e t)
+          ~init:cstrs
+          eles
+      in
+      cstrs, vect_expr (ArrayExpr eles) (SArray (t, s))
   (* | RowVectorExpr eles -> *)
   (*     fprintf ff "array([%a])" trans_exprs eles *)
   (* | Indexed (lhs, indices) -> *)
@@ -225,6 +252,7 @@ let rec annotate_expr:
   (*     cstrs, vect_expr (Indexed (lhs, indices)) expected *)
   | e ->
     (* XXX TODO XXX *)
+    Format.eprintf "XXXX %a" UnsizedType.pp texpr.emeta.type_;
     let cstrs, expected =
       vectorized_type_of_unsized_type cstrs texpr.emeta.type_
     in
@@ -262,28 +290,17 @@ and annotate_stmt (env: 'a) (cstrs: 'b) (tstmt: typed_statement) : 'a * 'b * vec
     { stmt; smeta = tstmt.smeta }
   in
   match tstmt.stmt with
-  (* | Assignment {assign_lhs; assign_rhs; assign_op} -> *)
-  (*     let annotate_lval env cstrs = function *)
-  (*     | { lval = LVariable ident; lmeta } -> *)
-  (*         let actual = SEnv.find_exn env ident.name in *)
-  (*         cstrs, actual, { lval = LVariable ident; lmeta } *)
-  (*     | { lval = LIndexed (_l, _i); lmeta = _ } -> *)
-  (*         (\* let cstrs, lactual, l = annotate_lval env cstrs l in *\) *)
-  (*         (\* let t, sizes = split_type lactual i in *\) *)
-  (*         (\* let i = assert false (\\* XXX TODO XXX *\\) in *\) *)
-  (*         (\* { lval = LIndexed (l, i); lmeta }, SVector(Expr i) *\) *)
-  (*         assert false (\* XXX TODO XXX *\) *)
-  (*     in *)
-  (*     let cstrs, lhst, lhs = annotate_lval env cstrs assign_lhs in *)
-  (*     let cstrs, rhs = annotate_expr env cstrs assign_rhs lhst in *)
-  (*     let stmt' = Assignment { assign_lhs = lhs; assign_rhs = rhs; assign_op } in *)
-  (*     env, cstrs, { stmt = stmt'; smeta = stmt.smeta} *)
+  | Assignment {assign_lhs; assign_rhs; assign_op} ->
+      let cstrs, lhs = annotate_lval env cstrs assign_lhs in
+      let lhst = lhs.lmeta.type_ in
+      let cstrs, rhs = annotate_expr env cstrs assign_rhs lhst in
+      let stmt' = Assignment { assign_lhs = lhs; assign_rhs = rhs; assign_op } in
+      env, cstrs, vect_stmt stmt'
   (* | NRFunApp (fn_kind, {name; _}, args) -> *)
   (*     trans_fun_app ff fn_kind name args *)
-  (* | IncrementLogProb e | TargetPE e -> *)
-  (*     fprintf ff "factor(%a, %a)" *)
-  (*       (gen_id ctx) e *)
-  (*       trans_expr e *)
+  | IncrementLogProb e | TargetPE e ->
+     let cstrs, e = annotate_expr env cstrs e SReal in
+     env, cstrs, vect_stmt (TargetPE e)
   (* | Tilde {arg; distribution; args; truncation} -> *)
   (*     let trans_distribution ff dist = *)
   (*       fprintf ff "%s" dist.name *)
@@ -298,21 +315,25 @@ and annotate_stmt (env: 'a) (cstrs: 'b) (tstmt: typed_statement) : 'a * 'b * vec
   (*       trans_exprs args *)
   (*       trans_expr arg *)
   (*       trans_truncation truncation *)
-  (* | Print ps -> fprintf ff "print(%a)" trans_printables ps *)
-  (* | Reject ps -> fprintf ff "stanlib.reject(%a)" trans_printables ps *)
-  (* | IfThenElse (cond, ifb, None) -> *)
-  (*     fprintf ff "@[<v 0>@[<v 4>if %a:@,%a@]@]" *)
-  (*       trans_expr cond *)
-  (*       (trans_stmt ctx) ifb *)
-  (* | IfThenElse (cond, ifb, Some elseb) -> *)
-  (*     fprintf ff "@[<v 0>@[<v 4>if %a:@,%a@]@,@[<v 4>else:@,%a@]@]" *)
-  (*       trans_expr cond *)
-  (*       (trans_stmt ctx) ifb *)
-  (*       (trans_stmt ctx) elseb *)
-  (* | While (cond, body) -> *)
-  (*     fprintf ff "@[<v4>while %a:@,%a@]" *)
-  (*       trans_expr cond *)
-  (*       (trans_stmt ("genid()"::ctx)) body *)
+  | Print ps ->
+      let cstrs, ps = annotate_printables env cstrs ps in
+      env, cstrs, vect_stmt (Print ps)
+  | Reject ps ->
+      let cstrs, ps = annotate_printables env cstrs ps in
+      env, cstrs, vect_stmt (Reject ps)
+  | IfThenElse (cond, ifb, None) ->
+      let cstrs, cond = annotate_expr env cstrs cond SReal in
+      let env, cstrs, ifb = annotate_stmt env cstrs ifb in
+      env, cstrs, vect_stmt (IfThenElse (cond, ifb, None))
+  | IfThenElse (cond, ifb, Some elseb) ->
+      let cstrs, cond = annotate_expr env cstrs cond SReal in
+      let env, cstrs, ifb = annotate_stmt env cstrs ifb in
+      let env, cstrs, elseb = annotate_stmt env cstrs elseb in
+      env, cstrs, vect_stmt (IfThenElse (cond, ifb, Some elseb))
+  | While (cond, body) ->
+      let cstrs, cond = annotate_expr env cstrs cond SReal in
+      let env, cstrs, body = annotate_stmt env cstrs body in
+      env, cstrs, vect_stmt (While (cond, body))
   | For {loop_variable; lower_bound; upper_bound; loop_body} ->
       let cstrs, lower_bound = annotate_expr env cstrs lower_bound SInt in
       let cstrs, upper_bound = annotate_expr env cstrs upper_bound SInt in
@@ -332,7 +353,6 @@ and annotate_stmt (env: 'a) (cstrs: 'b) (tstmt: typed_statement) : 'a * 'b * vec
   (* | FunDef _ (\* {funname; arguments; body; _} *\) -> *)
   (*     assert false (\* XXX TODO XXX *\) *)
   | VarDecl { identifier; initial_value; decl_type; is_global; transformation } ->
-      (* XXX TODO XXX *)
       let cstrs, decl_type, expected =
         vectorized_type_of_type env cstrs decl_type
       in
@@ -351,18 +371,21 @@ and annotate_stmt (env: 'a) (cstrs: 'b) (tstmt: typed_statement) : 'a * 'b * vec
              { identifier; initial_value; decl_type; is_global; transformation; })
       in
       env, cstrs, stmt
-  (* | Block stmts -> *)
-  (*     fprintf ff "%a" (print_list_newline (trans_stmt ctx)) stmts *)
-  (* | Return e -> *)
-  (*     fprintf ff "return %a" trans_expr e *)
-  (* | ReturnVoid -> *)
-  (*     fprintf ff "return" *)
-  (* | Break -> *)
-  (*     fprintf ff "break" *)
-  (* | Continue -> *)
-  (*     fprintf ff "continue" *)
-  (* | Skip -> *)
-  (*     fprintf ff "pass" *)
+  | Block stmts ->
+      let env, cstrs, stmts = annotate_list annotate_stmt env cstrs stmts in
+      env, cstrs, vect_stmt (Block stmts)
+  | Return e ->
+      let cstrs, t = vectorized_type_of_unsized_type cstrs e.emeta.type_ in
+      let cstrs, e = annotate_expr env cstrs e t in
+      env, cstrs, vect_stmt (Return e)
+  | ReturnVoid ->
+      env, cstrs, vect_stmt ReturnVoid
+  | Break ->
+      env, cstrs, vect_stmt Break
+  | Continue ->
+      env, cstrs, vect_stmt Continue
+  | Skip ->
+      env, cstrs, vect_stmt Skip
   | s ->
     (* XXX TODO XXX *)
     let hack = ref (env, cstrs) in
@@ -392,6 +415,19 @@ and annotate_stmt (env: 'a) (cstrs: 'b) (tstmt: typed_statement) : 'a * 'b * vec
     let env, cstrs = !hack in
     env, cstrs, vect_stmt s
     (* map_typed_statement (fun _stmt -> assert false) stmt *)
+
+and annotate_printables env cstrs ps =
+  List.fold_map
+    ~f:(fun cstrs -> function
+        | PString s -> cstrs, PString s
+        | PExpr e ->
+            let cstrs, expected =
+              vectorized_type_of_unsized_type cstrs e.emeta.type_
+            in
+            let cstrs, e = annotate_expr env cstrs e expected in
+            cstrs, PExpr e)
+    ~init:cstrs
+    ps
 
 and annotate_transformation env cstrs transformation =
   match transformation with

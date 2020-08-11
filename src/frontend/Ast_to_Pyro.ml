@@ -105,6 +105,7 @@ and trans_size ff s =
   match s with
   | Sigma x -> fprintf ff "XXXsigma%d" x (* XXX TODO XXX *)
   | SExpr e -> trans_expr ff e
+  | SConst n -> fprintf ff "%d" n
 
 and trans_binop e1 e2 ff op =
     match op with
