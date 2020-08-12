@@ -891,12 +891,12 @@ let trans_block_as_return ff block =
 
 let trans_prior (decl_type: typed_expression Type.t) ff transformation =
   match transformation with
-  | Program.Identity -> fprintf ff "ImproperUniform(shape=%a)" trans_dims decl_type
+  | Program.Identity -> fprintf ff "improper_uniform(shape=%a)" trans_dims decl_type
   | Lower lb ->
-     fprintf ff "LowerConstrainedImproperUniform(%a, shape=%a)"
+     fprintf ff "lower_constrained_improper_uniform(%a, shape=%a)"
        trans_expr lb trans_dims decl_type
   | Upper ub ->
-     fprintf ff "UpperConstrainedImproperUniform(%a, shape=%a)"
+     fprintf ff "upper_constrained_improper_uniform(%a, shape=%a)"
        trans_expr ub trans_dims decl_type
   | LowerUpper (lb, ub) ->
       fprintf ff "uniform(%a, %a, shape=%a)"

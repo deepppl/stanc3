@@ -1,5 +1,5 @@
 from dppl import NumpyroModel
-from numpy import array 
+from numpy import array
 
 test = NumpyroModel('/tmp/a.stan')
 mcmc = test.mcmc(warmups=10, samples=100)
