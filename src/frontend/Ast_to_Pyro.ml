@@ -53,12 +53,9 @@ let rec dims_of_sizedtype t =
   | SizedType.SInt
   | SReal -> []
   | SVector e -> [e]
-  | SRowVector e -> [e; 1]
+  | SRowVector e -> [e] (* XXX TODO: [e;1] ? XXX *)
   | SMatrix (e1, e2) -> [e1; e2]
   | SArray (t, e) -> e :: dims_of_sizedtype t
-
-let dims ff _t =
-  fprintf ff "XXX TODO XXX"
 
 let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
   match expr with
@@ -182,7 +179,16 @@ and trans_fun_app ff fn_kind name args =
     (match fn_kind with StanLib -> "stanlib." | UserDefined -> "")
     name trans_exprs args
 
-let trans_sizedtype = SizedType.map trans_expr
+and trans_dims ff (t : typed_expression Type.t) =
+  match t with
+  | Sized t ->
+      begin match dims_of_sizedtype t with
+      | [] -> fprintf ff "None"
+      | l -> fprintf ff "[%a]" trans_exprs l
+      end
+  | Unsized _ ->
+    assert false (* XXX TODO XXX *)
+
 
 let trans_expr_opt ff = function
   | Some e -> trans_expr ff e
@@ -883,18 +889,18 @@ let trans_block_as_return ff block =
             (get_var_decl_names stmts))
     block
 
-let trans_prior (decl_type: _ Type.t) ff transformation =
+let trans_prior (decl_type: typed_expression Type.t) ff transformation =
   match transformation with
-  | Program.Identity -> fprintf ff "ImproperUniform()" (* XXX TODO XXX *)
+  | Program.Identity -> fprintf ff "ImproperUniform(shape=%a)" trans_dims decl_type
   | Lower lb ->
-     fprintf ff "LowerConstrainedImproperUniform(%a, shape='%a')"
-       trans_expr lb dims decl_type
+     fprintf ff "LowerConstrainedImproperUniform(%a, shape=%a)"
+       trans_expr lb trans_dims decl_type
   | Upper ub ->
-     fprintf ff "UpperConstrainedImproperUniform(%a, shape='%a')"
-       trans_expr ub dims decl_type
+     fprintf ff "UpperConstrainedImproperUniform(%a, shape=%a)"
+       trans_expr ub trans_dims decl_type
   | LowerUpper (lb, ub) ->
-      fprintf ff "uniform(%a, %a)" (* XXX TODO: shape XXX *)
-        trans_expr lb trans_expr ub
+      fprintf ff "uniform(%a, %a, shape=%a)"
+        trans_expr lb trans_expr ub trans_dims decl_type
   | Offset _
   | Multiplier _
   | OffsetMultiplier _
