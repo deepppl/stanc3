@@ -48,12 +48,16 @@ let rec base_type ff = function
   | UArray t -> base_type ff t
   | _ -> raise_s [%message "Unexpected base type"]
 
+let expr_one =
+  { expr = IntNumeral "1";
+    emeta = { type_ = UInt; loc = Location_span.empty; ad_level = DataOnly; } }
+
 let rec dims_of_sizedtype t =
   match t with
   | SizedType.SInt
   | SReal -> []
   | SVector e -> [e]
-  | SRowVector e -> [e] (* XXX TODO: [e;1] ? XXX *)
+  | SRowVector e -> [expr_one; e]
   | SMatrix (e1, e2) -> [e1; e2]
   | SArray (t, e) -> e :: dims_of_sizedtype t
 
@@ -75,7 +79,7 @@ let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
   | ArrayExpr eles ->
       fprintf ff "array([%a])" trans_exprs eles
   | RowVectorExpr eles ->
-      fprintf ff "array([%a])" trans_exprs eles
+      fprintf ff "array([[%a]])" trans_exprs eles
   | Indexed (lhs, indices) ->
       fprintf ff "%a%a" trans_expr lhs (pp_print_list trans_idx) indices
 
@@ -83,19 +87,8 @@ and trans_numeral type_ ff x =
   begin match type_ with
   | UInt -> fprintf ff "%s" (format_number x)
   | UReal -> fprintf ff "%s" (format_number x)
-  (* | SVector s -> *)
-  (*     fprintf ff "%s * ones(%a)" (format_number x) trans_size s *)
-  (* | SRowVector s -> *)
-  (*     fprintf ff "%s * ones(1, %a)" (format_number x) trans_size s *)
-  (* | SMatrix (s1, s2) -> *)
-  (*     fprintf ff "%s * ones(%a, %a)" (format_number x) trans_size s1 trans_size s2 *)
-  (* | SArray (_t, _s) -> *)
-  (*     assert false (\* XXX TODO XXX *\) *)
-  (*     (\* fprintf ff "%s * ones(%a, %a, dtype=%a)" *\) *)
-  (*     (\*   x dims t trans_size s base_type t *\) *)
-  (* | _ -> *)
-  (*    raise_s [%message "Unexpected type for a numeral" (type_ : vectorized_type)] *)
-  | _ -> assert false (* XXX TODO XXX *)
+  | _ ->
+      raise_s [%message "Unexpected type for a numeral" (type_ : UnsizedType.t)]
   end
 
 and trans_binop e1 e2 ff op =
@@ -187,100 +180,18 @@ and trans_dims ff (t : typed_expression Type.t) =
       | l -> fprintf ff "[%a]" trans_exprs l
       end
   | Unsized _ ->
-    assert false (* XXX TODO XXX *)
-
+      raise_s
+        [%message "Expecting sized type" (t : typed_expression Type.t)]
 
 let trans_expr_opt ff = function
   | Some e -> trans_expr ff e
   | None -> fprintf ff "None"
-
-(* let neg_inf =
-  Expr.
-    { Fixed.pattern= FunApp (StanLib, Internal_fun.to_string FnNegInf, [])
-    ; meta=
-        Typed.Meta.{type_= UReal; loc= Location_span.empty; adlevel= DataOnly}
-    } *)
 
 let trans_arg ff (_, _, ident) =
   pp_print_string ff ident.name
 
 let trans_args ff args =
   fprintf ff "%a" (print_list_comma trans_arg) args
-
-(* let truncate_dist ud_dists (id : identifier) ast_obs ast_args t =
-  let cdf_suffices = ["_lcdf"; "_cdf_log"] in
-  let ccdf_suffices = ["_lccdf"; "_ccdf_log"] in
-  let find_function_info sfx =
-    let possible_names =
-      List.map ~f:(( ^ ) id.name) sfx |> String.Set.of_list
-    in
-    match List.find ~f:(fun (n, _) -> Set.mem possible_names n) ud_dists with
-    | Some (name, tp) -> (UserDefined, name, tp)
-    | None ->
-        ( StanLib
-        , Set.to_list possible_names |> List.hd_exn
-        , if Stan_math_signatures.is_stan_math_function_name (id.name ^ "_lpmf")
-          then UnsizedType.UInt
-          else UnsizedType.UReal (* close enough *) )
-  in
-  let trunc cond_op (x : typed_expression) y =
-    let smeta = x.emeta.loc in
-    { Stmt.Fixed.meta= smeta
-    ; pattern=
-        IfElse
-          ( op_to_funapp cond_op [ast_obs; x]
-          , {Stmt.Fixed.meta= smeta; pattern= TargetPE neg_inf}
-          , Some y ) }
-  in
-  let targetme loc e =
-    {Stmt.Fixed.meta= loc; pattern= TargetPE (op_to_funapp Operator.PMinus [e])}
-  in
-  let funapp meta kind name args =
-    { emeta= meta
-    ; expr= FunApp (kind, {name; id_loc= Location_span.empty}, args) }
-  in
-  let inclusive_bound tp (lb : typed_expression) =
-    let emeta = lb.emeta in
-    if UnsizedType.is_int_type tp then
-      
-        { emeta
-        ; expr= BinOp (lb, Operator.Minus, {emeta; expr= IntNumeral "1"})
-        }
-    else lb
-  in
-  match t with
-  | NoTruncate -> []
-  | TruncateUpFrom lb ->
-      let fk, fn, tp = find_function_info ccdf_suffices in
-      [ trunc Less lb
-          (targetme lb.emeta.loc
-             (funapp lb.emeta fk fn (inclusive_bound tp lb :: ast_args))) ]
-  | TruncateDownFrom ub ->
-      let fk, fn, _ = find_function_info cdf_suffices in
-      [ trunc Greater ub
-          (targetme ub.emeta.loc (funapp ub.emeta fk fn (ub :: ast_args))) ]
-  | TruncateBetween (lb, ub) ->
-      let fk, fn, tp = find_function_info cdf_suffices in
-      [ trunc Less lb
-          (trunc Greater ub
-             (targetme ub.emeta.loc
-                (funapp ub.emeta StanLib "log_diff_exp"
-                   [ funapp ub.emeta fk fn (ub :: ast_args)
-                   ; funapp ub.emeta fk fn (inclusive_bound tp lb :: ast_args)
-                   ]))) ] *)
-  
-(* let unquote s =
-  if s.[0] = '"' && s.[String.length s - 1] = '"' then
-    String.drop_suffix (String.drop_prefix s 1) 1
-  else s *)
-
-(* hack(sean): strings aren't real
-   XXX add UString to MIR and maybe 
-*)
-(* let mkstring loc s =
-  Expr.
-    { Fixed.pattern= Lit (Str, s)
-    ; meta= Typed.Meta.create ~type_:UReal ~loc ~adlevel:DataOnly () } *)
 
 let trans_printables ff (ps : _ printable list) =
   fprintf ff "%a"
@@ -639,7 +550,8 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       in
       let trans_truncation _ff = function
         | NoTruncate -> ()
-        | _ -> assert false (* XXX TODO XXX *)
+        | _ -> (* XXX TODO XXX *)
+          raise_s [%message "Truncations are currently not supported."]
       in
       fprintf ff "observe(%a, %a(%a), %a)%a"
         (gen_id ctx) arg
@@ -966,7 +878,7 @@ let trans_generatedquantitiesblock ff data tdata params tparams genquantities =
 let trans_prog runtime ff (p : typed_program) =
   fprintf ff "@[<v 0>%s@,%s@,@,@]"
     ("from runtimes."^runtime^".distributions import *")
-    ("from runtimes."^runtime^".dppllib import sample, observe, factor");
+    ("from runtimes."^runtime^".dppllib import sample, observe, factor, array");
   Option.iter ~f:(trans_functionblock ff) p.functionblock;
   trans_transformeddatablock ff p.datablock p.transformeddatablock;
   trans_modelblock ff

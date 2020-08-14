@@ -5,7 +5,6 @@ import jax
 from collections import defaultdict
 import subprocess
 
-
 class NumpyroModel:
     def __init__(self, stanfile):
         self.name = basename(stanfile)
