@@ -37,3 +37,4 @@ uniform = d.Uniform
 beta = d.Beta
 bernoulli = d.Bernoulli
 normal = d.Normal
+student_t = d.StudentT
