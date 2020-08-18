@@ -1,6 +1,7 @@
 import numpyro
 from numpyro.distributions import Exponential
 from numpy import array
+from numpy import zeros
 
 def sample(site_name, dist):
     return numpyro.sample(site_name, dist)

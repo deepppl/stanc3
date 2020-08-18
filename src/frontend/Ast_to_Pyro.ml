@@ -169,7 +169,9 @@ and trans_exprs ff exprs =
 
 and trans_fun_app ff fn_kind name args =
   fprintf ff "%s%s(%a)"
-    (match fn_kind with StanLib -> "stanlib." | UserDefined -> "")
+    (match fn_kind with
+     | StanLib -> (* "stanlib." *)""  (* XXX TODO XXX *)
+     | UserDefined -> "")
     name trans_exprs args
 
 and trans_dims ff (t : typed_expression Type.t) =
@@ -183,9 +185,14 @@ and trans_dims ff (t : typed_expression Type.t) =
       raise_s
         [%message "Expecting sized type" (t : typed_expression Type.t)]
 
-let trans_expr_opt ff = function
+let trans_expr_opt (type_ : typed_expression Type.t) ff = function
   | Some e -> trans_expr ff e
-  | None -> fprintf ff "None"
+  | None ->
+    begin match type_ with
+    | Sized (SInt | SReal)
+    | Unsized (UInt | UReal) -> fprintf ff "None"
+    | _ -> fprintf ff "zeros(%a)" trans_dims type_
+    end
 
 let trans_arg ff (_, _, ident) =
   pp_print_string ff ident.name
@@ -589,9 +596,9 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       raise_s
         [%message
           "Found function definition statement outside of function block"]
-  | VarDecl {identifier; initial_value; _} ->
+  | VarDecl {identifier; initial_value; decl_type; _ } ->
       fprintf ff "%s = %a" identifier.name
-        trans_expr_opt initial_value
+        (trans_expr_opt decl_type) initial_value
   | Block stmts ->
       fprintf ff "%a" (print_list_newline (trans_stmt ctx)) stmts
   | Return e ->
@@ -878,7 +885,7 @@ let trans_generatedquantitiesblock ff data tdata params tparams genquantities =
 let trans_prog runtime ff (p : typed_program) =
   fprintf ff "@[<v 0>%s@,%s@,@,@]"
     ("from runtimes."^runtime^".distributions import *")
-    ("from runtimes."^runtime^".dppllib import sample, observe, factor, array");
+    ("from runtimes."^runtime^".dppllib import sample, observe, factor, array, zeros");
   Option.iter ~f:(trans_functionblock ff) p.functionblock;
   trans_transformeddatablock ff p.datablock p.transformeddatablock;
   trans_modelblock ff
