@@ -185,14 +185,17 @@ and trans_dims ff (t : typed_expression Type.t) =
       raise_s
         [%message "Expecting sized type" (t : typed_expression Type.t)]
 
+let is_tensor (type_ : typed_expression Type.t) =
+  match type_ with
+  | Sized (SInt | SReal)
+  | Unsized (UInt | UReal) -> false
+  | _ -> true
+
 let trans_expr_opt (type_ : typed_expression Type.t) ff = function
   | Some e -> trans_expr ff e
   | None ->
-    begin match type_ with
-    | Sized (SInt | SReal)
-    | Unsized (UInt | UReal) -> fprintf ff "None"
-    | _ -> fprintf ff "zeros(%a)" trans_dims type_
-    end
+      if is_tensor type_ then fprintf ff "zeros(%a)" trans_dims type_
+      else fprintf ff "None"
 
 let trans_arg ff (_, _, ident) =
   pp_print_string ff ident.name
@@ -818,8 +821,15 @@ let trans_prior (decl_type: typed_expression Type.t) ff transformation =
      fprintf ff "upper_constrained_improper_uniform(%a, shape=%a)"
        trans_expr ub trans_dims decl_type
   | LowerUpper (lb, ub) ->
-      fprintf ff "uniform(%a, %a, shape=%a)"
-        trans_expr lb trans_expr ub trans_dims decl_type
+      if is_tensor decl_type then
+        fprintf ff "uniform(%a * ones(%a), %a)"
+          trans_expr lb
+          trans_dims decl_type
+          trans_expr ub
+      else
+        fprintf ff "uniform(%a, %a)"
+          trans_expr lb
+          trans_expr ub
   | Offset _
   | Multiplier _
   | OffsetMultiplier _
@@ -885,7 +895,7 @@ let trans_generatedquantitiesblock ff data tdata params tparams genquantities =
 let trans_prog runtime ff (p : typed_program) =
   fprintf ff "@[<v 0>%s@,%s@,%s@,@,@]"
     ("from runtimes."^runtime^".distributions import *")
-    ("from runtimes."^runtime^".dppllib import sample, observe, factor, array, zeros")
+    ("from runtimes."^runtime^".dppllib import sample, observe, factor, array, zeros, ones")
     ("from runtimes."^runtime^".stanlib import sqrt, exp, log");
   Option.iter ~f:(trans_functionblock ff) p.functionblock;
   trans_transformeddatablock ff p.datablock p.transformeddatablock;
