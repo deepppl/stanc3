@@ -92,9 +92,9 @@ def clean_log(f):
         }
         if "numpyro" in log["divergences"]:
             res["numpyro"] = flatten_scalar(log["divergences"]["numpyro"]["ks"])
-            if "NumPyro_Compilation" in log["timers"]:
-                res["numpyro"]["compilation"] = log["timers"]["NumPyro_Compilation"]
-            res["numpyro"]["runtime"] = log["timers"]["NumPyro_Runtime"]
+            if "Numpyro_Compilation" in log["timers"]:
+                res["numpyro"]["compilation"] = log["timers"]["Numpyro_Compilation"]
+            res["numpyro"]["runtime"] = log["timers"]["Numpyro_Runtime"]
         if "pyro" in log["divergences"]:
             res["pyro"] = flatten_scalar(log["divergences"]["pyro"]["ks"])
             if "Pyro_Compilation" in log["timers"]:
@@ -107,7 +107,7 @@ def clean_log(f):
             res["numpyro_naive"] = flatten_scalar(
                 log["divergences"]["numpyro_naive"]["ks"]
             )
-            res["numpyro_naive"]["runtime"] = log["timers"]["NumPyro_naive_Runtime"]
+            res["numpyro_naive"]["runtime"] = log["timers"]["Numpyro_naive_Runtime"]
         if "pyro_naive" in log["divergences"] and log["divergences"]["pyro_naive"]:
             res["pyro_naive"] = flatten_scalar(log["divergences"]["pyro_naive"]["ks"])
             res["pyro_naive"]["runtime"] = log["timers"]["Pyro_naive_Runtime"]

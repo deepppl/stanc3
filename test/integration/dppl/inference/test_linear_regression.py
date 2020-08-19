@@ -13,11 +13,11 @@ def test_linear_regression(config=Config()):
 
     t_linear_regression = MCMCTest(
         name='linear_regression',
-        model_file='deepppl/tests/good/linear_regression_array.stan',
+        model_file='good/linear_regression_array.stan',
         data=data,
         config=config
     )
-    
+
     return t_linear_regression.run()
 
 if __name__ == "__main__":

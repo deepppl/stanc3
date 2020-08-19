@@ -19,11 +19,11 @@ def test_logistic():
 
     t_logistic = MCMCTest(
         name='logistic',
-        model_file='deepppl/tests/good/logistic.stan',
+        model_file='good/logistic.stan',
         data=data,
         with_numpyro=False # Numpyro cannot find valid initial parameters
     )
-    
+
     return t_logistic.run_pyro()
 
 if __name__ == "__main__":

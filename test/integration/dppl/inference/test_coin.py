@@ -1,15 +1,16 @@
 
 from .harness import MCMCTest, Config
 from pprint import pprint
+import numpy as np
 
 def test_coin(config=Config()):
     data = {}
     data['N'] = 10
-    data['x'] = [0, 0, 0, 0, 0, 0, 1, 0, 0, 1]
+    data['x'] = np.array([0, 0, 0, 0, 0, 0, 1, 0, 0, 1])
 
     t_coin = MCMCTest(
         name='coin',
-        model_file='deepppl/tests/good/coin.stan',
+        model_file='good/coin.stan',
         data=data,
         config=config
     )
