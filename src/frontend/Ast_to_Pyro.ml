@@ -790,8 +790,8 @@ let migrate_checks_to_end_of_block stmts =
   not_checks @ checks *)
 
 let get_var_decl_names stmts =
-  List.fold_left
-    ~f:(fun acc stmt ->
+  List.fold_right
+    ~f:(fun stmt acc ->
           match stmt.stmt with
           | VarDecl {identifier; _} -> identifier.name :: acc
           | _ -> acc ) ~init:[] stmts
@@ -799,8 +799,11 @@ let get_var_decl_names stmts =
 let trans_block_as_args ff block =
   Option.iter
     ~f:(fun stmts ->
-          fprintf ff "*, %a"
-            (print_list_comma pp_print_string) (get_var_decl_names stmts))
+          match get_var_decl_names stmts with
+          | [] -> ()
+          | args ->
+              fprintf ff "*, %a"
+                (print_list_comma pp_print_string) args)
     block
 
 let trans_block_as_return ff block =
