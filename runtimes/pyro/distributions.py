@@ -38,6 +38,8 @@ beta = d.Beta
 bernoulli = d.Bernoulli
 normal = d.Normal
 student_t = d.StudentT
+inv_gamma = d.InverseGamma
+gamma = d.Gamma
 
 def categorical_logits(logits):
     return d.Categorical(logits=logits)
