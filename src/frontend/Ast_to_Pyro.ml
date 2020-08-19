@@ -883,9 +883,10 @@ let trans_generatedquantitiesblock ff data tdata params tparams genquantities =
   end
 
 let trans_prog runtime ff (p : typed_program) =
-  fprintf ff "@[<v 0>%s@,%s@,@,@]"
+  fprintf ff "@[<v 0>%s@,%s@,%s@,@,@]"
     ("from runtimes."^runtime^".distributions import *")
-    ("from runtimes."^runtime^".dppllib import sample, observe, factor, array, zeros");
+    ("from runtimes."^runtime^".dppllib import sample, observe, factor, array, zeros")
+    ("from runtimes."^runtime^".stanlib import sqrt, exp, log");
   Option.iter ~f:(trans_functionblock ff) p.functionblock;
   trans_transformeddatablock ff p.datablock p.transformeddatablock;
   trans_modelblock ff
