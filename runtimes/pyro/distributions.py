@@ -38,3 +38,15 @@ beta = d.Beta
 bernoulli = d.Bernoulli
 normal = d.Normal
 student_t = d.StudentT
+
+def categorical_logits(logits):
+    return d.Categorical(logits=logits)
+
+def bernoulli_logit(logits):
+    return d.Bernoulli(logits=logits)
+
+def binomial_logit(n, logits):
+    return d.Binomial(n, logits=logits)
+
+def poisson_log(alpha):
+    return d.Poisson(torch.exp(alpha))
