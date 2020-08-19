@@ -22,6 +22,6 @@ def test_aspirin(config=Config()):
     )
 
     return t_aspirin.run()
-    
+
 if __name__ == "__main__":
     pprint(test_aspirin())
