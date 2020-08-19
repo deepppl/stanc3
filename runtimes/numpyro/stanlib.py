@@ -1,1 +1,1 @@
-from numpy import sqrt, exp, log
+from jax.numpy import sqrt, exp, log
