@@ -1,13 +1,10 @@
-
-
-import torch
-from torch import tensor, rand
-import pyro
-import torch.distributions.constraints as constraints
-import pyro.distributions as dist
-
+from runtimes.pyro.distributions import *
+from runtimes.pyro.dppllib import sample, observe, factor, array, zeros, ones
+from runtimes.pyro.stanlib import sqrt, exp, log
 
 def model():
-    theta: 'real' = sample('theta', LowerConstrainedImproperUniform(0.0))
-    sample('expr' + '__1', dist.Normal(log(10.0), 1.0), obs=log(theta))
-    sample('expr' + '__2', dist.Exponential(1.0), obs=--log(fabs(theta)))
+    # Parameters
+    theta = sample('theta', lower_constrained_improper_uniform(0, shape=None))
+    # Model
+    observe('expr__1', normal(log(10.0), 1.0), log(theta))
+    factor('expr__2', - log(fabs(theta)))

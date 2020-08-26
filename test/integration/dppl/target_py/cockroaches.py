@@ -1,30 +1,24 @@
-import torch
-from torch import tensor, rand
-import pyro
-import torch.distributions.constraints as constraints
-import pyro.distributions as dist
+from runtimes.pyro.distributions import *
+from runtimes.pyro.dppllib import sample, observe, factor, array, zeros, ones
+from runtimes.pyro.stanlib import sqrt, exp, log
 
-
-def transformed_data(N=None, exposure2=None, roach1=None, senior=None,
-    treatment=None, y=None):
-    log_expo = zeros(N)
-    sqrt_roach = zeros(N)
+def transformed_data(*, N, exposure2, roach1, senior, treatment, y):
+    # Transformed data
+    log_expo = zeros([N])
+    sqrt_roach = zeros([N])
     log_expo = log(exposure2)
     sqrt_roach = sqrt(roach1)
-    return {'log_expo': log_expo, 'sqrt_roach': sqrt_roach}
+    return { 'log_expo': log_expo, 'sqrt_roach': sqrt_roach }
 
-
-def model(N=None, exposure2=None, roach1=None, senior=None, treatment=None,
-    y=None, transformed_data=None):
-    sqrt_roach = transformed_data['sqrt_roach']
-    log_expo = transformed_data['log_expo']
-    beta_1 = sample('beta_1', ImproperUniform())
-    beta_2 = sample('beta_2', ImproperUniform())
-    beta_3 = sample('beta_3', ImproperUniform())
-    beta_4 = sample('beta_4', ImproperUniform())
-    sample('beta_1' + '__1', dist.Normal(0, 5), obs=beta_1)
-    sample('beta_2' + '__2', dist.Normal(0, 2.5), obs=beta_2)
-    sample('beta_3' + '__3', dist.Normal(0, 2.5), obs=beta_3)
-    sample('beta_4' + '__4', dist.Normal(0, 2.5), obs=beta_4)
-    sample('y' + '__5', poisson_log(log_expo + beta_1 + beta_2 * sqrt_roach +
-        beta_3 * treatment + beta_4 * senior), obs=y)
+def model(*, N, exposure2, roach1, senior, treatment, y, log_expo, sqrt_roach):
+    # Parameters
+    beta_1 = sample('beta_1', improper_uniform(shape=None))
+    beta_2 = sample('beta_2', improper_uniform(shape=None))
+    beta_3 = sample('beta_3', improper_uniform(shape=None))
+    beta_4 = sample('beta_4', improper_uniform(shape=None))
+    # Model
+    observe('beta_1__1', normal(0, 5), beta_1)
+    observe('beta_2__2', normal(0, 2.5), beta_2)
+    observe('beta_3__3', normal(0, 2.5), beta_3)
+    observe('beta_4__4', normal(0, 2.5), beta_4)
+    observe('y__5', poisson_log(log_expo + beta_1 + beta_2 * sqrt_roach + beta_3 * treatment + beta_4 * senior), y)

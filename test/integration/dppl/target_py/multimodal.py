@@ -1,17 +1,16 @@
-
-import torch
-from torch import tensor, rand
-import pyro
-import torch.distributions.constraints as constraints
-import pyro.distributions as dist
-
+from runtimes.pyro.distributions import *
+from runtimes.pyro.dppllib import sample, observe, factor, array, zeros, ones
+from runtimes.pyro.stanlib import sqrt, exp, log
 
 def model():
-    cluster = sample('cluster', ImproperUniform())
-    theta = sample('theta', ImproperUniform())
-    sample('cluster' + '__1', dist.Normal(0, 1), obs=cluster)
+    # Parameters
+    cluster = sample('cluster', improper_uniform(shape=None))
+    theta = sample('theta', improper_uniform(shape=None))
+    # Model
+    mu = None
+    observe('cluster__1', normal(0, 1), cluster)
     if cluster > 0:
         mu = 2
     else:
         mu = 0
-    sample('theta' + '__2', dist.Normal(mu, 1), obs=theta)
+    observe('theta__2', normal(mu, 1), theta)

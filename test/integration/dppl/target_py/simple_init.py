@@ -1,12 +1,10 @@
-
-
-import torch
-from torch import tensor, rand
-import pyro
-import torch.distributions.constraints as constraints
-import pyro.distributions as dist
-
+from runtimes.pyro.distributions import *
+from runtimes.pyro.dppllib import sample, observe, factor, array, zeros, ones
+from runtimes.pyro.stanlib import sqrt, exp, log
 
 def model():
+    # Parameters
+    
+    # Model
     if 1.0 == 0.0:
-        a: 'real' = 1.0
+        a = 1.0

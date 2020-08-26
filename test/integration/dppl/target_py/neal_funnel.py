@@ -1,24 +1,20 @@
-
-
-import torch
-from torch import tensor, rand
-import pyro
-import torch.distributions.constraints as constraints
-import pyro.distributions as dist
-
+from runtimes.pyro.distributions import *
+from runtimes.pyro.dppllib import sample, observe, factor, array, zeros, ones
+from runtimes.pyro.stanlib import sqrt, exp, log
 
 def model():
-    y_std: 'real' = sample('y_std', ImproperUniform())
-    x_std: 'real' = sample('x_std', ImproperUniform())
-    y: 'real' = 3.0 * y_std
-    x: 'real' = exp(y / 2) * x_std
-    sample('y_std' + '__1', dist.Normal(0, 1), obs=y_std)
-    sample('x_std' + '__2', dist.Normal(0, 1), obs=x_std)
+    # Parameters
+    y_std = sample('y_std', improper_uniform(shape=None))
+    x_std = sample('x_std', improper_uniform(shape=None))
+    # Transformed parameters
+    y = 3.0 * y_std
+    x = exp(y / 2) * x_std
+    # Model
+    observe('y_std__1', normal(0, 1), y_std)
+    observe('x_std__2', normal(0, 1), x_std)
 
-
-def generated_quantities(parameters=None):
-    x_std = parameters['x_std']
-    y_std = parameters['y_std']
-    y: 'real' = 3.0 * y_std
-    x: 'real' = exp(y / 2) * x_std
-    return {'x': x, 'y': y}
+def generated_quantities(*, y_std, x_std):
+    # Transformed parameters
+    y = 3.0 * y_std
+    x = exp(y / 2) * x_std
+    return { 'y': y, 'x': x }
