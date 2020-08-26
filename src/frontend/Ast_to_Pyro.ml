@@ -20,6 +20,9 @@ let gen_id =
     let s =
       match e.expr with
       | Variable {name; _} -> name
+      | IntNumeral x
+      | RealNumeral x -> x
+      | Indexed ({ expr = Variable {name; _}; _ }, _) -> name
       | _ -> "expr"
     in
     match l with
@@ -110,8 +113,8 @@ and trans_binop e1 e2 ff op =
     | EltDivide -> fprintf ff "%a / %a" trans_expr e1 trans_expr e2
     | Pow -> fprintf ff "%a ** %a" trans_expr e1 trans_expr e2
     | EltPow -> fprintf ff "%a ** %a" trans_expr e1 trans_expr e2
-    | Or -> fprintf ff "%a || %a" trans_expr e1 trans_expr e2
-    | And -> fprintf ff "%a && %a" trans_expr e1 trans_expr e2
+    | Or -> fprintf ff "%a or %a" trans_expr e1 trans_expr e2
+    | And -> fprintf ff "%a and %a" trans_expr e1 trans_expr e2
     | Equals -> fprintf ff "%a == %a" trans_expr e1 trans_expr e2
     | NEquals -> fprintf ff "%a != %a" trans_expr e1 trans_expr e2
     | Less -> fprintf ff "%a < %a" trans_expr e1 trans_expr e2
