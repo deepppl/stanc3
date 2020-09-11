@@ -91,7 +91,7 @@ compile_tests_notype = [
     ('kmeans', None),
     ('schools', None),
     ('logistic', 'Type infernce'),
-    ('lda', None),
+    ('lda', 'XXX TODO?: simplex XXX'),
     ('bayes_nn', 'XXX TODO: deep XXX'),
     ('coin', None),
     ('coin_guide', 'XXX TODO: deep XXX'),
