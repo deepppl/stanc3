@@ -6,10 +6,10 @@ import subprocess
 
 
 class PyroModel:
-    def __init__(self, stanfile):
+    def __init__(self, stanfile, pyfile=None):
         self.name = basename(stanfile)
-        subprocess.check_call(["dune","exec","stanc","--","--pyro",stanfile])
-        self.pyfile = splitext(stanfile)[0] + ".py" 
+        self.pyfile = splitext(stanfile)[0] + ".py" if pyfile == None else pyfile
+        subprocess.check_call(["dune","exec","stanc","--","--pyro","--o",self.pyfile,stanfile])
         spec = importlib.util.spec_from_file_location(self.name, self.pyfile)
         Module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(Module)
