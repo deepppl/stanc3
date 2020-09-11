@@ -40,6 +40,7 @@ normal = d.Normal
 student_t = d.StudentT
 inv_gamma = d.InverseGamma
 gamma = d.Gamma
+dirichlet = d.Dirichlet
 
 def categorical_logits(logits):
     return d.Categorical(logits=logits)
