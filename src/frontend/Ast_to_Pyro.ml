@@ -3,6 +3,11 @@ open Ast
 open Middle
 open Format
 
+let print_warning loc message =
+  Fmt.pf Fmt.stderr
+    "@[<v>@,Warning: %s:@,%s@]@."
+    (Location.to_string loc.Location_span.begin_loc) message
+
 let print_list_comma printer ff l =
   fprintf ff "@[<hov 0>%a@]"
     (pp_print_list ~pp_sep:(fun ff () -> fprintf ff ",@ ") printer)
@@ -80,11 +85,16 @@ let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
       trans_fun_app ff fn_kind name args
   | GetLP | GetTarget -> fprintf ff "stanlib.target()" (* XXX TODO XXX *)
   | ArrayExpr eles ->
-      fprintf ff "array([%a])" trans_exprs eles
+      fprintf ff "array([%a], dtype=%a)"
+        trans_exprs eles
+        dtype_of_unsized_type emeta.type_
   | RowVectorExpr eles ->
-      fprintf ff "array([[%a]])" trans_exprs eles
+      fprintf ff "array([[%a]], dtype=%a)"
+        trans_exprs eles
+        dtype_of_unsized_type emeta.type_
   | Indexed (lhs, indices) ->
-      fprintf ff "%a%a" trans_expr lhs (pp_print_list trans_idx) indices
+      fprintf ff "%a%a" trans_expr lhs
+        (pp_print_list ~pp_sep:(fun _ff () -> ()) trans_idx) indices
 
 and trans_numeral type_ ff x =
   begin match type_ with
@@ -166,6 +176,14 @@ and trans_idx ff = function
     | _ ->
         raise_s
           [%message "Expecting int or array" (e.emeta.type_ : UnsizedType.t)] )
+
+and dtype_of_unsized_type ff t =
+  match t with
+  | UInt -> fprintf ff "dtype_long"
+  | UReal -> fprintf ff "dtype_double"
+  | UVector | URowVector | UMatrix -> fprintf ff "dtype_double"
+  | UArray(t) -> dtype_of_unsized_type ff t
+  | UFun _ | UMathLibraryFunction -> assert false
 
 and trans_exprs ff exprs =
   fprintf ff "%a" (print_list_comma trans_expr) exprs
@@ -838,15 +856,17 @@ let trans_prior (decl_type: typed_expression Type.t) ff transformation =
           trans_expr ub
   | Offset _
   | Multiplier _
-  | OffsetMultiplier _
+  | OffsetMultiplier _ ->
+      assert false (* XXX TODO XXX *)
+  | Simplex
   | Ordered
   | PositiveOrdered
-  | Simplex
   | UnitVector
   | CholeskyCorr
   | CholeskyCov
   | Correlation
-  | Covariance -> assert false (* XXX TODO XXX *)
+  | Covariance ->
+      raise_s [%message "Unsupported type constraints"]
 
 let pp_print_nothing _ () = ()
 

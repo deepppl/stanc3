@@ -15,8 +15,7 @@ def model(*, N, D, K, y, neg_log_K):
     soft_z = zeros([N, K])
     for n in range(1,N + 1):
         for k in range(1,K + 1):
-            soft_z[n - 1]
-            [k - 1] = neg_log_K - 0.5 * dot_self(mu[k - 1] - y[n - 1])
+            soft_z[n - 1][k - 1] = neg_log_K - 0.5 * dot_self(mu[k - 1] - y[n - 1])
     # Model
     for k in range(1,K + 1):
         observe(f'mu__{k}__1', normal(0, 1), mu[k - 1])
@@ -28,6 +27,5 @@ def generated_quantities(*, N, D, K, y, neg_log_K, mu):
     soft_z = zeros([N, K])
     for n in range(1,N + 1):
         for k in range(1,K + 1):
-            soft_z[n - 1]
-            [k - 1] = neg_log_K - 0.5 * dot_self(mu[k - 1] - y[n - 1])
+            soft_z[n - 1][k - 1] = neg_log_K - 0.5 * dot_self(mu[k - 1] - y[n - 1])
     return { 'soft_z': soft_z }
