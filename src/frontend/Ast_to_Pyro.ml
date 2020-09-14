@@ -946,11 +946,13 @@ let trans_guideparametersblock ff guide_parameters =
           (print_list_newline trans_guide_parameter))
     guide_parameters
         
-let trans_guideblock ff data tdata guide_parameters guide = 
-  fprintf ff "@[<v 4>def guide(%a):@,%a@,%a@]@."
-    trans_block_as_args (Option.merge ~f:(@) data tdata)
-    trans_guideparametersblock guide_parameters
-    (trans_block ~eol:false ~naive:true "Guide") guide
+let trans_guideblock ff data tdata guide_parameters guide =
+  if guide_parameters <> None || guide <> None then begin 
+    fprintf ff "@[<v 4>def guide(%a):@,%a@,%a@]@."
+      trans_block_as_args (Option.merge ~f:(@) data tdata)
+      trans_guideparametersblock guide_parameters
+      (trans_block ~eol:false ~naive:true "Guide") guide
+  end
   
 let trans_prog runtime ff (p : typed_program) =
   fprintf ff "@[<v 0>%s@,%s@,%s@,@,@]"
