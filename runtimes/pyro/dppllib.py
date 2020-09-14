@@ -6,6 +6,9 @@ from torch import zeros, ones
 def sample(site_name, dist):
     return pyro.sample(site_name, dist)
 
+def param(site_name, dist):
+    return pyro.param(site_name, dist.sample())
+
 def observe(site_name, dist, obs):
     pyro.sample(site_name, dist, obs = obs)
 

@@ -1,17 +1,17 @@
 
 import pyro
-import deepppl
 import numpy as np
+import torch
+from runtimes.pyro.dppl import PyroModel
 
 
 def test_coin_guided_inference():
-    model = deepppl.PyroModel(
-        model_file='deepppl/tests/good/coin_guide.stan')
+    model = PyroModel('test/integration/dppl/good/coin_guide.stan')
     svi = model.svi(params={'lr': 0.1})
     N = 10
-    x = [0, 0, 0, 0, 0, 0, 1, 0, 0, 1]
+    x = torch.Tensor([0, 0, 0, 0, 0, 0, 1, 0, 0, 1])
     for step in range(10000):
-        svi.step(N, x)
+        svi.step(N=N, x=x)
         if step % 100 == 0:
             print('.', end='')
     alpha_q = pyro.param("alpha_q").item()

@@ -20,7 +20,7 @@ let print_list_newline printer ff l =
 
 let gen_id =
   let cpt = ref 0 in
-  fun l ff e ->
+  fun ?(fresh=true) l ff e ->
     incr cpt;
     let s =
       match e.expr with
@@ -28,11 +28,14 @@ let gen_id =
       | IntNumeral x
       | RealNumeral x -> x
       | Indexed ({ expr = Variable {name; _}; _ }, _) -> name
-      | _ -> "expr"
+      | _ -> if fresh then "expr" else raise_s [%message "Unexpected identifier"]
     in
-    match l with
-    | [] -> fprintf ff "'%s__%d'" s !cpt
-    | _ -> fprintf ff "f'%s%a__%d'" s (pp_print_list (fun ff x -> fprintf ff "__{%s}" x)) l !cpt
+    if fresh then
+      match l with
+      | [] -> fprintf ff "'%s__%d'" s !cpt
+      | _ -> fprintf ff "f'%s%a__%d'" s (pp_print_list (fun ff x -> fprintf ff "__{%s}" x)) l !cpt
+    else 
+      fprintf ff "'%s'" s
 
 let without_underscores = String.filter ~f:(( <> ) '_')
 
@@ -552,7 +555,7 @@ let dist_name_suffix udf_names name =
   dist_name_suffix [] "normal" |> print_endline ;
   [%expect {| _lpdf |}] *)
 
-let rec trans_stmt ctx ff (ts : typed_statement) =
+let rec trans_stmt ?(naive=false) ctx ff (ts : typed_statement) =
   let stmt_typed = ts.stmt in
   match stmt_typed with
   | Assignment {assign_lhs; assign_rhs; assign_op} ->
@@ -584,38 +587,47 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
         | _ -> (* XXX TODO XXX *)
           raise_s [%message "Truncations are currently not supported."]
       in
-      fprintf ff "observe(%a, %a(%a), %a)%a"
-        (gen_id ctx) arg
-        trans_distribution distribution
-        trans_exprs args
-        trans_expr arg
-        trans_truncation truncation
+      if naive then
+        fprintf ff "%a = sample(%a, %a(%a))%a"
+          trans_expr arg
+          (gen_id ~fresh:(not naive) ctx) arg
+          trans_distribution distribution
+          trans_exprs args
+          trans_truncation truncation
+      else
+        fprintf ff "observe(%a, %a(%a), %a)%a"
+          (gen_id ctx) arg
+          trans_distribution distribution
+          trans_exprs args
+          trans_expr arg
+          trans_truncation truncation
+
   | Print ps -> fprintf ff "print(%a)" trans_printables ps
   | Reject ps -> fprintf ff "stanlib.reject(%a)" trans_printables ps
   | IfThenElse (cond, ifb, None) ->
       fprintf ff "@[<v 0>@[<v 4>if %a:@,%a@]@]"
         trans_expr cond
-        (trans_stmt ctx) ifb
+        (trans_stmt ~naive ctx) ifb
   | IfThenElse (cond, ifb, Some elseb) ->
       fprintf ff "@[<v 0>@[<v 4>if %a:@,%a@]@,@[<v 4>else:@,%a@]@]"
         trans_expr cond
-        (trans_stmt ctx) ifb
-        (trans_stmt ctx) elseb
+        (trans_stmt ~naive ctx) ifb
+        (trans_stmt ~naive ctx) elseb
   | While (cond, body) ->
       fprintf ff "@[<v4>while %a:@,%a@]"
         trans_expr cond
-        (trans_stmt ("genid()"::ctx)) body
+        (trans_stmt ~naive ("genid()"::ctx)) body
   | For {loop_variable; lower_bound; upper_bound; loop_body} ->
       fprintf ff "@[<v 4>for %s in range(%a,%a + 1):@,%a@]"
         loop_variable.name
         trans_expr lower_bound
         trans_expr upper_bound
-        (trans_stmt (loop_variable.name :: ctx)) loop_body
+        (trans_stmt ~naive (loop_variable.name :: ctx)) loop_body
   | ForEach (loopvar, iteratee, body) ->
       fprintf ff "@[<v4>for %s in %a:@,%a@]"
         loopvar.name
         trans_expr iteratee
-        (trans_stmt (loopvar.name :: ctx)) body
+        (trans_stmt ~naive (loopvar.name :: ctx)) body
   | FunDef _ ->
       raise_s
         [%message
@@ -624,7 +636,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       fprintf ff "%s = %a" identifier.name
         (trans_expr_opt decl_type) initial_value
   | Block stmts ->
-      fprintf ff "%a" (print_list_newline (trans_stmt ctx)) stmts
+      fprintf ff "%a" (print_list_newline (trans_stmt ~naive ctx)) stmts
   | Return e ->
       fprintf ff "return %a" trans_expr e
   | ReturnVoid ->
@@ -636,8 +648,8 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
   | Skip ->
       fprintf ff "pass"
 
-let trans_stmts ctx ff stmts =
-  fprintf ff "%a" (print_list_newline (trans_stmt ctx)) stmts
+let trans_stmts ?(naive=false) ctx ff stmts =
+  fprintf ff "%a" (print_list_newline (trans_stmt ~naive ctx)) stmts
 
 let trans_fun_def ff (ts : typed_statement) =
   match ts.stmt with
@@ -870,11 +882,11 @@ let trans_prior (decl_type: typed_expression Type.t) ff transformation =
 
 let pp_print_nothing _ () = ()
 
-let trans_block ?(eol=true) comment ff block =
+let trans_block ?(eol=true) ?(naive=false) comment ff block =
   Option.iter
     ~f:(fun stmts ->
           fprintf ff "@[<v 0># %s@,%a@]%a"
-            comment (trans_stmts []) stmts
+            comment (trans_stmts ~naive []) stmts
             (if eol then pp_print_cut else pp_print_nothing) ())
     block
 
@@ -921,7 +933,7 @@ let trans_generatedquantitiesblock ff data tdata params tparams genquantities =
 let trans_guide_parameter ff p =
   match p.stmt with
   | VarDecl {identifier; initial_value = None; decl_type; transformation; _} ->
-    fprintf ff "%s = pyro.param('%s', %a.sample())" identifier.name identifier.name
+    fprintf ff "%s = param('%s', %a)" identifier.name identifier.name
       (trans_prior decl_type) transformation
   | _ -> assert false
 
@@ -935,12 +947,12 @@ let trans_guideblock ff data tdata guide_parameters guide =
   fprintf ff "@[<v 4>def guide(%a):@,%a@,%a@]@."
     trans_block_as_args (Option.merge ~f:(@) data tdata)
     trans_guideparametersblock guide_parameters
-    (trans_block ~eol:false "Guide") guide
+    (trans_block ~eol:false ~naive:true "Guide") guide
   
 let trans_prog runtime ff (p : typed_program) =
   fprintf ff "@[<v 0>%s@,%s@,%s@,@,@]"
     ("from runtimes."^runtime^".distributions import *")
-    ("from runtimes."^runtime^".dppllib import sample, observe, factor, array, zeros, ones")
+    ("from runtimes."^runtime^".dppllib import sample, param, observe, factor, array, zeros, ones")
     ("from runtimes."^runtime^".stanlib import sqrt, exp, log");
   Option.iter ~f:(trans_functionblock ff) p.functionblock;
   trans_transformeddatablock ff p.datablock p.transformeddatablock;

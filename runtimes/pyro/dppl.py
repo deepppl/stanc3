@@ -3,6 +3,7 @@ import importlib.util
 import pyro
 from collections import defaultdict
 import subprocess
+import inspect
 
 
 class PyroModel:
@@ -20,6 +21,8 @@ class PyroModel:
             self._transformed_data = Module.transformed_data
         if hasattr(Module, "generated_quantities"):
             self._generated_quantities = Module.generated_quantities
+        if hasattr(Module, "guide"):
+            self._guide = Module.guide
 
     def mcmc(self, samples, warmups=0, chains=1, thin=1, kernel=None):
         if kernel is None:
@@ -29,6 +32,13 @@ class PyroModel:
         )
         return MCMCProxy(mcmc, self._generated_quantities, self._transformed_data, thin)
 
+    def svi(
+        self, optimizer=None, loss=None, params={"lr": 0.0005, "betas": (0.90, 0.999)}
+    ):
+        optimizer = optimizer if optimizer else pyro.optim.Adam(params)
+        loss = loss if loss is not None else pyro.infer.Trace_ELBO()
+        svi = pyro.infer.SVI(self._model, self._guide, optimizer, loss)
+        return SVIProxy(svi, self._generated_quantities, self._transformed_data)
 
 class MCMCProxy:
     def __init__(
@@ -68,3 +78,22 @@ class MCMCProxy:
             gen = self._sample_generated(samples)
             samples.update(gen)
         return samples
+
+class SVIProxy(object):
+    def __init__(self, svi, generated_quantities=None, transformed_data=None):
+        self.svi = svi
+        self.transformed_data = transformed_data
+        self.generated_quantities = generated_quantities
+        self.args = []
+        self.kwargs = {}
+
+    def posterior(self, n):
+        signature = inspect.signature(self.svi.guide)
+        args = [None for i in range(len(signature.parameters))]
+        return [self.svi.guide(*args) for _ in range(n)]
+
+    def step(self, *args, **kwargs):
+        self.kwargs = kwargs
+        if self.transformed_data:
+            self.kwargs.update(self.transformed_data(**self.kwargs))
+        return self.svi.step(**kwargs)
