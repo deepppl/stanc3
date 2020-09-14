@@ -11,7 +11,7 @@ def model(*, N, x):
 
 def guide(*, N, x):
     # Guide Parameters
-    alpha_q = param('alpha_q', lower_constrained_improper_uniform(0, shape=None))
-    beta_q = param('beta_q', lower_constrained_improper_uniform(0, shape=None))
+    alpha_q = param('alpha_q', lower_constrained_improper_uniform(0, shape=None).sample())
+    beta_q = param('beta_q', lower_constrained_improper_uniform(0, shape=None).sample())
     # Guide
     z = sample('z', beta(alpha_q, beta_q))

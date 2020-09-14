@@ -57,7 +57,7 @@ def normalize_and_compare(src_file, target_file, verbose=True):
 
 compile_tests = [
     ('coin_vectorized', None),
-    ('coin_guide_init', 'XXX TODO: deep XXX'),
+    ('coin_guide_init', None),
     ('gaussian', None),
     ('gaussian_log_density', None),
     ('double_gaussian', None),
@@ -94,11 +94,11 @@ compile_tests_notype = [
     ('lda', 'XXX TODO?: simplex XXX'),
     ('bayes_nn', 'XXX TODO: deep XXX'),
     ('coin', None),
-    ('coin_guide', 'XXX TODO: deep XXX'),
+    ('coin_guide', None),
     ('coin_vect', None),
     ('cockroaches', None),
     ('multimodal', None),
-    ('multimodal_guide', 'XXX TODO: deep XXX'),
+    ('multimodal_guide', None),
     ('posterior_twice', None),
     ('seeds', None),
     ('vae_inferred_shape', 'XXX TODO: deep XXX'),

@@ -66,6 +66,12 @@ let expr_one =
   { expr = IntNumeral "1";
     emeta = { type_ = UInt; loc = Location_span.empty; ad_level = DataOnly; } }
 
+let is_real t =
+  match t with
+  | Type.Sized (SizedType.SReal)
+  | Unsized (UnsizedType.UReal) -> true
+  | _ -> false
+
 let rec dims_of_sizedtype t =
   match t with
   | SizedType.SInt
@@ -936,8 +942,15 @@ let trans_generatedquantitiesblock ff data tdata params tparams genquantities =
 let trans_guide_parameter ff p =
   match p.stmt with
   | VarDecl {identifier; initial_value = None; decl_type; transformation; _} ->
-    fprintf ff "%s = param('%s', %a)" identifier.name identifier.name
+    fprintf ff "%s = param('%s', %a.sample())" identifier.name identifier.name
       (trans_prior decl_type) transformation
+  | VarDecl {identifier; initial_value = Some e; decl_type; _} ->
+    if is_real decl_type then
+      fprintf ff "%s = param('%s', array(%a))" identifier.name identifier.name
+        trans_expr e
+    else
+      fprintf ff "%s = param('%s', %a)" identifier.name identifier.name
+        trans_expr e
   | _ -> assert false
 
 let trans_guideparametersblock ff guide_parameters =
@@ -945,15 +958,15 @@ let trans_guideparametersblock ff guide_parameters =
     ~f:(fprintf ff "@[<v 0># Guide Parameters@,%a@]"
           (print_list_newline trans_guide_parameter))
     guide_parameters
-        
+
 let trans_guideblock ff data tdata guide_parameters guide =
-  if guide_parameters <> None || guide <> None then begin 
+  if guide_parameters <> None || guide <> None then begin
     fprintf ff "@[<v 4>def guide(%a):@,%a@,%a@]@."
       trans_block_as_args (Option.merge ~f:(@) data tdata)
       trans_guideparametersblock guide_parameters
       (trans_block ~eol:false ~naive:true "Guide") guide
   end
-  
+
 let trans_prog runtime ff (p : typed_program) =
   fprintf ff "@[<v 0>%s@,%s@,%s@,@,@]"
     ("from runtimes."^runtime^".distributions import *")

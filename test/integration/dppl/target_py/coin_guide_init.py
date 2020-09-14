@@ -1,20 +1,18 @@
+from runtimes.pyro.distributions import *
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones
+from runtimes.pyro.stanlib import sqrt, exp, log
 
-import torch
-from torch import tensor, rand
-import pyro
-import torch.distributions.constraints as constraints
-import pyro.distributions as dist
+def model(*, N, x):
+    # Parameters
+    theta = sample('theta', uniform(0.0, 1.0))
+    # Model
+    observe('theta__1', beta(10.0, 10.0), theta)
+    for i in range(1,10 + 1):
+        observe(f'x__{i}__2', bernoulli(theta), x[i - 1])
 
-
-def guide_(x: 'int[10]'=None):
-    alpha_q: 'real' = pyro.param('alpha_q', tensor(15.0))
-    beta_q: 'real' = pyro.param('beta_q', tensor(15.0))
-    theta: 'real' = sample('theta', dist.Beta(alpha_q, beta_q))
-
-
-def model(x: 'int[10]'=None):
-    theta: 'real' = sample('theta', dist.Uniform(0.0, 1.0))
-    sample('theta' + '__1', dist.Beta(10.0, 10.0), obs=theta)
-    for i in range(1, 10 + 1):
-        sample('x' + '__{}'.format(i - 1) + '__2', dist.Bernoulli(theta),
-            obs=x[i - 1])
+def guide(*, N, x):
+    # Guide Parameters
+    alpha_q = param('alpha_q', array(15.0))
+    beta_q = param('beta_q', array(15.0))
+    # Guide
+    theta = sample('theta', beta(alpha_q, beta_q))

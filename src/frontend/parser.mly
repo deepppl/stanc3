@@ -120,7 +120,7 @@ guide_block:
     { grammar_logger "guide_block"; vds }
     
 guide_parameters_block:
-  | GUIDEPARAMETERSBLOCK LBRACE tvd=list(top_var_decl_no_assign) RBRACE
+  | GUIDEPARAMETERSBLOCK LBRACE tvd=list(top_var_decl) RBRACE
     {grammar_logger "guide_parameters_block" ; tvd }
     
 

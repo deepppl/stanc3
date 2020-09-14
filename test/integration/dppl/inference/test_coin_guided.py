@@ -13,10 +13,9 @@ def test_coin_guided_inference():
     for step in range(10000):
         svi.step(N=N, x=x)
         if step % 100 == 0:
-            print('.', end='')
+            print('.', end='', flush=True)
     alpha_q = pyro.param("alpha_q").item()
     beta_q = pyro.param("beta_q").item()
-    
     print(f'alpha: {alpha_q} beta: {beta_q}')
 
     # The posterior distribution should be a Beta(1 + 2, 1 + 8)

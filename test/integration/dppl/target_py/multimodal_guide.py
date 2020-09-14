@@ -1,31 +1,30 @@
-
-
-import torch
-from torch import tensor, rand
-import pyro
-import torch.distributions.constraints as constraints
-import pyro.distributions as dist
-
-
-def guide_():
-    mu_cluster = pyro.param('mu_cluster', (2 - -2) * rand(()) + -2)
-    mu1 = pyro.param('mu1', (2 - -2) * rand(()) + -2)
-    mu2 = pyro.param('mu2', (2 - -2) * rand(()) + -2)
-    log_sigma1 = pyro.param('log_sigma1', (2 - -2) * rand(()) + -2)
-    log_sigma2 = pyro.param('log_sigma2', (2 - -2) * rand(()) + -2)
-    cluster = sample('cluster', dist.Normal(mu_cluster, 1))
-    if cluster > 0:
-        theta = sample('theta', dist.Normal(mu1, exp(log_sigma1)))
-    else:
-        theta = sample('theta', dist.Normal(mu2, exp(log_sigma2)))
-
+from runtimes.pyro.distributions import *
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones
+from runtimes.pyro.stanlib import sqrt, exp, log
 
 def model():
-    cluster = sample('cluster', ImproperUniform())
-    theta = sample('theta', ImproperUniform())
-    sample('cluster' + '__1', dist.Normal(0, 1), obs=cluster)
+    # Parameters
+    cluster = sample('cluster', improper_uniform(shape=None))
+    theta = sample('theta', improper_uniform(shape=None))
+    # Model
+    mu = None
+    observe('cluster__1', normal(0, 1), cluster)
     if cluster > 0:
         mu = 2
     else:
         mu = 0
-    sample('theta' + '__2', dist.Normal(mu, 1), obs=theta)
+    observe('theta__2', normal(mu, 1), theta)
+
+def guide():
+    # Guide Parameters
+    mu_cluster = param('mu_cluster', improper_uniform(shape=None).sample())
+    mu1 = param('mu1', improper_uniform(shape=None).sample())
+    mu2 = param('mu2', improper_uniform(shape=None).sample())
+    log_sigma1 = param('log_sigma1', improper_uniform(shape=None).sample())
+    log_sigma2 = param('log_sigma2', improper_uniform(shape=None).sample())
+    # Guide
+    cluster = sample('cluster', normal(mu_cluster, 1))
+    if cluster > 0:
+        theta = sample('theta', normal(mu1, exp(log_sigma1)))
+    else:
+        theta = sample('theta', normal(mu2, exp(log_sigma2)))
