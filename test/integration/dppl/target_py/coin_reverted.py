@@ -1,11 +1,11 @@
+from runtimes.pyro.distributions import *
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones
+from runtimes.pyro.stanlib import sqrt, exp, log
 
-import torch
-from torch import tensor, rand
-import pyro
-import torch.distributions.constraints as constraints
-import pyro.distributions as dist
+def model(*, x):
+    # Parameters
+    theta = sample('theta', uniform(0, 1))
+    # Model
+    observe('x__1', bernoulli(theta), x)
+    observe('theta__2', uniform(0, 1), theta)
 
-
-def model(x):
-    theta = sample('theta', dist.Uniform(torch(0.0), torch(1.0)))
-    sample('x', dist.Bernoulli(theta), obs=x)

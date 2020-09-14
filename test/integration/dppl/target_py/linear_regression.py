@@ -1,13 +1,12 @@
+from runtimes.pyro.distributions import *
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones
+from runtimes.pyro.stanlib import sqrt, exp, log
 
-import torch
-from torch import tensor, rand
-import pyro
-import torch.distributions.constraints as constraints
-import pyro.distributions as dist
+def model(*, N, x, y):
+    # Parameters
+    alpha = sample('alpha', improper_uniform(shape=None))
+    beta = sample('beta', improper_uniform(shape=None))
+    sigma = sample('sigma', lower_constrained_improper_uniform(0, shape=None))
+    # Model
+    observe('y__1', normal(alpha + beta * x, sigma), y)
 
-
-def model(N: 'int'=None, x: 'real[N]'=None, y: 'real[N]'=None):
-    alpha: 'real' = sample('alpha', ImproperUniform())
-    beta: 'real' = sample('beta', ImproperUniform())
-    sigma: 'real' = sample('sigma', LowerConstrainedImproperUniform(0.0))
-    sample('y' + '__1', dist.Normal(alpha + beta * x, sigma), obs=y)
