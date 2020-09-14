@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, observe, factor, array, zeros, ones
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones
 from runtimes.pyro.stanlib import sqrt, exp, log
 
 def model(*, N, y, sigma_y):
@@ -17,6 +17,7 @@ def model(*, N, y, sigma_y):
     observe('eta__3', normal(0, sigma_eta), eta)
     observe('xi__4', normal(0, 5), xi)
     observe('y__5', normal(theta, sigma_y), y)
+
 
 def generated_quantities(*, N, y, sigma_y, eta, mu_theta, sigma_eta, xi):
     # Transformed parameters

@@ -1,19 +1,17 @@
+from runtimes.pyro.distributions import *
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones
+from runtimes.pyro.stanlib import sqrt, exp, log
 
+def model(*, N, x):
+    # Parameters
+    z = sample('z', uniform(0, 1))
+    # Model
+    observe('z__1', beta(1, 1), z)
+    observe('x__2', bernoulli(z), x)
 
-import torch
-from torch import tensor, rand
-import pyro
-import torch.distributions.constraints as constraints
-import pyro.distributions as dist
-
-
-def guide_(N=None, x=None):
-    alpha_q = pyro.param('alpha_q', (0.0 + 10 - 0.0) * rand(()) + 0.0)
-    beta_q = pyro.param('beta_q', (0.0 + 10 - 0.0) * rand(()) + 0.0)
-    z = sample('z', dist.Beta(alpha_q, beta_q))
-
-
-def model(N=None, x=None):
-    z = sample('z', dist.Uniform(0.0, 1.0))
-    sample('z' + '__1', dist.Beta(1, 1), obs=z)
-    sample('x' + '__2', dist.Bernoulli(z * ones(N)), obs=x)
+def guide(*, N, x):
+    # Guide Parameters
+    alpha_q = param('alpha_q', lower_constrained_improper_uniform(0, shape=None))
+    beta_q = param('beta_q', lower_constrained_improper_uniform(0, shape=None))
+    # Guide
+    z = sample('z', beta(alpha_q, beta_q))

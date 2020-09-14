@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, observe, factor, array, zeros, ones
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones
 from runtimes.pyro.stanlib import sqrt, exp, log
 
 def transformed_data(*, N, exposure2, roach1, senior, treatment, y):
@@ -22,3 +22,5 @@ def model(*, N, exposure2, roach1, senior, treatment, y, log_expo, sqrt_roach):
     observe('beta_3__3', normal(0, 2.5), beta_3)
     observe('beta_4__4', normal(0, 2.5), beta_4)
     observe('y__5', poisson_log(log_expo + beta_1 + beta_2 * sqrt_roach + beta_3 * treatment + beta_4 * senior), y)
+
+

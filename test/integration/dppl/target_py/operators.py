@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, observe, factor, array, zeros, ones
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones
 from runtimes.pyro.stanlib import sqrt, exp, log
 
 def model(*, x):
@@ -10,3 +10,4 @@ def model(*, x):
     for i in range(1,10 + 1):
         if (1 <= 10) and (1 > 5 or 2 < 1):
             observe(f'x__{i}__2', bernoulli(theta), x[i - 1])
+

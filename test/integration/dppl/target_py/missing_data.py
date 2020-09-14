@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, observe, factor, array, zeros, ones
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones
 from runtimes.pyro.stanlib import sqrt, exp, log
 
 def model(*, N_obs, N_mis, y_obs):
@@ -10,3 +10,4 @@ def model(*, N_obs, N_mis, y_obs):
     # Model
     observe('y_obs__1', normal(mu, sigma), y_obs)
     observe('y_mis__2', normal(mu, sigma), y_mis)
+

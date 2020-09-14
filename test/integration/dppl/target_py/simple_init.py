@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, observe, factor, array, zeros, ones
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones
 from runtimes.pyro.stanlib import sqrt, exp, log
 
 def model():
@@ -8,3 +8,4 @@ def model():
     # Model
     if 1.0 == 0.0:
         a = 1.0
+

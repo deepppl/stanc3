@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, observe, factor, array, zeros, ones
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones
 from runtimes.pyro.stanlib import sqrt, exp, log
 
 def transformed_data(*, N, D, K, y):
@@ -21,6 +21,7 @@ def model(*, N, D, K, y, neg_log_K):
         observe(f'mu__{k}__1', normal(0, 1), mu[k - 1])
     for n in range(1,N + 1):
         factor(f'expr__{n}__2', log_sum_exp(soft_z[n - 1]))
+
 
 def generated_quantities(*, N, D, K, y, neg_log_K, mu):
     # Transformed parameters

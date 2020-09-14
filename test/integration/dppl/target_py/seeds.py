@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, observe, factor, array, zeros, ones
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones
 from runtimes.pyro.stanlib import sqrt, exp, log
 
 def transformed_data(*, I, n, N, x1, x2):
@@ -27,6 +27,8 @@ def model(*, I, n, N, x1, x2, x1x2):
     observe('b__6', normal(0.0, sigma), b)
     observe('n__7', binomial_logit(N,
                                    alpha0 + alpha1 * x1 + alpha2 * x2 + alpha12 * x1x2 + b), n)
+
+
 
 def generated_quantities(*, I, n, N, x1, x2, x1x2, alpha0, alpha1, alpha12,
                             alpha2, tau, b):
