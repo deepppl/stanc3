@@ -27,14 +27,17 @@ let gen_id =
       | Variable {name; _} -> name
       | IntNumeral x
       | RealNumeral x -> x
-      | Indexed ({ expr = Variable {name; _}; _ }, _) -> name
+      | Indexed ({ expr = Variable {name; _}; _ }, _) ->
+          if fresh then name else raise_s [%message "Unexpected identifier"]
       | _ -> if fresh then "expr" else raise_s [%message "Unexpected identifier"]
     in
     if fresh then
       match l with
       | [] -> fprintf ff "'%s__%d'" s !cpt
-      | _ -> fprintf ff "f'%s%a__%d'" s (pp_print_list (fun ff x -> fprintf ff "__{%s}" x)) l !cpt
-    else 
+      | _ ->
+          fprintf ff "f'%s%a__%d'" s
+            (pp_print_list (fun ff x -> fprintf ff "__{%s}" x)) l !cpt
+    else
       fprintf ff "'%s'" s
 
 let without_underscores = String.filter ~f:(( <> ) '_')
