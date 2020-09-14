@@ -56,25 +56,43 @@ def normalize_and_compare(src_file, target_file, verbose=True):
     assert code_to_normalized(compiled) == target
 
 compile_tests = [
+    ('coin', None),
+    ('coin_guide', None),
+    ('coin_vect', None),
     ('coin_vectorized', None),
     ('coin_guide_init', None),
+    ('coin_reverted', None),
+    ('coin_transformed_data', None),
     ('gaussian', None),
     ('gaussian_log_density', None),
     ('double_gaussian', None),
+    ('multimodal', None),
+    ('multimodal_guide', None),
+    ('aspirin', None),
     ('log_normal', None),
     ('operators', None),
     ('operators-expr', None),
     ('simple_init', None),
     ('missing_data', None),
     ('neal_funnel', None),
-    ('coin_reverted', None),
-    ('coin_transformed_data', None),
-    ('lstm', 'Type inference + XXX TODO: deep XXX'),
     ('linear_regression', None),
+    ('kmeans', None),
+    ('schools', None),
+    ('logistic', None),
+    ('lda', 'XXX TODO?: simplex XXX'),
+    ('cockroaches', None),
+    ('posterior_twice', None),
+    ('seeds', None),
     ('gaussian_process', None),
     ('regression_matrix', None),
     ('squared_error', None),
     ('vectorized_probability', None),
+    ('mlp', 'XXX TODO: deep XXX'),
+    ('mlp_default_init', 'XXX TODO: deep XXX'),
+    ('vae_inferred_shape', 'XXX TODO: deep XXX'),
+    ('vae', 'XXX TODO: deep XXX'),
+    ('bayes_nn', 'XXX TODO: deep XXX'),
+    ('lstm', 'Type inference + XXX TODO: deep XXX'),
 ]
 @pytest.mark.parametrize('test_name, fail', compile_tests)
 def test_normalize_and_compare(test_name, fail):
@@ -83,31 +101,3 @@ def test_normalize_and_compare(test_name, fail):
     filename = f'good/{test_name}.stan'
     target_file = f'target_py/{test_name}.py'
     normalize_and_compare(filename, target_file)
-
-compile_tests_notype = [
-    ('aspirin', None),
-    ('mlp', 'XXX TODO: deep XXX'),
-    ('mlp_default_init', 'XXX TODO: deep XXX'),
-    ('kmeans', None),
-    ('schools', None),
-    ('logistic', None),
-    ('lda', 'XXX TODO?: simplex XXX'),
-    ('bayes_nn', 'XXX TODO: deep XXX'),
-    ('coin', None),
-    ('coin_guide', None),
-    ('coin_vect', None),
-    ('cockroaches', None),
-    ('multimodal', None),
-    ('multimodal_guide', None),
-    ('posterior_twice', None),
-    ('seeds', None),
-    ('vae_inferred_shape', 'XXX TODO: deep XXX'),
-    ('vae', 'XXX TODO: deep XXX')
-]
-@pytest.mark.parametrize('test_name, fail', compile_tests_notype)
-def test_normalize_and_compare_notype(test_name, fail):
-    if fail:
-        pytest.xfail(fail)
-    filename = f'good/{test_name}.stan'
-    target_file = f'target_py/{test_name}.py'
-    normalize_and_compare(filename, target_file, verbose=False)
