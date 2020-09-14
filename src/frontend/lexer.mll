@@ -75,6 +75,11 @@ rule token = parse
       ( space+ )
       "quantities"    { lexer_logger "generated quantities" ;
                                 Parser.GENERATEDQUANTITIESBLOCK }
+  | "guide"                   {lexer_logger "guide" ; Parser.GUIDEBLOCK }
+  | "guide"
+      ( space + )
+      "parameters"    { lexer_logger "guide parameters";
+                                Parser.GUIDEPARAMETERSBLOCK }
 (* Punctuation *)
   | '{'                       { lexer_logger "{" ; Parser.LBRACE }
   | '}'                       { lexer_logger "}" ; Parser.RBRACE }

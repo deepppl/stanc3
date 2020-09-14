@@ -392,7 +392,9 @@ let pp_program ppf
     ; parametersblock= bp
     ; transformedparametersblock= btp
     ; modelblock= bm
-    ; generatedquantitiesblock= bgq } =
+    ; generatedquantitiesblock= bgq
+    ; guideparametersblock = bdgp
+    ; guideblock = bdg } =
   Format.pp_open_vbox ppf 0 ;
   pp_opt_block ppf "functions" bf ;
   pp_opt_block ppf "data" bd ;
@@ -401,6 +403,8 @@ let pp_program ppf
   pp_opt_block ppf "transformed parameters" btp ;
   pp_opt_block ppf "model" bm ;
   pp_opt_block ppf "generated quantities" bgq ;
+  pp_opt_block ppf "guide parameters" bdgp ;
+  pp_opt_block ppf "guide" bdg ;
   Format.pp_close_box ppf ()
 
 let check_correctness prog pretty =

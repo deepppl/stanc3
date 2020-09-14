@@ -525,9 +525,16 @@ let annotate_prog p =
     annotate_block env cstrs p.transformedparametersblock
   in
   let env, cstrs, modelblock = annotate_block env cstrs p.modelblock in
-  let _, _, generatedquantitiesblock =
+  let env, cstrs, generatedquantitiesblock =
     annotate_block env cstrs p.generatedquantitiesblock
+  in
+  let env, cstrs, guideparametersblock = 
+    annotate_block env cstrs p.guideparametersblock
+  in
+  let _, _, guideblock = 
+    annotate_block env cstrs p.guideblock
   in
   { functionblock; datablock; transformeddatablock;
     parametersblock; transformedparametersblock;
-    modelblock; generatedquantitiesblock; }
+    modelblock; generatedquantitiesblock; 
+    guideparametersblock; guideblock; }

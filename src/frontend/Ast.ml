@@ -212,7 +212,9 @@ type 's program =
   ; parametersblock: 's list option
   ; transformedparametersblock: 's list option
   ; modelblock: 's list option
-  ; generatedquantitiesblock: 's list option }
+  ; generatedquantitiesblock: 's list option 
+  ; guideparametersblock: 's list option
+  ; guideblock: 's list option }
 [@@deriving sexp, hash, compare, map]
 
 (** Untyped programs (before type checking) *)

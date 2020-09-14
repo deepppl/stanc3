@@ -14,6 +14,7 @@ let reducearray (sbt, l) =
 
 %token FUNCTIONBLOCK DATABLOCK TRANSFORMEDDATABLOCK PARAMETERSBLOCK
        TRANSFORMEDPARAMETERSBLOCK MODELBLOCK GENERATEDQUANTITIESBLOCK
+       GUIDEBLOCK GUIDEPARAMETERSBLOCK
 %token LBRACE RBRACE LPAREN RPAREN LBRACK RBRACK LABRACK RABRACK COMMA SEMICOLON
        BAR
 %token RETURN IF ELSE WHILE FOR IN BREAK CONTINUE
@@ -68,6 +69,8 @@ program:
     otpb=option(transformed_parameters_block)
     omb=option(model_block)
     ogb=option(generated_quantities_block)
+    odgpb=option(guide_parameters_block)
+    odgb=option(guide_block)
     EOF
     {
       grammar_logger "program" ;
@@ -77,7 +80,9 @@ program:
       ; parametersblock= opb
       ; transformedparametersblock= otpb
       ; modelblock= omb
-      ; generatedquantitiesblock= ogb }
+      ; generatedquantitiesblock= ogb
+      ; guideblock =odgb
+      ; guideparametersblock = odgpb }
     }
 
 (* blocks *)
@@ -109,6 +114,15 @@ model_block:
 generated_quantities_block:
   | GENERATEDQUANTITIESBLOCK LBRACE tvds=list(top_vardecl_or_statement) RBRACE
     { grammar_logger "generated_quantities_block" ; tvds }
+    
+guide_block:
+  | GUIDEBLOCK LBRACE vds=list(vardecl_or_statement) RBRACE
+    { grammar_logger "guide_block"; vds }
+    
+guide_parameters_block:
+  | GUIDEPARAMETERSBLOCK LBRACE tvd=list(top_var_decl_no_assign) RBRACE
+    {grammar_logger "guide_parameters_block" ; tvd }
+    
 
 (* function definitions *)
 identifier:

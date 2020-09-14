@@ -901,7 +901,7 @@ let trans_parametersblock ff parameters =
     parameters
 
 let trans_modelblock ff data tdata parameters tparameters model =
-  fprintf ff "@[<v 4>def model(%a):@,%a@,%a%a@]@."
+  fprintf ff "@[<v 4>def model(%a):@,%a@,%a%a@]@,@,@."
     trans_block_as_args (Option.merge ~f:(@) data tdata)
     trans_parametersblock parameters
     (trans_block "Transformed parameters") tparameters
@@ -918,6 +918,25 @@ let trans_generatedquantitiesblock ff data tdata params tparams genquantities =
     fprintf ff "@]@,@]"
   end
 
+let trans_guide_parameter ff p =
+  match p.stmt with
+  | VarDecl {identifier; initial_value = None; decl_type; transformation; _} ->
+    fprintf ff "%s = pyro.param('%s', %a.sample())" identifier.name identifier.name
+      (trans_prior decl_type) transformation
+  | _ -> assert false
+
+let trans_guideparametersblock ff guide_parameters =
+  Option.iter
+    ~f:(fprintf ff "@[<v 0># Guide Parameters@,%a@]"
+          (print_list_newline trans_guide_parameter))
+    guide_parameters
+        
+let trans_guideblock ff data tdata guide_parameters guide = 
+  fprintf ff "@[<v 4>def guide(%a):@,%a@,%a@]@."
+    trans_block_as_args (Option.merge ~f:(@) data tdata)
+    trans_guideparametersblock guide_parameters
+    (trans_block ~eol:false "Guide") guide
+  
 let trans_prog runtime ff (p : typed_program) =
   fprintf ff "@[<v 0>%s@,%s@,%s@,@,@]"
     ("from runtimes."^runtime^".distributions import *")
@@ -930,4 +949,7 @@ let trans_prog runtime ff (p : typed_program) =
     p.parametersblock p.transformedparametersblock p.modelblock;
   trans_generatedquantitiesblock ff
     p.datablock p.transformeddatablock
-    p.parametersblock p.transformedparametersblock p.generatedquantitiesblock
+    p.parametersblock p.transformedparametersblock p.generatedquantitiesblock;
+  trans_guideblock ff
+    p.datablock p.transformeddatablock
+    p.guideparametersblock p.guideblock;

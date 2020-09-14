@@ -40,6 +40,8 @@ type originblock =
   | TParam
   | Model
   | GQuant
+  | GuideParam
+  | Guide
 
 (** Print all the signatures of a stan math operator, for the purposes of error messages. *)
 let check_that_all_functions_have_definition = ref true
@@ -227,7 +229,7 @@ let semantic_check_fn_target_plus_equals cf ~loc id =
   Validate.(
     if
       String.is_suffix id.name ~suffix:"_lp"
-      && not (cf.in_lp_fun_def || cf.current_block = Model)
+      && not (cf.in_lp_fun_def || cf.current_block = Model || cf.current_block = Guide)
     then Semantic_error.target_plusequals_outisde_model_or_logprob loc |> error
     else ok ())
 
@@ -740,6 +742,7 @@ and semantic_check_expression cf ({emeta; expr} : Ast.untyped_expression) :
       if
         not
           ( cf.in_lp_fun_def || cf.current_block = Model
+          || cf.current_block = Guide
           || cf.current_block = TParam )
       then
         Semantic_error.target_plusequals_outisde_model_or_logprob emeta.loc
@@ -754,6 +757,7 @@ and semantic_check_expression cf ({emeta; expr} : Ast.untyped_expression) :
       if
         not
           ( cf.in_lp_fun_def || cf.current_block = Model
+          || cf.current_block = Guide
           || cf.current_block = TParam )
       then
         Semantic_error.target_plusequals_outisde_model_or_logprob emeta.loc
@@ -923,7 +927,7 @@ let semantic_check_nrfn_target ~loc ~cf id =
   Validate.(
     if
       String.is_suffix id.name ~suffix:"_lp"
-      && not (cf.in_lp_fun_def || cf.current_block = Model)
+      && not (cf.in_lp_fun_def || cf.current_block = Model || cf.current_block = Guide)
     then Semantic_error.target_plusequals_outisde_model_or_logprob loc |> error
     else ok ())
 
@@ -1067,7 +1071,7 @@ let semantic_check_target_pe_expr_type ~loc e =
   | _ -> Validate.ok ()
 
 let semantic_check_target_pe_usage ~loc ~cf =
-  if cf.in_lp_fun_def || cf.current_block = Model then Validate.ok ()
+  if cf.in_lp_fun_def || cf.current_block = Model || cf.current_block = Guide then Validate.ok ()
   else
     Semantic_error.target_plusequals_outisde_model_or_logprob loc
     |> Validate.error
@@ -1113,7 +1117,7 @@ let semantic_check_sampling_cdf_ccdf ~loc id =
 (* Target+= can only be used in model and functions with right suffix (same for tilde etc) *)
 let semantic_check_valid_sampling_pos ~loc ~cf =
   Validate.(
-    if not (cf.in_lp_fun_def || cf.current_block = Model) then
+    if not (cf.in_lp_fun_def || cf.current_block = Model || cf.current_block = Guide) then
       error @@ Semantic_error.target_plusequals_outisde_model_or_logprob loc
     else ok ())
 
@@ -1795,7 +1799,9 @@ let semantic_check_program
     ; parametersblock= pb
     ; transformedparametersblock= tpb
     ; modelblock= mb
-    ; generatedquantitiesblock= gb } =
+    ; generatedquantitiesblock= gb
+    ; guideparametersblock = dgpb
+    ; guideblock = dgb } =
   (* NB: We always want to make sure we start with an empty symbol table, in
      case we are processing multiple files in one run. *)
   unsafe_clear_symbol_table vm ;
@@ -1823,14 +1829,18 @@ let semantic_check_program
   let umb = semantic_check_ostatements_in_block ~cf Model mb in
   Symbol_table.end_scope vm ;
   let ugb = semantic_check_ostatements_in_block ~cf GQuant gb in
-  let mk_typed_prog ufb udb utdb upb utpb umb ugb : Ast.typed_program =
+  let udgpb = semantic_check_ostatements_in_block ~cf GuideParam dgpb in
+  let udgb = semantic_check_ostatements_in_block ~cf Guide dgb in
+  let mk_typed_prog ufb udb utdb upb utpb umb ugb udgpb udgb : Ast.typed_program =
     { functionblock= ufb
     ; datablock= udb
     ; transformeddatablock= utdb
     ; parametersblock= upb
     ; transformedparametersblock= utpb
     ; modelblock= umb
-    ; generatedquantitiesblock= ugb }
+    ; generatedquantitiesblock= ugb
+    ; guideparametersblock = udgpb
+    ; guideblock = udgb }
   in
   let apply_to x f = Validate.apply ~f x in
   let check_correctness_invariant (decorated_ast : typed_program) :
@@ -1843,7 +1853,9 @@ let semantic_check_program
         ; parametersblock= pb
         ; transformedparametersblock= tpb
         ; modelblock= mb
-        ; generatedquantitiesblock= gb }
+        ; generatedquantitiesblock= gb
+        ; guideparametersblock = dgpb
+        ; guideblock = dgb }
         (untyped_program_of_typed_program decorated_ast)
       = 0
     then decorated_ast
@@ -1858,7 +1870,8 @@ let semantic_check_program
   in
   Validate.(
     ok mk_typed_prog |> apply_to ufb |> apply_to udb |> apply_to utdb
-    |> apply_to upb |> apply_to utpb |> apply_to umb |> apply_to ugb
+    |> apply_to upb |> apply_to utpb |> apply_to umb |> apply_to ugb 
+    |> apply_to udgpb |> apply_to udgb
     |> check_correctness_invariant_validate
     |> get_with
          ~with_ok:(fun ok -> Result.Ok ok)
