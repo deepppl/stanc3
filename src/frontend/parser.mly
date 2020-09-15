@@ -131,10 +131,11 @@ guide_parameters_block:
 
 (* network declarations *)
 network_decl:
-  | net=decl_identifier id=decl_identifier SEMICOLON
+  | rt=return_type name=decl_identifier LPAREN args=separated_list(COMMA, arg_decl)
+    RPAREN SEMICOLON
     {
       grammar_logger "network_decl";
-      {net_type=net; net_id=id}
+      { net_id = name; net_returntype = rt; net_arguments = args; }
     }
 
 (* function definitions *)

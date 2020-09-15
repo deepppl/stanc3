@@ -370,8 +370,11 @@ and pp_args ppf (at, ut, id) =
 and pp_list_of_statements ppf l =
   with_vbox ppf 0 (fun () -> Format.pp_print_list pp_statement ppf l)
 
-and pp_network_decl ppf n =
-  Fmt.pf ppf "%a %a;" pp_identifier n.net_type pp_identifier n.net_id
+and pp_network_decl ppf { net_returntype=rt; net_id=id; net_arguments=args} =
+  Fmt.pf ppf "%a %a(" pp_returntype rt pp_identifier id ;
+  with_box ppf 0 (fun () ->
+      Fmt.pf ppf "%a" (Fmt.list ~sep:Fmt.comma pp_args) args ) ;
+  Fmt.pf ppf ");"
 
 let pp_block block_name ppf block_stmts =
   Fmt.pf ppf "%s {" block_name ;

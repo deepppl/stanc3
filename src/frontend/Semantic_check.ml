@@ -1764,6 +1764,25 @@ let semantic_check_ostatements_in_block ~cf block stmts_opt =
       |> List.rev |> Validate.sequence
       |> Validate.map ~f:Option.some )
 
+let semantic_check_onetworks ~cf nb =
+  Option.value_map nb ~default:(Validate.ok None) ~f:(fun nets ->
+    List.fold ~init:[] nets ~f:(fun accu net ->
+          let { net_returntype=rt; net_id=id; net_arguments=args } = net in
+          let body = { stmt = Skip; smeta = { loc = Location_span.empty }  } in
+          let loc = id.id_loc in
+          let vnet = semantic_check_fundef ~loc ~cf rt id args body in
+          let unet =
+            Validate.map vnet ~f:(function
+                | { stmt = FunDef {returntype= urt; funname= id; arguments= uargs; _}; _ } ->
+                  Symbol_table.set_is_assigned vm id.name;
+                  { net_id=id; net_returntype=urt; net_arguments=uargs}
+                | _ -> assert false)
+          in
+          unet :: accu
+        )
+    |> List.rev |> Validate.sequence
+    |> Validate.map ~f:Option.some)
+
 let check_fun_def_body_in_block = function
   | {stmt= FunDef {body= {stmt= Block _; _}; _}; _}
    |{stmt= FunDef {body= {stmt= Skip; _}; _}; _} ->
@@ -1815,7 +1834,7 @@ let semantic_check_program
     ; in_lp_fun_def= false
     ; loop_depth= 0 }
   in
-  let unb = nb (* XXX TODO: add sematic checks? XXX *) in
+  let unb = semantic_check_onetworks ~cf nb in
   let ufb =
     Validate.(
       semantic_check_ostatements_in_block ~cf Functions fb
@@ -1833,7 +1852,7 @@ let semantic_check_program
   let ugb = semantic_check_ostatements_in_block ~cf GQuant gb in
   let udgpb = semantic_check_ostatements_in_block ~cf GuideParam dgpb in
   let udgb = semantic_check_ostatements_in_block ~cf Guide dgb in
-  let mk_typed_prog ufb udb utdb upb utpb umb ugb udgpb udgb : Ast.typed_program =
+  let mk_typed_prog unb ufb udb utdb upb utpb umb ugb udgpb udgb : Ast.typed_program =
     { networkblock= unb
     ; functionblock= ufb
     ; datablock= udb
@@ -1873,8 +1892,8 @@ let semantic_check_program
     Validate.map ~f:check_correctness_invariant
   in
   Validate.(
-    ok mk_typed_prog |> apply_to ufb |> apply_to udb |> apply_to utdb
-    |> apply_to upb |> apply_to utpb |> apply_to umb |> apply_to ugb 
+    ok mk_typed_prog |> apply_to unb |> apply_to ufb |> apply_to udb |> apply_to utdb
+    |> apply_to upb |> apply_to utpb |> apply_to umb |> apply_to ugb
     |> apply_to udgpb |> apply_to udgb
     |> check_correctness_invariant_validate
     |> get_with

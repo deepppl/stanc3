@@ -11,7 +11,11 @@ type identifier =
 
 (** Network declaration *)
 type network =
-  { net_type: identifier; net_id: identifier; }
+  { net_id: identifier
+  ; net_returntype: Middle.UnsizedType.returntype
+  ; net_arguments:
+      (Middle.UnsizedType.autodifftype * Middle.UnsizedType.t * identifier)
+        list }
 [@@deriving sexp, hash, compare]
 
 (** Indices for array access *)
