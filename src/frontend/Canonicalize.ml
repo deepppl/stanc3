@@ -65,10 +65,10 @@ let without_suffix user_dists name =
 let rec repair_syntax_expr {expr; emeta} =
   let expr =
     match expr with
-    | FunApp (f, {name; id_loc}, e) when distribution_suffix name ->
-        CondDistApp (f, {name; id_loc}, List.map ~f:repair_syntax_expr e)
-    | CondDistApp (f, {name; id_loc}, e) when not (distribution_suffix name) ->
-        FunApp (f, {name; id_loc}, List.map ~f:repair_syntax_expr e)
+    | FunApp (f, {name; id_loc; path}, e) when distribution_suffix name ->
+        CondDistApp (f, {name; id_loc; path}, List.map ~f:repair_syntax_expr e)
+    | CondDistApp (f, {name; id_loc; path}, e) when not (distribution_suffix name) ->
+        FunApp (f, {name; id_loc; path}, List.map ~f:repair_syntax_expr e)
     | _ -> map_expression repair_syntax_expr ident expr
   in
   {expr; emeta}
@@ -77,11 +77,11 @@ let repair_syntax_lval = map_lval_with repair_syntax_expr ident
 
 let rec repair_syntax_stmt user_dists {stmt; smeta} =
   match stmt with
-  | Tilde {arg; distribution= {name; id_loc}; args; truncation} ->
+  | Tilde {arg; distribution= {name; id_loc; path}; args; truncation} ->
       { stmt=
           Tilde
             { arg= repair_syntax_expr arg
-            ; distribution= {name= without_suffix user_dists name; id_loc}
+            ; distribution= {name= without_suffix user_dists name; id_loc; path}
             ; args= List.map ~f:repair_syntax_expr args
             ; truncation= map_truncation repair_syntax_expr truncation }
       ; smeta }
@@ -96,34 +96,36 @@ let rec replace_deprecated_expr {expr; emeta} =
   let expr =
     match expr with
     | GetLP -> GetTarget
-    | FunApp (StanLib, {name= "abs"; id_loc}, [e])
+    | FunApp (StanLib, {name= "abs"; id_loc; path= None}, [e])
       when Middle.UnsizedType.is_real_type e.emeta.type_ ->
-        FunApp (StanLib, {name= "fabs"; id_loc}, [replace_deprecated_expr e])
+        FunApp (StanLib,
+                {name= "fabs"; id_loc; path= None}, [replace_deprecated_expr e])
     | FunApp (StanLib, {name= "if_else"; _}, [c; t; e]) ->
         Paren
           (replace_deprecated_expr
              {expr= TernaryIf ({expr= Paren c; emeta= c.emeta}, t, e); emeta})
-    | FunApp (StanLib, {name; id_loc}, e) ->
+    | FunApp (StanLib, {name; id_loc; path= None}, e) ->
         if is_distribution name then
           CondDistApp
             ( StanLib
-            , {name= rename_distribution name; id_loc}
+            , {name= rename_distribution name; id_loc; path= None}
             , List.map ~f:replace_deprecated_expr e )
         else
           FunApp
             ( StanLib
-            , {name= rename_function name; id_loc}
+            , {name= rename_function name; id_loc; path= None}
             , List.map ~f:replace_deprecated_expr e )
-    | FunApp (UserDefined, {name; id_loc}, e) -> (
+    | FunApp (UserDefined, {name; id_loc; path= None}, e) -> (
       match String.Table.find deprecated_userdefined name with
       | Some newname ->
           CondDistApp
             ( UserDefined
-            , {name= newname; id_loc}
+            , {name= newname; id_loc; path= None}
             , List.map ~f:replace_deprecated_expr e )
       | None ->
           FunApp
-            (UserDefined, {name; id_loc}, List.map ~f:replace_deprecated_expr e)
+            (UserDefined,
+             {name; id_loc; path= None}, List.map ~f:replace_deprecated_expr e)
       )
     | _ -> map_expression replace_deprecated_expr ident expr
   in
@@ -140,14 +142,15 @@ let rec replace_deprecated_stmt {stmt; smeta} =
           { assign_lhs= replace_deprecated_lval l
           ; assign_op= Assign
           ; assign_rhs= replace_deprecated_expr e }
-    | FunDef {returntype; funname= {name; id_loc}; arguments; body} ->
+    | FunDef {returntype; funname= {name; id_loc; path}; arguments; body} ->
         FunDef
           { returntype
           ; funname=
               { name=
                   Option.value ~default:name
                     (String.Table.find deprecated_userdefined name)
-              ; id_loc }
+              ; id_loc
+              ; path }
           ; arguments
           ; body= replace_deprecated_stmt body }
     | _ ->

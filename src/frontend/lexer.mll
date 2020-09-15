@@ -57,6 +57,8 @@ rule token = parse
                                                        comments.") ;
                                 singleline_comment lexbuf; token lexbuf } (* deprecated *)
 (* Program blocks *)
+  | "networks"                { lexer_logger "networks" ;
+                                Parser.NETWORKBLOCK }
   | "functions"               { lexer_logger "functions" ;
                                 Parser.FUNCTIONBLOCK }
   | "data"                    { lexer_logger "data" ; Parser.DATABLOCK }
@@ -92,6 +94,7 @@ rule token = parse
   | ','                       { lexer_logger "," ; Parser.COMMA }
   | ';'                       { lexer_logger ";" ; Parser.SEMICOLON }
   | '|'                       { lexer_logger "|" ; Parser.BAR }
+  | '.'                       { lexer_logger "." ; Parser.DOT }
 (* Control flow keywords *)
   | "return"                  { lexer_logger "return" ; Parser.RETURN }
   | "if"                      { lexer_logger "if" ; Parser.IF }

@@ -5,7 +5,13 @@ open Middle
 
 (** Our type for identifiers, on which we record a location *)
 type identifier =
-  {name: string; id_loc: Location_span.t sexp_opaque [@compare.ignore]}
+  {name: string; id_loc: Location_span.t sexp_opaque [@compare.ignore]
+  ;path: string list option}
+[@@deriving sexp, hash, compare]
+
+(** Network declaration *)
+type network =
+  { net_type: identifier; net_id: identifier; }
 [@@deriving sexp, hash, compare]
 
 (** Indices for array access *)
@@ -212,7 +218,8 @@ type 's program =
   ; parametersblock: 's list option
   ; transformedparametersblock: 's list option
   ; modelblock: 's list option
-  ; generatedquantitiesblock: 's list option 
+  ; generatedquantitiesblock: 's list option
+  ; networkblock: network list option
   ; guideparametersblock: 's list option
   ; guideblock: 's list option }
 [@@deriving sexp, hash, compare, map]

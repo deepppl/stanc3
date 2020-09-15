@@ -12,11 +12,11 @@ let reducearray (sbt, l) =
   List.fold_right l ~f:(fun z y -> SizedType.SArray (y, z)) ~init:sbt
 %}
 
-%token FUNCTIONBLOCK DATABLOCK TRANSFORMEDDATABLOCK PARAMETERSBLOCK
+%token NETWORKBLOCK FUNCTIONBLOCK DATABLOCK TRANSFORMEDDATABLOCK PARAMETERSBLOCK
        TRANSFORMEDPARAMETERSBLOCK MODELBLOCK GENERATEDQUANTITIESBLOCK
        GUIDEBLOCK GUIDEPARAMETERSBLOCK
 %token LBRACE RBRACE LPAREN RPAREN LBRACK RBRACK LABRACK RABRACK COMMA SEMICOLON
-       BAR
+       BAR DOT
 %token RETURN IF ELSE WHILE FOR IN BREAK CONTINUE
 %token VOID INT REAL VECTOR ROWVECTOR MATRIX ORDERED POSITIVEORDERED SIMPLEX
        UNITVECTOR CHOLESKYFACTORCORR CHOLESKYFACTORCOV CORRMATRIX COVMATRIX
@@ -62,7 +62,8 @@ let reducearray (sbt, l) =
 
 (* program *)
 program:
-  | ofb=option(function_block)
+  | onb=option(network_block)
+    ofb=option(function_block)
     odb=option(data_block)
     otdb=option(transformed_data_block)
     opb=option(parameters_block)
@@ -74,7 +75,8 @@ program:
     EOF
     {
       grammar_logger "program" ;
-      { functionblock= ofb
+      { networkblock= onb
+      ; functionblock= ofb
       ; datablock= odb
       ; transformeddatablock= otdb
       ; parametersblock= opb
@@ -86,9 +88,13 @@ program:
     }
 
 (* blocks *)
+network_block:
+  | NETWORKBLOCK LBRACE nd=list(network_decl) RBRACE
+    { grammar_logger "network_block" ; nd }
+
 function_block:
   | FUNCTIONBLOCK LBRACE fd=list(function_def) RBRACE
-    {  grammar_logger "function_block" ; fd}
+    {  grammar_logger "function_block" ; fd }
 
 data_block:
   | DATABLOCK LBRACE tvd=list(top_var_decl_no_assign) RBRACE
@@ -114,27 +120,54 @@ model_block:
 generated_quantities_block:
   | GENERATEDQUANTITIESBLOCK LBRACE tvds=list(top_vardecl_or_statement) RBRACE
     { grammar_logger "generated_quantities_block" ; tvds }
-    
+
 guide_block:
   | GUIDEBLOCK LBRACE vds=list(vardecl_or_statement) RBRACE
     { grammar_logger "guide_block"; vds }
-    
+
 guide_parameters_block:
   | GUIDEPARAMETERSBLOCK LBRACE tvd=list(top_var_decl) RBRACE
     {grammar_logger "guide_parameters_block" ; tvd }
-    
+
+(* network declarations *)
+network_decl:
+  | net=decl_identifier id=decl_identifier SEMICOLON
+    {
+      grammar_logger "network_decl";
+      {net_type=net; net_id=id}
+    }
 
 (* function definitions *)
 identifier:
-  | id=IDENTIFIER
+  (* | id=IDENTIFIER *)
+  (*   { *)
+  (*     grammar_logger ("identifier " ^ id) ; *)
+  (*     {name=id; id_loc=Location_span.of_positions_exn $startpos $endpos *)
+  (*     ;path=None} *)
+  (*   } *)
+  | p=separated_nonempty_list(DOT, IDENTIFIER)
     {
-      grammar_logger ("identifier " ^ id) ;
-      {name=id; id_loc=Location_span.of_positions_exn $startpos $endpos}
+     grammar_logger "path";
+      let string_of_path path =
+        List.fold_left
+          ~f:(fun acc x -> acc ^ "." ^ x) ~init:(List.hd_exn path)
+          (List.tl_exn path)
+      in
+      match p with
+      | [] -> assert false
+      | [id] ->
+          {name=id; id_loc=Location_span.of_positions_exn $startpos $endpos
+          ;path=None}
+      | _ ->
+          {name= string_of_path p
+          ;id_loc= Location_span.of_positions_exn $startpos $endpos
+          ;path = Some (List.map ~f:(fun x -> x) p)}
     }
   | TRUNCATE
     {
       grammar_logger "identifier T" ;
-      {name="T"; id_loc=Location_span.of_positions_exn $startpos $endpos}
+      {name="T"; id_loc=Location_span.of_positions_exn $startpos $endpos
+      ;path=None}
     }
 
 decl_identifier:
@@ -145,10 +178,12 @@ decl_identifier:
      that's distinct from the use of other non-identifiers, so we can assign
      it a different message in the .messages file.
    *)
+  | NETWORKBLOCK UNREACHABLE
   | FUNCTIONBLOCK UNREACHABLE
   | DATABLOCK UNREACHABLE
   | PARAMETERSBLOCK UNREACHABLE
   | MODELBLOCK UNREACHABLE
+  | GUIDEBLOCK UNREACHABLE
   | RETURN UNREACHABLE
   | IF UNREACHABLE
   | ELSE UNREACHABLE

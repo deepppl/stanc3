@@ -142,7 +142,8 @@ let truncate_dist ud_dists (id : Ast.identifier) ast_obs ast_args t =
   in
   let funapp meta kind name args =
     { Ast.emeta= meta
-    ; expr= Ast.FunApp (kind, {name; id_loc= Location_span.empty}, args) }
+    ; expr= Ast.FunApp (kind,
+                        {name; id_loc= Location_span.empty; path= None}, args) }
   in
   let inclusive_bound tp (lb : Ast.typed_expression) =
     let emeta = lb.emeta in

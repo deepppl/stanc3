@@ -85,7 +85,7 @@ let probability_distribution_name_variants id =
   let name = id.name in
   let open String in
   List.map
-    ~f:(fun n -> {name= n; id_loc= id.id_loc})
+    ~f:(fun n -> {name= n; id_loc= id.id_loc; path= None})
     ( if name = "multiply_log" || name = "binomial_coefficient_log" then [name]
     else if is_suffix ~suffix:"_lpmf" name then
       [name; drop_suffix name 5 ^ "_lpdf"; drop_suffix name 5 ^ "_log"]
@@ -1793,7 +1793,8 @@ let semantic_check_functions_have_defn function_block_stmts_opt =
 
 (* The actual semantic checks for all AST nodes! *)
 let semantic_check_program
-    { functionblock= fb
+    { networkblock= nb
+    ; functionblock= fb
     ; datablock= db
     ; transformeddatablock= tdb
     ; parametersblock= pb
@@ -1814,6 +1815,7 @@ let semantic_check_program
     ; in_lp_fun_def= false
     ; loop_depth= 0 }
   in
+  let unb = nb (* XXX TODO: add sematic checks? XXX *) in
   let ufb =
     Validate.(
       semantic_check_ostatements_in_block ~cf Functions fb
@@ -1832,7 +1834,8 @@ let semantic_check_program
   let udgpb = semantic_check_ostatements_in_block ~cf GuideParam dgpb in
   let udgb = semantic_check_ostatements_in_block ~cf Guide dgb in
   let mk_typed_prog ufb udb utdb upb utpb umb ugb udgpb udgb : Ast.typed_program =
-    { functionblock= ufb
+    { networkblock= unb
+    ; functionblock= ufb
     ; datablock= udb
     ; transformeddatablock= utdb
     ; parametersblock= upb
@@ -1847,7 +1850,8 @@ let semantic_check_program
       typed_program =
     if
       compare_untyped_program
-        { functionblock= fb
+        { networkblock= nb
+        ; functionblock= fb
         ; datablock= db
         ; transformeddatablock= tdb
         ; parametersblock= pb
