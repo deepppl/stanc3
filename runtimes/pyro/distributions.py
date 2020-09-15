@@ -45,7 +45,7 @@ multi_normal = d.MultivariateNormal
 logistic = d.LogisticNormal
 cauchy = d.Cauchy
 
-def categorical_logits(logits):
+def categorical_logit(logits):
     return d.Categorical(logits=logits)
 
 def bernoulli_logit(logits):
