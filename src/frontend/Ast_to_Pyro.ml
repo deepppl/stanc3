@@ -81,6 +81,33 @@ let rec dims_of_sizedtype t =
   | SMatrix (e1, e2) -> [e1; e2]
   | SArray (t, e) -> e :: dims_of_sizedtype t
 
+
+let get_networks_calls stmts =
+  let rec get_networks_calls_in_expr acc e =
+    let acc =
+      match e.expr with
+      | FunApp (_, id, _args) -> id :: acc
+      | _ -> acc
+    in
+    fold_expression
+      get_networks_calls_in_expr
+      (fun acc _ -> acc)
+      acc e.expr
+  in
+  let rec get_networks_calls_in_lval acc lv =
+    fold_lvalue get_networks_calls_in_lval get_networks_calls_in_expr
+      acc lv.lval
+  in
+  List.fold_left ~init:[]
+    ~f:(fun acc stmt ->
+        fold_statement_with
+          get_networks_calls_in_expr
+          (fun acc _ -> acc)
+          get_networks_calls_in_lval
+          (fun acc _ -> acc)
+          acc stmt)
+    stmts
+
 let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
   match expr with
   | Paren x -> fprintf ff "(%a)" trans_expr x
@@ -917,13 +944,24 @@ let trans_parameter ff p =
 
 let trans_parametersblock ff parameters =
   Option.iter
-    ~f:(fprintf ff "@[<v 0># Parameters@,%a@]"
+    ~f:(fprintf ff "# Parameters@,%a@,"
           (print_list_newline trans_parameter))
     parameters
 
+let register_network ff ostmts =
+  Option.iter
+    ~f:(fun stmts ->
+        let nets = get_networks_calls stmts in
+        if nets <> [] then
+          fprintf ff "# Networks@,%a@,"
+            (print_list_newline
+               (fun ff net -> fprintf ff "pyro.module(%s)" net.name)) nets)
+    ostmts
+
 let trans_modelblock ff data tdata parameters tparameters model =
-  fprintf ff "@[<v 4>def model(%a):@,%a@,%a%a@]@,@,@."
+  fprintf ff "@[<v 4>def model(%a):@,%a%a%a%a@]@,@,@."
     trans_block_as_args (Option.merge ~f:(@) data tdata)
+    register_network model
     trans_parametersblock parameters
     (trans_block "Transformed parameters") tparameters
     (trans_block ~eol:false "Model") model
@@ -955,14 +993,15 @@ let trans_guide_parameter ff p =
 
 let trans_guideparametersblock ff guide_parameters =
   Option.iter
-    ~f:(fprintf ff "@[<v 0># Guide Parameters@,%a@]"
+    ~f:(fprintf ff "# Guide Parameters@,%a@,"
           (print_list_newline trans_guide_parameter))
     guide_parameters
 
 let trans_guideblock ff data tdata guide_parameters guide =
   if guide_parameters <> None || guide <> None then begin
-    fprintf ff "@[<v 4>def guide(%a):@,%a@,%a@]@."
+    fprintf ff "@[<v 4>def guide(%a):@,%a%a%a@]@."
       trans_block_as_args (Option.merge ~f:(@) data tdata)
+      register_network guide
       trans_guideparametersblock guide_parameters
       (trans_block ~eol:false ~naive:true "Guide") guide
   end
