@@ -19,8 +19,8 @@ class Config:
     # warmups: int = 10
     # chains: int = 1
     # thin: int = 2
-    iterations: int = 5
-    warmups: int = 1
+    iterations: int = 1
+    warmups: int = 0
     chains: int = 1
     thin: int = 1
 
@@ -44,7 +44,7 @@ def test(posterior, config):
     try:
         pyro_model = PyroModel(stanfile, pyfile=pythonfile)
     except Exception as e:
-        return { 'code': 1, 'msg': f'compilation error: {model.name}', 'exn': e }
+        return { 'code': 1, 'msg': f'compilation error ({posterior.name}): {model.name}', 'exn': e }
     try:
         mcmc = pyro_model.mcmc(config.iterations,
                                warmups=config.warmups,
@@ -54,13 +54,60 @@ def test(posterior, config):
         inputs = {k: _convert_to_tensor(data.values()[k], v['type']) for k, v in inputs_info.items()}
         mcmc.run(**inputs)
     except Exception as e:
-        return { 'code': 2, 'msg': f'Inference error: {model.name}({data.name})', 'exn': e }
+        return { 'code': 2, 'msg': f'Inference error ({posterior.name}): {model.name}({data.name})', 'exn': e }
     return { 'code': 0, 'samples': mcmc.get_samples() }
 
 
 my_pdb = PosteriorDatabase(pdb_path)
 
+xfail = [ ('soil_carbon-soil_incubation', 'bad model') ]
+bugs = [
+    # rep_matrix?
+    ('ecdc0501-covid19imperial_v2', 'rep_matrix'),
+    ('ecdc0401-covid19imperial_v2', 'The expanded size of the tensor (14) must match the existing size (6) at non-singleton dimension 0'),
+    ('ecdc0501-covid19imperial_v3', 'rep_matrix'),
+    ('ecdc0401-covid19imperial_v3', 'The expanded size of the tensor (14) must match the existing size (6) at non-singleton dimension 0.'),
+    ('diamonds-diamonds', 'The expanded size of the tensor (24) must match the existing size (25) at non-singleton dimension 0'),
+    # not defined (hard?)
+    ('hudson_lynx_hare-lotka_volterra', 'integrate_ode_rk45 is not defined'),
+    ('sir-sir', 'integrate_ode_rk45 is not defined'),
+    ('one_comp_mm_elim_abs-one_comp_mm_elim_abs', 'integrate_ode_bdf is not defined'),
+    ('gp_pois_regr-gp_pois_regr', 'cov_exp_quad is not defined'),
+    ('gp_pois_regr-gp_regr', 'cov_exp_quad is not defined'),
+    # not defined (easy?)
+    ('mnist-nn_rbm1bJ100', 'append_col is not defined'),
+    ('mnist_100-nn_rbm1bJ10', 'append_col is not defined'),
+    ('butterfly-multi_occupancy', 'Tensor object is not callable'),
+    ('mcycle_gp-accel_gp', 'dims is not defined'),
+    ('dogs-dogs_log', 'inv_logit is not defined'),
+    ('low_dim_gauss_mix_collapse', 'log_mix is not defined'),
+    ('low_dim_gauss_mix_collapse-low_dim_gauss_mix_collapse', 'log_mix is not defined'),
+    ('normal_2-normal_mixture', 'log_mix'),
+    ('mcycle_splines-accel_splines', 'dot is not defined'),
+    ('sblrc-blr', 'dot is not defined'),
+    ('sblri-blr', 'dot is not defined'),
+    ('ovarian-logistic_regression_rhs', 'std_normal is not defined'),
+    ('prostate-logistic_regression_rhs', 'std_normal is not defined'),
+    # compile?
+    ('rstan_downloads-prophet', 'index 1 is out of bounds for dimension 0 with size 1'),
+    ('dogs-dogs', 'result type Float can t be cast to the desired output type Long'),
+    ('irt_2pl-irt_2pl', 'result type Float can t be cast to the desired output type Long'),
+    ('election88-election88_full', 'result type Float can t be cast to the desired output type Long'),
+    ('arma-arma11', 'one of the variables needed for gradient computation has been modified by an inplace operation'),
+    ('garch-garch11', 'one of the variables needed for gradient computation has been modified by an inplace operation') ]
+constraints = [
+    ('bball_drive_event_0-hmm_drive_0', 'hmm_drive_0'),
+    ('bball_drive_event_1-hmm_drive_1', 'hmm_drive_1'),
+    ('hmm_example-hmm_example', 'hmm_example'),
+    ('prideprejustice_chapter-ldaK5', 'ldaK5'),
+    ('prideprejustice_paragraph-ldaK5', 'ldaK5'),
+    ('sat-hier_2pl', 'hier_2pl'),
+    ('low_dim_gauss_mix-low_dim_gauss_mix', 'low_dim_gauss_mix'),
+    ('normal_5-normal_mixture_k', 'normal_mixture_k') ]
+
 # posterior = my_pdb.posterior('radon_mn-radon_variable_intercept_centered')
+# posterior = my_pdb.posterior('mesquite-logmesquite_logvas')
+# posterior = my_pdb.posterior('irt_2pl-irt_2pl')
 # config = Config()
 # res = test(posterior, config)
 # print(res['code'])

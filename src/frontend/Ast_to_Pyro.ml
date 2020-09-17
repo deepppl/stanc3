@@ -1028,11 +1028,26 @@ let trans_guideblock ff networks data tdata guide_parameters guide =
       (trans_block ~eol:false ~naive:true "Guide") guide
   end
 
+let dppllib =
+  [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones";
+    "dtype_long"; "dtype_double" ]
+
+let stanlib =
+  [ "sqrt"; "cbrt"; "square"; "exp"; "exp2"; "log"; "log2"; "log10";
+    "pow"; "inv"; "inv_sqrt"; "inv_square";
+    "min"; "max"; "sum"; "prod"; "log_sum_exp";
+    "mean"; "variance"; "sd"; "distance"; "squared_distance";
+    "rep_vector"; "rep_row_vector"; "rep_matrix"; "append_col"; "append_row"  ]
+
 let trans_prog runtime ff (p : typed_program) =
-  fprintf ff "@[<v 0>%s@,%s@,%s@,@,@]"
+  fprintf ff "@[<v 0>%s@,%s%a@,%s%a@,@,@]"
     ("from runtimes."^runtime^".distributions import *")
-    ("from runtimes."^runtime^".dppllib import sample, param, observe, factor, array, zeros, ones, dtype_long, dtype_double")
-    ("from runtimes."^runtime^".stanlib import mean, sqrt, exp, log, log2, log10, square, rep_vector, rep_row_vector, rep_matrix");
+    ("from runtimes."^runtime^".dppllib import ")
+    (pp_print_list ~pp_sep:(fun ff () -> fprintf ff ", ") pp_print_string)
+    dppllib
+    ("from runtimes."^runtime^".stanlib import ")
+    (pp_print_list ~pp_sep:(fun ff () -> fprintf ff ", ") pp_print_string)
+    stanlib;
   Option.iter ~f:(trans_functionblock ff) p.functionblock;
   trans_transformeddatablock ff p.datablock p.transformeddatablock;
   trans_modelblock ff
