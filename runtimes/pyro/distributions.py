@@ -37,6 +37,8 @@ uniform = d.Uniform
 beta = d.Beta
 bernoulli = d.Bernoulli
 normal = d.Normal
+def normal_lpdf(y, mu, sigma):
+    return d.Normal(mu, sigma).log_prob(y)
 student_t = d.StudentT
 inv_gamma = d.InverseGamma
 gamma = d.Gamma
