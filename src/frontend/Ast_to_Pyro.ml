@@ -44,7 +44,8 @@ let gen_id =
       | [] -> fprintf ff "'%s__%d'" s !cpt
       | _ ->
           fprintf ff "f'%s%a__%d'" s
-            (pp_print_list (fun ff x -> fprintf ff "__{%s}" x)) l !cpt
+            (pp_print_list ~pp_sep:(fun _ _ ->())
+               (fun ff x -> fprintf ff "__{%s}" x)) l !cpt
     else
       fprintf ff "'%s'" s
 
