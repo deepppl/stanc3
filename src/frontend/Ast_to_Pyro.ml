@@ -86,7 +86,7 @@ let get_networks_calls stmts =
   let rec get_networks_calls_in_expr acc e =
     let acc =
       match e.expr with
-      | FunApp (_, id, _args) -> id :: acc
+      | FunApp (_, id, _args) -> if id.path = None then acc else  id :: acc
       | _ -> acc
     in
     fold_expression
