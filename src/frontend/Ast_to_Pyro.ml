@@ -962,7 +962,8 @@ let register_network networks ff ostmts =
         if nets <> [] then
           fprintf ff "# Networks@,%a@,"
             (print_list_newline
-               (fun ff net -> fprintf ff "pyro.module(%s)" net.name)) nets)
+               (fun ff net -> fprintf ff "pyro.module('%s', %s)"
+                   net.name net.name)) nets)
     ostmts
 
 let trans_modelblock ff networks data tdata parameters tparameters model =
