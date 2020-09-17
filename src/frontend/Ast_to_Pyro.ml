@@ -18,6 +18,14 @@ let print_list_newline printer ff l =
   (pp_print_list ~pp_sep:(fun ff () -> fprintf ff "@,") printer)
   l
 
+let trans_id ff id =
+  let x =
+    match id.name with
+    | "lambda" -> "lambda_"
+    | x -> x
+  in
+  fprintf ff "%s" x
+
 let gen_id =
   let cpt = ref 0 in
   fun ?(fresh=true) l ff e ->
@@ -123,12 +131,12 @@ let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
   | TernaryIf (cond, ifb, elseb) ->
       fprintf ff "%a if %a else %a"
         trans_expr ifb trans_expr cond trans_expr elseb
-  | Variable {name; _} -> fprintf ff "%s" name
+  | Variable id -> trans_id ff id
   | IntNumeral x -> trans_numeral emeta.type_ ff x
   | RealNumeral x -> trans_numeral emeta.type_ ff x
-  | FunApp (fn_kind, {name; _}, args) | CondDistApp (fn_kind, {name; _}, args)
+  | FunApp (fn_kind, id, args) | CondDistApp (fn_kind, id, args)
     ->
-      trans_fun_app ff fn_kind name args
+      trans_fun_app ff fn_kind id args
   | GetLP | GetTarget -> fprintf ff "stanlib.target()" (* XXX TODO XXX *)
   | ArrayExpr eles ->
       fprintf ff "array([%a], dtype=%a)"
@@ -234,12 +242,12 @@ and dtype_of_unsized_type ff t =
 and trans_exprs ff exprs =
   fprintf ff "%a" (print_list_comma trans_expr) exprs
 
-and trans_fun_app ff fn_kind name args =
-  fprintf ff "%s%s(%a)"
+and trans_fun_app ff fn_kind id args =
+  fprintf ff "%s%a(%a)"
     (match fn_kind with
      | StanLib -> (* "stanlib." *)""  (* XXX TODO XXX *)
      | UserDefined -> "")
-    name trans_exprs args
+    trans_id id trans_exprs args
 
 and trans_dims ff (t : typed_expression Type.t) =
   match t with
@@ -265,7 +273,7 @@ let trans_expr_opt (type_ : typed_expression Type.t) ff = function
       else fprintf ff "None"
 
 let trans_arg ff (_, _, ident) =
-  pp_print_string ff ident.name
+  trans_id ff ident
 
 let trans_args ff args =
   fprintf ff "%a" (print_list_comma trans_arg) args
@@ -615,15 +623,15 @@ let rec trans_stmt ?(naive=false) ctx ff (ts : typed_statement) =
       in
       let lhs = expr_of_lval assign_lhs in
       fprintf ff "%a = %a" trans_expr lhs (trans_rhs lhs) assign_rhs
-  | NRFunApp (fn_kind, {name; _}, args) ->
-      trans_fun_app ff fn_kind name args
+  | NRFunApp (fn_kind, id, args) ->
+      trans_fun_app ff fn_kind id args
   | IncrementLogProb e | TargetPE e ->
       fprintf ff "factor(%a, %a)"
         (gen_id ctx) e
         trans_expr e
   | Tilde {arg; distribution; args; truncation} ->
       let trans_distribution ff dist =
-        fprintf ff "%s" dist.name
+        fprintf ff "%a" trans_id dist
       in
       let trans_truncation _ff = function
         | NoTruncate -> ()
@@ -661,14 +669,14 @@ let rec trans_stmt ?(naive=false) ctx ff (ts : typed_statement) =
         trans_expr cond
         (trans_stmt ~naive ("genid()"::ctx)) body
   | For {loop_variable; lower_bound; upper_bound; loop_body} ->
-      fprintf ff "@[<v 4>for %s in range(%a,%a + 1):@,%a@]"
-        loop_variable.name
+      fprintf ff "@[<v 4>for %a in range(%a,%a + 1):@,%a@]"
+        trans_id loop_variable
         trans_expr lower_bound
         trans_expr upper_bound
         (trans_stmt ~naive (loop_variable.name :: ctx)) loop_body
   | ForEach (loopvar, iteratee, body) ->
-      fprintf ff "@[<v4>for %s in %a:@,%a@]"
-        loopvar.name
+      fprintf ff "@[<v4>for %a in %a:@,%a@]"
+        trans_id loopvar
         trans_expr iteratee
         (trans_stmt ~naive (loopvar.name :: ctx)) body
   | FunDef _ ->
@@ -676,7 +684,8 @@ let rec trans_stmt ?(naive=false) ctx ff (ts : typed_statement) =
         [%message
           "Found function definition statement outside of function block"]
   | VarDecl {identifier; initial_value; decl_type; _ } ->
-      fprintf ff "%s = %a" identifier.name
+      fprintf ff "%a = %a"
+        trans_id identifier
         (trans_expr_opt decl_type) initial_value
   | Block stmts ->
       fprintf ff "%a" (print_list_newline (trans_stmt ~naive ctx)) stmts
@@ -697,8 +706,8 @@ let trans_stmts ?(naive=false) ctx ff stmts =
 let trans_fun_def ff (ts : typed_statement) =
   match ts.stmt with
   | FunDef {funname; arguments; body; _} ->
-      fprintf ff "@[<v 0>@[<v 4>def %s(%a):@,%a@]@,@]"
-        funname.name trans_args arguments (trans_stmt []) body
+      fprintf ff "@[<v 0>@[<v 4>def %a(%a):@,%a@]@,@]"
+        trans_id funname trans_args arguments (trans_stmt []) body
   | _ ->
       raise_s
         [%message "Found non-function definition statement in function block"]
@@ -869,7 +878,7 @@ let get_var_decl_names stmts =
   List.fold_right
     ~f:(fun stmt acc ->
           match stmt.stmt with
-          | VarDecl {identifier; _} -> identifier.name :: acc
+          | VarDecl {identifier; _} -> identifier :: acc
           | _ -> acc ) ~init:[] stmts
 
 let trans_block_as_args ff block =
@@ -879,14 +888,15 @@ let trans_block_as_args ff block =
           | [] -> ()
           | args ->
               fprintf ff "*, %a"
-                (print_list_comma pp_print_string) args)
+                (print_list_comma trans_id) args)
     block
 
 let trans_block_as_return ff block =
   Option.iter
     ~f:(fun stmts ->
           fprintf ff "return { %a }"
-            (print_list_comma (fun ff x -> fprintf ff "'%s': %s" x x))
+            (print_list_comma
+               (fun ff x -> fprintf ff "'%s': %a" x.name trans_id x))
             (get_var_decl_names stmts))
     block
 
@@ -945,7 +955,7 @@ let trans_transformeddatablock ff data transformeddata =
 let trans_parameter ff p =
   match p.stmt with
   | VarDecl {identifier; initial_value = None; decl_type; transformation; _} ->
-    fprintf ff "%s = sample('%s', %a)" identifier.name identifier.name
+    fprintf ff "%a = sample('%s', %a)" trans_id identifier identifier.name
       (trans_prior decl_type) transformation
   | _ -> assert false
 
@@ -962,8 +972,8 @@ let register_network networks ff ostmts =
         if nets <> [] then
           fprintf ff "# Networks@,%a@,"
             (print_list_newline
-               (fun ff net -> fprintf ff "pyro.module('%s', %s)"
-                   net.name net.name)) nets)
+               (fun ff net -> fprintf ff "pyro.module('%s', %a)"
+                   net.name trans_id net)) nets)
     ostmts
 
 let trans_modelblock ff networks data tdata parameters tparameters model =
@@ -988,14 +998,17 @@ let trans_generatedquantitiesblock ff data tdata params tparams genquantities =
 let trans_guide_parameter ff p =
   match p.stmt with
   | VarDecl {identifier; initial_value = None; decl_type; transformation; _} ->
-    fprintf ff "%s = param('%s', %a.sample())" identifier.name identifier.name
+    fprintf ff "%a = param('%s', %a.sample())"
+      trans_id identifier identifier.name
       (trans_prior decl_type) transformation
   | VarDecl {identifier; initial_value = Some e; decl_type; _} ->
     if is_real decl_type then
-      fprintf ff "%s = param('%s', array(%a))" identifier.name identifier.name
+      fprintf ff "%a = param('%s', array(%a))"
+        trans_id identifier identifier.name
         trans_expr e
     else
-      fprintf ff "%s = param('%s', %a)" identifier.name identifier.name
+      fprintf ff "%a = param('%s', %a)"
+        trans_id identifier identifier.name
         trans_expr e
   | _ -> assert false
 
@@ -1018,7 +1031,7 @@ let trans_prog runtime ff (p : typed_program) =
   fprintf ff "@[<v 0>%s@,%s@,%s@,@,@]"
     ("from runtimes."^runtime^".distributions import *")
     ("from runtimes."^runtime^".dppllib import sample, param, observe, factor, array, zeros, ones, dtype_long, dtype_double")
-    ("from runtimes."^runtime^".stanlib import sqrt, exp, log, log2, log10, square, rep_vector, rep_row_vector, rep_matrix");
+    ("from runtimes."^runtime^".stanlib import mean, sqrt, exp, log, log2, log10, square, rep_vector, rep_row_vector, rep_matrix");
   Option.iter ~f:(trans_functionblock ff) p.functionblock;
   trans_transformeddatablock ff p.datablock p.transformeddatablock;
   trans_modelblock ff
