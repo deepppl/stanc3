@@ -19,19 +19,20 @@ class Config:
     # warmups: int = 10
     # chains: int = 1
     # thin: int = 2
-    iterations: int = 10
+    iterations: int = 5
     warmups: int = 1
     chains: int = 1
     thin: int = 1
 
 
-def _convert_to_tensor(value):
+def _convert_to_tensor(value, typ):
     if isinstance(value, (list, np.ndarray)):
-        # if all(isinstance(n, int) for n in value):
-        #     return tensor(value, dtype=torch.long)
-        return tensor(value)
-    elif isinstance(value, dict):
-        return {k: _convert_to_tensor(v) for k, v in value.items()}
+        if typ == 'int':
+            return tensor(value, dtype=torch.long)
+        elif typ == 'real':
+            return tensor(value, dtype=torch.double)
+        else:
+            raise "error"
     else:
         return value
 
@@ -49,7 +50,8 @@ def test(posterior, config):
                                warmups=config.warmups,
                                chains=config.chains,
                                thin=config.thin)
-        inputs = {k: _convert_to_tensor(v) for k, v in data.values().items()}
+        inputs_info = model.information['inputs']
+        inputs = {k: _convert_to_tensor(data.values()[k], v['type']) for k, v in inputs_info.items()}
         mcmc.run(**inputs)
     except Exception as e:
         return { 'code': 2, 'msg': f'Inference error: {model.name}({data.name})', 'exn': e }
@@ -65,13 +67,11 @@ my_pdb = PosteriorDatabase(pdb_path)
 # print(res['msg'])
 # print(res['exn'])
 
-
 success = 0
 compile_error = 0
 inference_error = 0
 
 for name in my_pdb.posterior_names():
-    # posterior = my_pdb.posterior("eight_schools-eight_schools_centered")
     print(f'Test {name}')
     posterior = my_pdb.posterior(name)
     config = Config()
@@ -91,6 +91,3 @@ for name in my_pdb.posterior_names():
         print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
         inference_error = inference_error + 1
     print(f'success: {success}, compile errors: {compile_error}, inference errors: {inference_error}, total: {success + compile_error + inference_error}')
-# print(dir(posterior.gold_standard))
-# print(posterior.posterior_info)
-# print(posterior.reference_posterior)
