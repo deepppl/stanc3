@@ -1018,7 +1018,7 @@ let trans_prog runtime ff (p : typed_program) =
   fprintf ff "@[<v 0>%s@,%s@,%s@,@,@]"
     ("from runtimes."^runtime^".distributions import *")
     ("from runtimes."^runtime^".dppllib import sample, param, observe, factor, array, zeros, ones, dtype_long, dtype_double")
-    ("from runtimes."^runtime^".stanlib import sqrt, exp, log, log10, square, rep_vector, rep_row_vector, rep_matrix");
+    ("from runtimes."^runtime^".stanlib import sqrt, exp, log, log2, log10, square, rep_vector, rep_row_vector, rep_matrix");
   Option.iter ~f:(trans_functionblock ff) p.functionblock;
   trans_transformeddatablock ff p.datablock p.transformeddatablock;
   trans_modelblock ff
