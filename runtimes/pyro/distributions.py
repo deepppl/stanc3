@@ -46,6 +46,7 @@ dirichlet = d.Dirichlet
 multi_normal = d.MultivariateNormal
 logistic = d.LogisticNormal
 cauchy = d.Cauchy
+lognormal = d.LogNormal
 
 def categorical_logit(logits):
     return d.Categorical(logits=logits)

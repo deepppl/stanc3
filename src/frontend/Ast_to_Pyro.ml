@@ -82,31 +82,38 @@ let rec dims_of_sizedtype t =
   | SArray (t, e) -> e :: dims_of_sizedtype t
 
 
-let get_networks_calls stmts =
-  let rec get_networks_calls_in_expr acc e =
+let get_networks_calls networks stmts =
+  let rec get_networks_calls_in_expr networks acc e =
     let acc =
       match e.expr with
-      | FunApp (_, id, _args) -> if id.path = None then acc else  id :: acc
+      | FunApp (_, id, _args) ->
+        if List.exists ~f:(fun n -> n.net_id.name = id.name) networks then
+          id :: acc
+        else acc
       | _ -> acc
     in
     fold_expression
-      get_networks_calls_in_expr
+      (get_networks_calls_in_expr networks)
       (fun acc _ -> acc)
       acc e.expr
   in
-  let rec get_networks_calls_in_lval acc lv =
-    fold_lvalue get_networks_calls_in_lval get_networks_calls_in_expr
+  let rec get_networks_calls_in_lval networks acc lv =
+    fold_lvalue (get_networks_calls_in_lval networks)
+      (get_networks_calls_in_expr networks)
       acc lv.lval
   in
-  List.fold_left ~init:[]
-    ~f:(fun acc stmt ->
-        fold_statement_with
-          get_networks_calls_in_expr
-          (fun acc _ -> acc)
-          get_networks_calls_in_lval
-          (fun acc _ -> acc)
-          acc stmt)
-    stmts
+  match networks with
+  | Some nets ->
+      List.fold_left ~init:[]
+        ~f:(fun acc stmt ->
+            fold_statement_with
+              (get_networks_calls_in_expr nets)
+              (fun acc _ -> acc)
+              (get_networks_calls_in_lval nets)
+              (fun acc _ -> acc)
+              acc stmt)
+        stmts
+  | _ -> []
 
 let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
   match expr with
@@ -948,20 +955,20 @@ let trans_parametersblock ff parameters =
           (print_list_newline trans_parameter))
     parameters
 
-let register_network ff ostmts =
+let register_network networks ff ostmts =
   Option.iter
     ~f:(fun stmts ->
-        let nets = get_networks_calls stmts in
+        let nets = get_networks_calls networks stmts in
         if nets <> [] then
           fprintf ff "# Networks@,%a@,"
             (print_list_newline
                (fun ff net -> fprintf ff "pyro.module(%s)" net.name)) nets)
     ostmts
 
-let trans_modelblock ff data tdata parameters tparameters model =
+let trans_modelblock ff networks data tdata parameters tparameters model =
   fprintf ff "@[<v 4>def model(%a):@,%a%a%a%a@]@,@,@."
     trans_block_as_args (Option.merge ~f:(@) data tdata)
-    register_network model
+    (register_network networks) model
     trans_parametersblock parameters
     (trans_block "Transformed parameters") tparameters
     (trans_block ~eol:false "Model") model
@@ -997,11 +1004,11 @@ let trans_guideparametersblock ff guide_parameters =
           (print_list_newline trans_guide_parameter))
     guide_parameters
 
-let trans_guideblock ff data tdata guide_parameters guide =
+let trans_guideblock ff networks data tdata guide_parameters guide =
   if guide_parameters <> None || guide <> None then begin
     fprintf ff "@[<v 4>def guide(%a):@,%a%a%a@]@."
       trans_block_as_args (Option.merge ~f:(@) data tdata)
-      register_network guide
+      (register_network networks) guide
       trans_guideparametersblock guide_parameters
       (trans_block ~eol:false ~naive:true "Guide") guide
   end
@@ -1009,16 +1016,16 @@ let trans_guideblock ff data tdata guide_parameters guide =
 let trans_prog runtime ff (p : typed_program) =
   fprintf ff "@[<v 0>%s@,%s@,%s@,@,@]"
     ("from runtimes."^runtime^".distributions import *")
-    ("from runtimes."^runtime^".dppllib import sample, param, observe, factor, array, zeros, ones")
-    ("from runtimes."^runtime^".stanlib import sqrt, exp, log");
+    ("from runtimes."^runtime^".dppllib import sample, param, observe, factor, array, zeros, ones, dtype_long, dtype_double")
+    ("from runtimes."^runtime^".stanlib import sqrt, exp, log, log10, square, rep_vector, rep_row_vector");
   Option.iter ~f:(trans_functionblock ff) p.functionblock;
   trans_transformeddatablock ff p.datablock p.transformeddatablock;
   trans_modelblock ff
-    p.datablock p.transformeddatablock
+    p.networkblock p.datablock p.transformeddatablock
     p.parametersblock p.transformedparametersblock p.modelblock;
   trans_generatedquantitiesblock ff
     p.datablock p.transformeddatablock
     p.parametersblock p.transformedparametersblock p.generatedquantitiesblock;
   trans_guideblock ff
-    p.datablock p.transformeddatablock
+    p.networkblock p.datablock p.transformeddatablock
     p.guideparametersblock p.guideblock;
