@@ -28,6 +28,79 @@ let trans_id ff id =
   in
   fprintf ff "%s" x
 
+
+let dppllib =
+  [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones"; "matmul";
+    "dtype_long"; "dtype_double"; "register_network" ]
+
+let stanlib =
+  [ "sqrt_int"; "sqrt_real"; "sqrt_vector"; "sqrt_rowvector";
+    "sqrt_matrix"; "sqrt_array";
+    "cbrt_int"; "cbrt_real"; "cbrt_vector"; "cbrt_rowvector";
+    "cbrt_matrix"; "cbrt_array";
+    "square_int"; "square_real"; "square_vector"; "square_rowvector";
+    "square_matrix"; "square_array";
+    "exp_int"; "exp_real"; "exp_vector"; "exp_rowvector";
+    "exp_matrix"; "exp_array";
+    "exp2_int"; "exp2_real"; "exp2_vector"; "exp2_rowvector";
+    "exp2_matrix"; "exp2_array";
+    "log_int"; "log_real"; "log_vector"; "log_rowvector";
+    "log_matrix"; "log_array";
+    "log2_int"; "log2_real"; "log2_vector"; "log2_rowvector";
+    "log2_matrix"; "log2_array";
+    "log10_int"; "log10_real"; "log10_vector"; "log10_rowvector";
+    "log10_matrix"; "log10_array";
+    "pow_int_int"; "pow_int_real"; "pow_real_int"; "pow_real_real";
+    "inv_int"; "inv_real"; "inv_vector"; "inv_rowvector";
+    "inv_matrix"; "inv_array";
+    "inv_sqrt_int"; "inv_sqrt_real"; "inv_sqrt_vector"; "inv_sqrt_rowvector";
+    "inv_sqrt_matrix"; "inv_sqrt_array";
+    "inv_square_int"; "inv_square_real"; "inv_square_vector";
+    "inv_square_rowvector"; "inv_square_matrix"; "inv_square_array";
+    "min_array"; "max_array";
+    "sum_array"; "prod_array"; "log_sum_exp_array";
+    "mean_array"; "variance_array"; "sd_array";
+    "distance_vector_vector"; "distance_vector_row_vector";
+    "distance_row_vector_vector"; "distance_row_vector_row_vector";
+    "squared_distance_vector_vector"; "squared_distance_vector_row_vector";
+    "squared_distance_row_vector_vector";
+    "squared_distance_row_vector_row_vector";
+    "dims_int"; "dims_real"; "dims_vector"; "dims_rowvector";
+    "dims_matrix"; "dims_array";
+    "num_elements_array";
+    "size_array";
+    "log_sum_exp_vector"; "log_sum_exp_rowvector"; "log_sum_exp_matrix";
+    "min_vector"; "min_rowvector"; "min_matrix";
+    "max_vector"; "max_rowvector"; "max_matrix";
+    "sum_vector"; "sum_rowvector"; "sum_matrix";
+    "prod_vector"; "prod_rowvector"; "prod_matrix";
+    "mean_vector"; "mean_rowvector"; "mean_matrix";
+    "variance_vector"; "variance_rowvector"; "variance_matrix";
+    "sd_vector"; "sd_rowvector"; "sd_matrix";
+    "rep_vector_real_int"; "rep_vector_int_int";
+    "rep_row_vector_real_int"; "rep_row_vector_int_int";
+    "rep_matrix_real_int_int"; "rep_matrix_int_int_int";
+    "rep_matrix_vector_int";
+    "rep_matrix_rowvector_int";
+    "col_matrix_int"; "row_matrix_int";
+    "block_matrix_int_int_int_int"; "sub_col_matrix_int_int_int";
+    "sub_row_matrix_int_int_int";
+    "head_vector_int"; "head_rowvector_int"; "head_array_int";
+    "tail_vector_int"; "tail_rowvector_int"; "tail_array_int";
+    "segment_vector_int_int"; "segment_rowvector_int_int";
+    "segment_array_int_int";
+    "append_col_matrix_matrix"; "append_col_matrix_vector";
+    "append_col_vector_matrix"; "append_col_vector_vector";
+    "append_col_row_vector_row_vector"; "append_col_real_row_vector";
+    "append_col_int_row_vector"; "append_col_row_vector_real";
+    "append_col_row_vector_int";
+    "append_row_matrix_matrix"; "append_row_matrix_row_vector";
+    "append_row_row_vector_matrix"; "append_row_row_vector_row_vector";
+    "append_row_vector_vector"; "append_row_real_vector";
+    "append_row_int_vector"; "append_row_vector_real";
+    "append_row_vector_int";
+  ]
+
 let stanlib_id id args =
   let arg_type arg =
     match arg.emeta.type_ with
@@ -114,7 +187,9 @@ let get_stanlib_calls program =
     let acc =
       match e.expr with
       | FunApp (StanLib, id, args) | CondDistApp (StanLib, id, args) ->
-        SSet.add acc (stanlib_id id args)
+        let sid = stanlib_id id args in
+        if List.mem ~equal:(=) stanlib sid then SSet.add acc sid
+        else acc
       | _ -> acc
     in
     fold_expression get_stanlib_calls_in_expr (fun acc _ -> acc)
@@ -1086,86 +1161,18 @@ let trans_guideblock ff networks data tdata guide_parameters guide =
       (trans_block ~eol:false ~naive:true "Guide") guide
   end
 
-let dppllib =
-  [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones"; "matmul";
-    "dtype_long"; "dtype_double"; "register_network" ]
-
-(* let stanlib = *)
-(*   [ "sqrt_int"; "sqrt_real"; "sqrt_vector"; "sqrt_rowvector"; *)
-(*     "sqrt_matrix"; "sqrt_array"; *)
-(*     "cbrt_int"; "cbrt_real"; "cbrt_vector"; "cbrt_rowvector"; *)
-(*     "cbrt_matrix"; "cbrt_array"; *)
-(*     "square_int"; "square_real"; "square_vector"; "square_rowvector"; *)
-(*     "square_matrix"; "square_array"; *)
-(*     "exp_int"; "exp_real"; "exp_vector"; "exp_rowvector"; *)
-(*     "exp_matrix"; "exp_array"; *)
-(*     "exp2_int"; "exp2_real"; "exp2_vector"; "exp2_rowvector"; *)
-(*     "exp2_matrix"; "exp2_array"; *)
-(*     "log_int"; "log_real"; "log_vector"; "log_rowvector"; *)
-(*     "log_matrix"; "log_array"; *)
-(*     "log2_int"; "log2_real"; "log2_vector"; "log2_rowvector"; *)
-(*     "log2_matrix"; "log2_array"; *)
-(*     "log10_int"; "log10_real"; "log10_vector"; "log10_rowvector"; *)
-(*     "log10_matrix"; "log10_array"; *)
-(*     "pow_int_int"; "pow_int_real"; "pow_real_int"; "pow_real_real"; *)
-(*     "inv_int"; "inv_real"; "inv_vector"; "inv_rowvector"; *)
-(*     "inv_matrix"; "inv_array"; *)
-(*     "inv_sqrt_int"; "inv_sqrt_real"; "inv_sqrt_vector"; "inv_sqrt_rowvector"; *)
-(*     "inv_sqrt_matrix"; "inv_sqrt_array"; *)
-(*     "inv_square_int"; "inv_square_real"; "inv_square_vector"; *)
-(*     "inv_square_rowvector"; "inv_square_matrix"; "inv_square_array"; *)
-(*     "min_array"; "max_array"; *)
-(*     "sum_array"; "prod_array"; "log_sum_exp_array"; *)
-(*     "mean_array"; "variance_array"; "sd_array"; *)
-(*     "distance_vector_vector"; "distance_vector_row_vector"; *)
-(*     "distance_row_vector_vector"; "distance_row_vector_row_vector"; *)
-(*     "squared_distance_vector_vector"; "squared_distance_vector_row_vector"; *)
-(*     "squared_distance_row_vector_vector"; *)
-(*     "squared_distance_row_vector_row_vector"; *)
-(*     "dims_int"; "dims_real"; "dims_vector"; "dims_rowvector"; *)
-(*     "dims_matrix"; "dims_array"; *)
-(*     "num_elements_array"; *)
-(*     "size_array"; *)
-(*     "log_sum_exp_vector"; "log_sum_exp_rowvector"; "log_sum_exp_matrix"; *)
-(*     "min_vector"; "min_rowvector"; "min_matrix"; *)
-(*     "max_vector"; "max_rowvector"; "max_matrix"; *)
-(*     "sum_vector"; "sum_rowvector"; "sum_matrix"; *)
-(*     "prod_vector"; "prod_rowvector"; "prod_matrix"; *)
-(*     "mean_vector"; "mean_rowvector"; "mean_matrix"; *)
-(*     "variance_vector"; "variance_rowvector"; "variance_matrix"; *)
-(*     "sd_vector"; "sd_rowvector"; "sd_matrix"; *)
-(*     "rep_vector_real_int"; "rep_vector_int_int"; *)
-(*     "rep_row_vector_real_int"; "rep_row_vector_int_int"; *)
-(*     "rep_matrix_real_int_int"; "rep_matrix_int_int_int"; *)
-(*     "rep_matrix_vector_int"; *)
-(*     "rep_matrix_rowvector_int"; *)
-(*     "col_matrix_int"; "row_matrix_int"; *)
-(*     "block_matrix_int_int_int_int"; "sub_col_matrix_int_int_int"; *)
-(*     "sub_row_matrix_int_int_int"; *)
-(*     "head_vector_int"; "head_rowvector_int"; "head_array_int"; *)
-(*     "tail_vector_int"; "tail_rowvector_int"; "tail_array_int"; *)
-(*     "segment_vector_int_int"; "segment_rowvector_int_int"; *)
-(*     "segment_array_int_int"; *)
-(*     "append_col_matrix_matrix"; "append_col_matrix_vector"; *)
-(*     "append_col_vector_matrix"; "append_col_vector_vector"; *)
-(*     "append_col_row_vector_row_vector"; "append_col_real_row_vector"; *)
-(*     "append_col_int_row_vector"; "append_col_row_vector_real"; *)
-(*     "append_col_row_vector_int"; *)
-(*     "append_row_matrix_matrix"; "append_row_matrix_row_vector"; *)
-(*     "append_row_row_vector_matrix"; "append_row_row_vector_row_vector"; *)
-(*     "append_row_vector_vector"; "append_row_real_vector"; *)
-(*     "append_row_int_vector"; "append_row_vector_real"; *)
-(*     "append_row_vector_int"; *)
-(*   ] *)
+let pp_imports lib ff funs =
+  if List.length funs > 0 then
+    fprintf ff "from %s import %a@,"
+      lib
+      (pp_print_list ~pp_sep:(fun ff () -> fprintf ff ", ") pp_print_string)
+      funs
 
 let trans_prog runtime ff (p : typed_program) =
-  fprintf ff "@[<v 0>%s@,%s%a@,%s%a@,@,@]"
-    ("from runtimes."^runtime^".distributions import *")
-    ("from runtimes."^runtime^".dppllib import ")
-    (pp_print_list ~pp_sep:(fun ff () -> fprintf ff ", ") pp_print_string)
-    dppllib
-    ("from runtimes."^runtime^".stanlib import ")
-    (pp_print_list ~pp_sep:(fun ff () -> fprintf ff ", ") pp_print_string)
+  fprintf ff "@[<v 0>%a%a%a@,@]"
+    (pp_imports ("runtimes."^runtime^".distributions")) ["*"]
+    (pp_imports ("runtimes."^runtime^".dppllib")) dppllib
+    (pp_imports ("runtimes."^runtime^".stanlib"))
     (SSet.to_list (get_stanlib_calls p));
   Option.iter ~f:(trans_functionblock ff) p.functionblock;
   trans_transformeddatablock ff p.datablock p.transformeddatablock;
