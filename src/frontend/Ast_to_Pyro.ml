@@ -86,7 +86,7 @@ let rec dims_of_sizedtype t =
   | SizedType.SInt
   | SReal -> []
   | SVector e -> [e]
-  | SRowVector e -> [expr_one; e]
+  | SRowVector e -> [e]
   | SMatrix (e1, e2) -> [e1; e2]
   | SArray (t, e) -> e :: dims_of_sizedtype t
 
@@ -144,7 +144,7 @@ let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
         trans_exprs eles
         dtype_of_unsized_type emeta.type_
   | RowVectorExpr eles ->
-      fprintf ff "array([[%a]], dtype=%a)"
+      fprintf ff "array([%a], dtype=%a)"
         trans_exprs eles
         dtype_of_unsized_type emeta.type_
   | Indexed (lhs, indices) ->
