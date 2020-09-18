@@ -1,7 +1,7 @@
 import pyro
 from pyro.distributions import Exponential
 from torch import tensor as array
-from torch import zeros, ones, Tensor
+from torch import zeros, ones, Tensor, matmul
 import torch
 
 def sample(site_name, dist):

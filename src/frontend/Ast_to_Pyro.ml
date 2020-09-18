@@ -168,7 +168,7 @@ and trans_binop e1 e2 ff op =
         | ((UInt | UReal), _) | (_, (UInt | UReal)) ->
             fprintf ff "%a * %a" trans_expr e1 trans_expr e2
         | _ ->
-            fprintf ff "dot(%a, %a)" trans_expr e1 trans_expr e2
+            fprintf ff "matmul(%a, %a)" trans_expr e1 trans_expr e2
         end
     | Divide -> fprintf ff "%a / %a" trans_expr e1 trans_expr e2
     | IntDivide -> fprintf ff "%a // %a" trans_expr e1 trans_expr e2
@@ -1041,7 +1041,7 @@ let trans_guideblock ff networks data tdata guide_parameters guide =
   end
 
 let dppllib =
-  [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones";
+  [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones"; "matmul";
     "dtype_long"; "dtype_double"; "register_network" ]
 
 let stanlib =
