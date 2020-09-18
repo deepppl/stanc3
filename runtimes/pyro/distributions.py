@@ -39,6 +39,7 @@ bernoulli = d.Bernoulli
 normal = d.Normal
 def normal_lpdf(y, mu, sigma):
     return d.Normal(mu, sigma).log_prob(y)
+normal_lpdf_real_real_real = normal_lpdf
 student_t = d.StudentT
 inv_gamma = d.InverseGamma
 gamma = d.Gamma

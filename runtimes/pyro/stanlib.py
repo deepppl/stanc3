@@ -3,101 +3,130 @@ import torch
 from torch import ones, tensor
 from numbers import Number
 
-def dispatch1(tf, mf, x):
-    if isinstance(x, torch.Tensor):
-        return tf(x)
-    else:
-        return mf(x)
-
-def _XXX_TODO_XXX_(x):
-    assert false, f'{x}: not yet implemented'
+def _XXX_TODO_XXX_(f):
+    def todo(x):
+        assert false, f'{f}: not yet implemented'
+    return todo
 
 ## 3.8 Power and Logarithm Functions
 
+# R sqrt(T x)
+# square root of x
 from torch import sqrt as tsqrt
 from math import sqrt as msqrt
-def sqrt(x):
-    """
-    R sqrt(T x)
-    square root of x
-    """
-    return dispatch1(tsqrt, msqrt, x)
+sqrt_int = msqrt
+sqrt_real = msqrt
+sqrt_vector = tsqrt
+sqrt_rowvector = tsqrt
+sqrt_matrix = tsqrt
+sqrt_array = tsqrt
 
 # R cbrt(T x)
 # cube root of x
-def cbrt(x):
-    _XXX_TODO_XXX_('cbrt')
+cbrt_int = _XXX_TODO_XXX_('cbrt')
+cbrt_real = _XXX_TODO_XXX_('cbrt')
+cbrt_vector = _XXX_TODO_XXX_('cbrt')
+cbrt_rowvector = _XXX_TODO_XXX_('cbrt')
+cbrt_matrix = _XXX_TODO_XXX_('cbrt')
+cbrt_array = _XXX_TODO_XXX_('cbrt')
 
+# R square(T x)
+# square of x
 from torch import square as tsquare
-def square(x):
-    """
-    R square(T x)
-    square of x
-    """
-    return dispatch1(tsquare, lambda x: x * x, x)
+square_int = lambda x: x * x
+square_real = lambda x: x * x
+square_vector = tsquare
+square_rowvector = tsquare
+square_matrix = tsquare
+square_array = tsquare
 
+
+# R exp(T x)
+# natural exponential of x
 from torch import exp as texp
 from math import exp as mexp
-def exp(x):
-    """
-    R exp(T x)
-    natural exponential of x
-    """
-    return dispatch1(texp, mexp, x)
+exp_int = mexp
+exp_real = mexp
+exp_vector = texp
+exp_rowvector = texp
+exp_matrix = texp
+exp_array = texp
 
 # R exp2(T x)
 # base-2 exponential of x
-def exp2(x):
-    _XXX_TODO_XXX_('exp2')
+exp2_int = _XXX_TODO_XXX_('exp2')
+exp2_real = _XXX_TODO_XXX_('exp2')
+exp2_vector = _XXX_TODO_XXX_('exp2')
+exp2_rowvector = _XXX_TODO_XXX_('exp2')
+exp2_matrix = _XXX_TODO_XXX_('exp2')
+exp2_array = _XXX_TODO_XXX_('exp2')
 
+# R log(T x)
+# natural logarithm of x
 from torch import log as tlog
 from math import log as mlog
-def log(x):
-    """
-    R log(T x)
-    natural logarithm of x
-    """
-    return dispatch1(tlog, mlog, x)
+log_int = mlog
+log_real = mlog
+log_vector = tlog
+log_rowvector = tlog
+log_matrix = tlog
+log_array = tlog
 
+# R log2(T x)
+# base-2 logarithm of x
 from torch import log2 as tlog2
 from math import log2 as mlog2
-def log2(x):
-    """
-    R log2(T x)
-    base-2 logarithm of x
-    """
-    return dispatch1(tlog2, mlog2, x)
+log2_int = mlog2
+log2_real = mlog2
+log2_vector = tlog2
+log2_rowvector = tlog2
+log2_matrix = tlog2
+log2_array = tlog2
 
+# R log10(T x)
+# base-10 logarithm of x
 from torch import log10 as tlog10
 from math import log10 as mlog10
-def log10(x):
-    """
-    R log10(T x)
-    base-10 logarithm of x
-    """
-    return dispatch1(tlog10, mlog10, x)
+log10_int = mlog10
+log10_real = mlog10
+log10_vector = tlog10
+log10_rowvector = tlog10
+log10_matrix = tlog10
+log10_array = tlog10
 
-def pow(x, y):
-    """
-    real pow(real x, real y)
-    Return x raised to the power of y.
-    """
-    return x ** y
+# real pow(real x, real y)
+# Return x raised to the power of y.
+pow_int_int = lambda x, y: x ** y
+pow_int_real = lambda x, y: x ** y
+pow_real_int = lambda x, y: x ** y
+pow_real_real = lambda x, y: x ** y
 
 # R inv(T x)
 # inverse of x
-def inv(x):
-    _XXX_TODO_XXX_('inv')
+inv_int = _XXX_TODO_XXX_('inv')
+inv_real = _XXX_TODO_XXX_('inv')
+inv_vector = _XXX_TODO_XXX_('inv')
+inv_rowvector = _XXX_TODO_XXX_('inv')
+inv_matrix = _XXX_TODO_XXX_('inv')
+inv_array = _XXX_TODO_XXX_('inv')
 
 # R inv_sqrt(T x)
 # inverse of the square root of x
-def inv_sqrt(x):
-    _XXX_TODO_XXX_('inv_sqrt')
+inv_sqrt_int = _XXX_TODO_XXX_('inv_sqrt')
+inv_sqrt_real = _XXX_TODO_XXX_('inv_sqrt')
+inv_sqrt_vector = _XXX_TODO_XXX_('inv_sqrt')
+inv_sqrt_rowvector = _XXX_TODO_XXX_('inv_sqrt')
+inv_sqrt_matrix = _XXX_TODO_XXX_('inv_sqrt')
+inv_sqrt_array = _XXX_TODO_XXX_('inv_sqrt')
 
 # R inv_square(T x)
 # inverse of the square of x
-def inv_square(x):
-    _XXX_TODO_XXX_('inv_square')
+inv_square_int = _XXX_TODO_XXX_('inv_square')
+inv_square_real = _XXX_TODO_XXX_('inv_square')
+inv_square_vector = _XXX_TODO_XXX_('inv_square')
+inv_square_rowvector = _XXX_TODO_XXX_('inv_square')
+inv_square_matrix = _XXX_TODO_XXX_('inv_square')
+inv_square_array = _XXX_TODO_XXX_('inv_square')
 
 ## 4.1 Reductions
 
@@ -108,12 +137,14 @@ def inv_square(x):
 # int min(int[] x)
 # The minimum value in x, or error if x is size 0.
 from torch import min
+min_array = min
 
 # real max(real[] x)
 # The maximum value in x, or −∞ if x is size 0.
 # int max(int[] x)
 # The maximum value in x, or error if x is size 0.
 from torch import max
+max_array = max
 
 
 ## 4.1.2 Sum, Product, and Log Sum of Exp
@@ -124,17 +155,20 @@ from torch import max
 # real sum(real[] x)
 # The sum of the elements in x; see definition above.
 from torch import sum
+sum_array = sum
 
 # real prod(real[] x)
 # The product of the elements in x, or 1 if x is size 0.
 # real prod(int[] x)
 # The product of the elements in x, product(x)={∏Nn=1xnifN>01ifN=0
 from torch import prod
+prod_array = prod
 
 # real log_sum_exp(real[] x)
 # The natural logarithm of the sum of the exponentials of the elements in x, or −∞
 # if the array is empty.
-from torch import logsumexp as log_sum_exp
+from torch import logsumexp
+log_sum_exp_array = logsumexp
 
 ## 4.1.3 Sample Mean, Variance, and Standard Deviation
 
@@ -142,16 +176,19 @@ from torch import logsumexp as log_sum_exp
 # The sample mean of the elements in x.
 # It is an error to the call the mean function with an array of size 0.
 from torch import mean
+mean_array = mean
 
 # real variance(real[] x)
 # The sample variance of the elements in x.
 # It is an error to call the variance function with an array of size 0.
-from torch import var as variance
+from torch import var
+variance_array = var
 
 # real sd(real[] x)
 # The sample standard deviation of elements in x.
 # It is an error to call the sd function with an array of size 0.
-from torch import std as sd
+from torch import std
+sd_array = std
 
 
 ## 4.1.4 Euclidean Distance and Squared Distance
@@ -161,139 +198,312 @@ from torch import std as sd
 # real distance(row_vector x, vector y)
 # real distance(row_vector x, row_vector y)
 # The Euclidean distance between x and y
-def distance(x):
-    _XXX_TODO_XXX_('distance')
+distance_vector_vector = _XXX_TODO_XXX_('distance')
+distance_vector_row_vector = _XXX_TODO_XXX_('distance')
+distance_row_vector_vector = _XXX_TODO_XXX_('distance')
+distance_row_vector_row_vector = _XXX_TODO_XXX_('distance')
 
 # real squared_distance(vector x, vector y)
 # real squared_distance(vector x, row_vector [] y)
 # real squared_distance(row_vector x, vector [] y)
 # real squared_distance(row_vector x, row_vector[] y)
 # The squared Euclidean distance between x and y
-def squared_distance(x):
-    _XXX_TODO_XXX_('squared_distance')
+squared_distance_vector_vector = _XXX_TODO_XXX_('squared_distance')
+squared_distance_vector_row_vector = _XXX_TODO_XXX_('squared_distance')
+squared_distance_row_vector_vector = _XXX_TODO_XXX_('squared_distance')
+squared_distance_row_vector_row_vector = _XXX_TODO_XXX_('squared_distance')
 
 
 ## 4.2 Array Size and Dimension Function
 
-def dims(x):
-    """
-    int[] dims(T x)
-    Return an integer array containing the dimensions of x; the type
-    of the argument T can be any Stan type with up to 8 array
-    dimensions.
-    """
-    return x.shape
+# int[] dims(T x)
+# Return an integer array containing the dimensions of x; the type
+# of the argument T can be any Stan type with up to 8 array
+# dimensions.
+dims_int = tensor([], dtype=torch.long)
+dims_real = tensor([], dtype=torch.long)
+dims_vector = lambda x: x.shape
+dims_rowvector = lambda x: x.shape
+dims_matrix = lambda x: x.shape
+dims_array = lambda x: x.shape
 
-def num_elements(x):
-    """
-    int num_elements(T[] x)
-    Return the total number of elements in the array x including all
-    elements in contained arrays, vectors, and matrices. T can be any
-    array type. For example, if x is of type real[4,3] then
-    num_elements(x) is 12, and if y is declared as matrix[3,4] y[5],
-    then size(y) evaluates to 60.
-    """
-    return math.prod(x.shape)
+# int num_elements(T[] x)
+# Return the total number of elements in the array x including all
+# elements in contained arrays, vectors, and matrices. T can be any
+# array type. For example, if x is of type real[4,3] then
+# num_elements(x) is 12, and if y is declared as matrix[3,4] y[5],
+# then size(y) evaluates to 60.
+num_elements_array = lambda x: math.prod(x.shape)
 
-def size(x):
-    """
-    int size(T[] x)
-    Return the number of elements in the array x; the type of the array T
-    can be any type, but the size is just the size of the top level
-    array, not the total number of elements contained. For example, if
-    x is of type real[4,3] then size(x) is 4.
-    """
-    return x.shape[0]
+# int size(T[] x)
+# Return the number of elements in the array x; the type of the array T
+# can be any type, but the size is just the size of the top level
+# array, not the total number of elements contained. For example, if
+# x is of type real[4,3] then size(x) is 4.
+size_array = lambda x: x.shape[0]
 
+## 5.6 Reductions
+
+## 5.6.1 Log Sum of Exponents
+
+# real log_sum_exp(vector x)
+# The natural logarithm of the sum of the exponentials of the elements in x
+log_sum_exp_vector = logsumexp
+
+# real log_sum_exp(row_vector x)
+# The natural logarithm of the sum of the exponentials of the elements in x
+log_sum_exp_rowvector = logsumexp
+
+# real log_sum_exp(matrix x)
+# The natural logarithm of the sum of the exponentials of the elements in x
+log_sum_exp_matrix = logsumexp
+
+## 5.6.2 Minimum and Maximum
+
+# real min(vector x)
+# The minimum value in x, or +∞ if x is empty
+min_vector = min
+
+# real min(row_vector x)
+# The minimum value in x, or +∞ if x is empty
+min_rowvector = min
+
+# real min(matrix x)
+# The minimum value in x, or +∞ if x is empty
+min_matrix = min
+
+# real max(vector x)
+# The maximum value in x, or −∞ if x is empty
+max_vector = max
+
+# real max(row_vector x)
+# The maximum value in x, or −∞ if x is empty
+max_rowvector = max
+
+# real max(matrix x)
+# The maximum value in x, or −∞ if x is empty
+max_matrix = max
+
+# 5.6.3 Sums and Products
+
+# real sum(vector x)
+# The sum of the values in x, or 0 if x is empty
+sum_vector = sum
+
+# real sum(row_vector x)
+# The sum of the values in x, or 0 if x is empty
+sum_rowvector = sum
+
+# real sum(matrix x)
+# The sum of the values in x, or 0 if x is empty
+sum_matrix = sum
+
+# real prod(vector x)
+# The product of the values in x, or 1 if x is empty
+prod_vector = prod
+
+# real prod(row_vector x)
+# The product of the values in x, or 1 if x is empty
+prod_rowvector = prod
+
+# real prod(matrix x)
+# The product of the values in x, or 1 if x is empty
+prod_matrix = prod
+
+## 5.6.4 Sample Moments
+
+# real mean(vector x)
+# The sample mean of the values in x; see section array reductions for details.
+mean_vector = mean
+
+# real mean(row_vector x)
+# The sample mean of the values in x; see section array reductions for details.
+mean_rowvector = mean
+
+# real mean(matrix x)
+# The sample mean of the values in x; see section array reductions for details.
+mean_matrix = mean
+
+# real variance(vector x)
+# The sample variance of the values in x; see section array reductions for details.
+variance_vector = var
+
+# real variance(row_vector x)
+# The sample variance of the values in x; see section array reductions for details.
+variance_rowvector = var
+
+# real variance(matrix x)
+# The sample variance of the values in x; see section array reductions for details.
+variance_matrix = var
+
+# real sd(vector x)
+# The sample standard deviation of the values in x; see section array reductions for details.
+sd_vector = std
+
+# real sd(row_vector x)
+# The sample standard deviation of the values in x; see section array reductions for details.
+sd_rowvector = std
+
+# real sd(matrix x)
+# The sample standard deviation of the values in x; see section array reductions for details.
+sd_matrix = std
 
 ## 5.7 Broadcast Functions
 
-def rep_vector(x, m):
-    """
-    vector rep_vector(real x, int m)
-    Return the size m (column) vector consisting of copies of x.
-    """
-    return x * ones(m)
+# vector rep_vector(real x, int m)
+# Return the size m (column) vector consisting of copies of x.
+rep_vector_real_int = lambda x, m: x * ones(m)
+rep_vector_int_int = lambda x, m: x * ones(m)
 
-def rep_row_vector(x, m):
-    """
-    row_vector rep_row_vector(real x, int n)
-    Return the size n row vector consisting of copies of x.
-    """
-    return x * ones(1, m)
+# row_vector rep_row_vector(real x, int n)
+# Return the size n row vector consisting of copies of x.
+rep_row_vector_real_int = lambda x, m: x * ones(m)
+rep_row_vector_int_int = lambda x, m: x * ones(m)
 
-def rep_matrix(x, *dims):
-    """
-    matrix rep_matrix(real x, int m, int n)
-    Return the m by n matrix consisting of copies of x.
-    matrix rep_matrix(vector v, int n)
-    Return the m by n matrix consisting of n copies of the (column) vector v of size m.
-    matrix rep_matrix(row_vector rv, int m)
-    Return the m by n matrix consisting of m copies of the row vector rv of size n.
-    """
-    if len(dims) == 2:
-        return x * ones(*dims)
-    elif len(x.shape) == 1:
-        return x * ones(x.shape[0], *dims)
-    elif len(x.shape) == 2:
-        return x * ones(*dims, x.shape[1])
-    else:
-        assert False
+# matrix rep_matrix(real x, int m, int n)
+# Return the m by n matrix consisting of copies of x.
+rep_matrix_real_int_int = lambda x, m, n: x * ones([m, n])
+rep_matrix_int_int_int = lambda x, m, n: x * ones([m, n])
+
+# matrix rep_matrix(vector v, int n)
+# Return the m by n matrix consisting of n copies of the (column) vector v of size m.
+rep_matrix_vector_int = lambda v, n: v.expand([n, v.shape[0]]).t()
+
+# matrix rep_matrix(row_vector rv, int m)
+# Return the m by n matrix consisting of m copies of the row vector rv of size n.
+rep_matrix_rowvector_int = lambda rv, m: rv.expand([m, rv.shape[0]])
+
+
+## 5.9 Slicing and Blocking Functions
+
+## 5.9.1 Columns and Rows
+
+# vector col(matrix x, int n)
+# The n-th column of matrix x
+col_matrix_int = lambda x, n: x[:, n - 1]
+
+# row_vector row(matrix x, int m)
+# The m-th row of matrix x
+row_matrix_int = lambda x, m: x[m - 1]
+
+## 5.9.2 Block Operations
+
+## 5.9.2.1 Matrix Slicing Operations
+
+# matrix block(matrix x, int i, int j, int n_rows, int n_cols)
+# Return the submatrix of x that starts at row i and column j and extends n_rows rows and n_cols columns.
+block_matrix_int_int_int_int = lambda x, i, j, n_rows, n_cols: x[i - 1 : i - 1 + n_rows, j - 1 : j - 1 + n_cols]
+
+# vector sub_col(matrix x, int i, int j, int n_rows)
+# Return the sub-column of x that starts at row i and column j and extends n_rows rows and 1 column.
+sub_col_matrix_int_int_int = lambda x, i, j, n_rows: x[i - 1 : i - 1 + n_rows, j - 1 : j]
+
+# row_vector sub_row(matrix x, int i, int j, int n_cols)
+# Return the sub-row of x that starts at row i and column j and extends 1 row and n_cols columns.
+sub_row_matrix_int_int_int = lambda x, i, y, n_cols: x[i - 1 : i, j - 1 : j - 1 + n_cols]
+
+# 5.9.2.2 Vector and Array Slicing Operations
+
+# vector head(vector v, int n)
+# Return the vector consisting of the first n elements of v.
+head_vector_int = lambda v, n: v[0:n]
+
+# row_vector head(row_vector rv, int n)
+# Return the row vector consisting of the first n elements of rv.
+head_rowvector_int = lambda v, n: v[0:n]
+
+# T[] head(T[] sv, int n)
+# Return the array consisting of the first n elements of sv; applies to up to three-dimensional arrays containing any type of elements T.
+head_array_int = lambda v, n: v[0:n]
+
+# vector tail(vector v, int n)
+# Return the vector consisting of the last n elements of v.
+tail_vector_int = lambda v, n: v[v.shape[0] - n :]
+
+# row_vector tail(row_vector rv, int n)
+# Return the row vector consisting of the last n elements of rv.
+tail_rowvector_int = lambda v, n: v[v.shape[0] - n :]
+
+# T[] tail(T[] sv, int n)
+# Return the array consisting of the last n elements of sv; applies to up to three-dimensional arrays containing any type of elements T.
+tail_array_int = lambda v, n: v[v.shape[0] - n :]
+
+# vector segment(vector v, int i, int n)
+# Return the vector consisting of the n elements of v starting at i; i.e., elements i through through i + n - 1.
+segment_vector_int_int = lambda v, i, n: v[i - 1 : i - 1 + n]
+
+# row_vector segment(row_vector rv, int i, int n)
+# Return the row vector consisting of the n elements of rv starting at i; i.e., elements i through through i + n - 1.
+segment_rowvector_int_int = lambda v, i, n: v[i - 1 : i - 1 + n]
+
+# T[] segment(T[] sv, int i, int n)
+# Return the array consisting of the n elements of sv starting at i; i.e., elements i through through i + n - 1. Applies to up to three-dimensional arrays containing any type of elements T.
+segment_array_int_int = lambda v, i, n: v[i - 1 : i - 1 + n]
+
 
 ## 5.10 Matrix Concatenation
 
 # Horizontal concatenation
 from torch import cat
-def append_col(x, y):
-    """
-    matrix append_col(matrix x, matrix y)
-    Combine matrices x and y by columns. The matrices must have the same number of rows.
-    matrix append_col(matrix x, vector y)
-    Combine matrix x and vector y by columns. The matrix and the vector must have the same number of rows.
-    matrix append_col(vector x, matrix y)
-    Combine vector x and matrix y by columns. The vector and the matrix must have the same number of rows.
-    matrix append_col(vector x, vector y)
-    Combine vectors x and y by columns. The vectors must have the same number of rows.
-    row_vector append_col(row_vector x, row_vector y)
-    Combine row vectors x and y of any size into another row vector.
-    row_vector append_col(real x, row_vector y)
-    Append x to the front of y, returning another row vector.
-    row_vector append_col(row_vector x, real y)
-    Append y to the end of x, returning another row vector.
-    """
-    # XXX TODO: review XXX
-    if isinstance(x, Number):
-        return cat([x * ones([1,1], dtype=torch.double), y])
-    elif isinstance(y, Number):
-        return cat([x, y * ones([1,1], dtype=torch.double)])
-    elif len(x.shape) == 1 and len(y.shape) == 1:
-        return cat([x.expand([1,x.shape[0]]), x.expand([1,x.shape[0]])], 1)
-    else:
-        return cat([x, y], 1)
+
+# matrix append_col(matrix x, matrix y)
+# Combine matrices x and y by columns. The matrices must have the same number of rows.
+append_col_matrix_matrix = lambda x, y: cat([x.t(), y.t()]).t()
+
+# matrix append_col(matrix x, vector y)
+# Combine matrix x and vector y by columns. The matrix and the vector must have the same number of rows.
+append_col_matrix_vector = lambda x, y: cat([x.t(), y.expand(1,y.shape[0])]).t()
+
+# matrix append_col(vector x, matrix y)
+# Combine vector x and matrix y by columns. The vector and the matrix must have the same number of rows.
+append_col_vector_matrix = lambda x, y: cat([x.expand(1,x.shape[0]), y.t()]).t()
+
+# matrix append_col(vector x, vector y)
+# Combine vectors x and y by columns. The vectors must have the same number of rows.
+append_col_vector_vector = lambda x, y: cat([x.expand(1,x.shape[0]), y.expand(1,y.shape[0])]).t()
+
+# row_vector append_col(row_vector x, row_vector y)
+# Combine row vectors x and y of any size into another row vector.
+append_col_row_vector_row_vector = lambda x, y: cat(x, y)
+
+# row_vector append_col(real x, row_vector y)
+# Append x to the front of y, returning another row vector.
+append_col_real_row_vector = lambda x, y: cat([tensor([x], dtype=torch.double), y])
+append_col_int_row_vector = lambda x, y: cat([tensor([x], dtype=torch.double), y])
+
+# row_vector append_col(row_vector x, real y)
+# Append y to the end of x, returning another row vector.
+append_col_row_vector_real = lambda x, y: cat([x, tensor([y], dtype=torch.double)])
+append_col_row_vector_int = lambda x, y: cat([x, tensor([y], dtype=torch.double)])
 
 # 5.10.0.2 Vertical concatenation
 
-def append_row(x, y):
-    """
-    matrix append_row(matrix x, matrix y)
-    Combine matrices x and y by rows. The matrices must have the same number of columns.
-    matrix append_row(matrix x, row_vector y)
-    Combine matrix x and row vector y by rows. The matrix and the row vector must have the same number of columns.
-    matrix append_row(row_vector x, matrix y)
-    Combine row vector x and matrix y by rows. The row vector and the matrix must have the same number of columns.
-    matrix append_row(row_vector x, row_vector y)
-    Combine row vectors x and y by row. The row vectors must have the same number of columns.
-    vector append_row(vector x, vector y)
-    Concatenate vectors x and y of any size into another vector.
-    vector append_row(real x, vector y)
-    Append x to the top of y, returning another vector.
-    vector append_row(vector x, real y)
-    Append y to the bottom of x, returning another vector.
-    """
-    # XXX TODO: review XXX
-    if isinstance(x, Number):
-        return cat([tensor([x], dtype=torch.double), y])
-    elif isinstance(y, Number):
-        return cat([x, tensor([y], dtype=torch.double)])
-    else:
-        return cat([x, y])
+# matrix append_row(matrix x, matrix y)
+# Combine matrices x and y by rows. The matrices must have the same number of columns.
+append_row_matrix_matrix = lambda x, y: cat([x, y])
+
+# matrix append_row(matrix x, row_vector y)
+# Combine matrix x and row vector y by rows. The matrix and the row vector must have the same number of columns.
+append_row_matrix_row_vector = lambda x, y: cat([x, y.expand(1,y.shape[0])])
+
+# matrix append_row(row_vector x, matrix y)
+# Combine row vector x and matrix y by rows. The row vector and the matrix must have the same number of columns.
+append_row_row_vector_matrix = lambda x, y: cat([x.expand(1,x.shape[0]), y])
+
+# matrix append_row(row_vector x, row_vector y)
+# Combine row vectors x and y by row. The row vectors must have the same number of columns.
+append_row_row_vector_row_vector = lambda x, y: cat([x.expand(1,x.shape[0]), y.expand(1,y.shape[0])])
+
+# vector append_row(vector x, vector y)
+# Concatenate vectors x and y of any size into another vector.
+append_row_vector_vector = lambda x, y: cat([x, y])
+
+# vector append_row(real x, vector y)
+# Append x to the top of y, returning another vector.
+append_row_real_vector = lambda x, y: cat([tensor([x], dtype=torch.double), y])
+append_row_int_vector = lambda x, y: cat([tensor([x], dtype=torch.double), y])
+
+# vector append_row(vector x, real y)
+# Append y to the bottom of x, returning another vector.
+append_row_vector_real = lambda x, y: cat([x, tensor([y], dtype=torch.double)])
+append_row_vector_int = lambda x, y: cat([x, tensor([y], dtype=torch.double)])
