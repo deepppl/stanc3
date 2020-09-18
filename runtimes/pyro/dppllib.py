@@ -16,5 +16,8 @@ def observe(site_name, dist, obs):
 def factor(site_name, x):
     pyro.sample(site_name, Exponential(1), obs=-x)
 
+def register_network(name, x):
+    pyro.module(name, x)
+
 dtype_long = torch.long
 dtype_double = torch.double

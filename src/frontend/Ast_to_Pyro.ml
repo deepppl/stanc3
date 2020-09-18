@@ -983,7 +983,7 @@ let register_network networks ff ostmts =
         if nets <> [] then
           fprintf ff "# Networks@,%a@,"
             (print_list_newline
-               (fun ff net -> fprintf ff "pyro.module('%s', %a)"
+               (fun ff net -> fprintf ff "register_network('%s', %a)"
                    net.name trans_id net)) nets)
     ostmts
 
@@ -1042,7 +1042,7 @@ let trans_guideblock ff networks data tdata guide_parameters guide =
 
 let dppllib =
   [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones";
-    "dtype_long"; "dtype_double" ]
+    "dtype_long"; "dtype_double"; "register_network" ]
 
 let stanlib =
   [ "sqrt"; "cbrt"; "square"; "exp"; "exp2"; "log"; "log2"; "log10";
