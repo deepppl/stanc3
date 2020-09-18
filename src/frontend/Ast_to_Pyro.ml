@@ -892,6 +892,16 @@ let trans_block_as_args ff block =
                 (print_list_comma trans_id) args)
     block
 
+let trans_networks_as_arg ff networks =
+  match networks with
+  | None -> ()
+  | Some nets ->
+      fprintf ff ", ";
+      pp_print_list
+        ~pp_sep:(fun ff () -> fprintf ff ", ")
+        (fun ff net -> fprintf ff "%s" net.net_id.name)
+        ff nets
+
 let trans_block_as_return ff block =
   Option.iter
     ~f:(fun stmts ->
@@ -978,8 +988,9 @@ let register_network networks ff ostmts =
     ostmts
 
 let trans_modelblock ff networks data tdata parameters tparameters model =
-  fprintf ff "@[<v 4>def model(%a):@,%a%a%a%a@]@,@,@."
+  fprintf ff "@[<v 4>def model(%a%a):@,%a%a%a%a@]@,@,@."
     trans_block_as_args (Option.merge ~f:(@) data tdata)
+    trans_networks_as_arg networks
     (register_network networks) model
     trans_parametersblock parameters
     (trans_block "Transformed parameters") tparameters
@@ -1021,8 +1032,9 @@ let trans_guideparametersblock ff guide_parameters =
 
 let trans_guideblock ff networks data tdata guide_parameters guide =
   if guide_parameters <> None || guide <> None then begin
-    fprintf ff "@[<v 4>def guide(%a):@,%a%a%a@]@."
+    fprintf ff "@[<v 4>def guide(%a%a):@,%a%a%a@]@."
       trans_block_as_args (Option.merge ~f:(@) data tdata)
+      trans_networks_as_arg networks
       (register_network networks) guide
       trans_guideparametersblock guide_parameters
       (trans_block ~eol:false ~naive:true "Guide") guide
