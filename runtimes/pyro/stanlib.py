@@ -1,3 +1,4 @@
+import math
 import torch
 from torch import ones, tensor
 from numbers import Number
@@ -170,6 +171,39 @@ def distance(x):
 # The squared Euclidean distance between x and y
 def squared_distance(x):
     _XXX_TODO_XXX_('squared_distance')
+
+
+## 4.2 Array Size and Dimension Function
+
+def dims(x):
+    """
+    int[] dims(T x)
+    Return an integer array containing the dimensions of x; the type
+    of the argument T can be any Stan type with up to 8 array
+    dimensions.
+    """
+    return x.shape
+
+def num_elements(x):
+    """
+    int num_elements(T[] x)
+    Return the total number of elements in the array x including all
+    elements in contained arrays, vectors, and matrices. T can be any
+    array type. For example, if x is of type real[4,3] then
+    num_elements(x) is 12, and if y is declared as matrix[3,4] y[5],
+    then size(y) evaluates to 60.
+    """
+    return math.prod(x.shape)
+
+def size(x):
+    """
+    int size(T[] x)
+    Return the number of elements in the array x; the type of the array T
+    can be any type, but the size is just the size of the top level
+    array, not the total number of elements contained. For example, if
+    x is of type real[4,3] then size(x) is 4.
+    """
+    return x.shape[0]
 
 
 ## 5.7 Broadcast Functions

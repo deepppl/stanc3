@@ -1049,6 +1049,7 @@ let stanlib =
     "pow"; "inv"; "inv_sqrt"; "inv_square";
     "min"; "max"; "sum"; "prod"; "log_sum_exp";
     "mean"; "variance"; "sd"; "distance"; "squared_distance";
+    "dims"; "num_elements"; "size";
     "rep_vector"; "rep_row_vector"; "rep_matrix"; "append_col"; "append_row"  ]
 
 let trans_prog runtime ff (p : typed_program) =
