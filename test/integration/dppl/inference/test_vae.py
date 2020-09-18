@@ -3,11 +3,10 @@ import torch
 from torch import nn
 from torch import tensor
 import pyro
-from pyro import distributions as dist
 import numpy as np
+from runtimes.pyro.dppl import PyroModel
 
-from .util import loadData
-import deepppl
+from util import loadData
 import os
 
 side = 28
@@ -72,17 +71,19 @@ class Classifier:
 def test_vae_inference():
     encoder, decoder = build_vae()
     train_loader, test_loader = loadData(batch_size)
-    model = deepppl.PyroModel(
-                                model_file = 'deepppl/tests/good/vae.stan', 
-                                encoder=encoder,
-                                decoder=decoder)
+    model = PyroModel('test/integration/dppl/good/vae.stan')
     svi = model.svi(params = {'lr' : 0.01})
 
     for epoch in range(4):  # loop over the dataset multiple times
         for j, (imgs, _) in enumerate(train_loader, 0):
             # calculate the loss and take a gradient step
-            loss = svi.step(nz, imgs)
+            loss = svi.step(nz=nz, x=imgs, encoder=encoder, decoder=decoder)
     classifier = Classifier(encoder, train_loader)
     img, lbls = iter(test_loader).next()
     accuracy = (lbls.data.numpy() == classifier.classify(img)).mean()
     assert accuracy > 0.15
+  
+  
+if __name__ == "__main__":
+    print('coucou')  
+    test_vae_inference()
