@@ -128,6 +128,105 @@ inv_square_rowvector = _XXX_TODO_XXX_('inv_square')
 inv_square_matrix = _XXX_TODO_XXX_('inv_square')
 inv_square_array = _XXX_TODO_XXX_('inv_square')
 
+
+# 3.14 Composed Functions
+
+# R expm1(T x)
+# natural exponential of x minus 1
+expm1_int = _XXX_TODO_XXX_('expm1')
+expm1_real = _XXX_TODO_XXX_('expm1')
+expm1_vector = _XXX_TODO_XXX_('expm1')
+expm1_rowvector = _XXX_TODO_XXX_('expm1')
+expm1_matrix = _XXX_TODO_XXX_('expm1')
+expm1_array = _XXX_TODO_XXX_('expm1')
+
+
+# real fma(real x, real y, real z)
+# Return z plus the result of x multiplied by y. fma(x,y,z)=(x×y)+z
+fma_real_real_real = _XXX_TODO_XXX_('fma')
+
+# real multiply_log(real x, real y)
+# Warning: This function is deprecated and should be replaced with lmultiply. Return the product of x and the natural logarithm of y.
+multiply_log_real_real = _XXX_TODO_XXX_('multiply_log')
+
+# real lmultiply(real x, real y)
+# Return the product of x and the natural logarithm of y.
+lmultiply_real_real = _XXX_TODO_XXX_('lmultiply')
+
+# R log1p(T x)
+# natural logarithm of 1 plus x
+log1p_int = _XXX_TODO_XXX_('log1p')
+log1p_real = _XXX_TODO_XXX_('log1p')
+log1p_vector = _XXX_TODO_XXX_('log1p')
+log1p_rowvector = _XXX_TODO_XXX_('log1p')
+log1p_matrix = _XXX_TODO_XXX_('log1p')
+log1p_array = _XXX_TODO_XXX_('log1p')
+
+# R log1m(T x)
+# natural logarithm of 1 minus x
+log1m_int = _XXX_TODO_XXX_('log1m')
+log1m_real = _XXX_TODO_XXX_('log1m')
+log1m_vector = _XXX_TODO_XXX_('log1m')
+log1m_rowvector = _XXX_TODO_XXX_('log1m')
+log1m_matrix = _XXX_TODO_XXX_('log1m')
+log1m_array = _XXX_TODO_XXX_('log1m')
+
+# R log1p_exp(T x)
+# natural logarithm of one plus the natural exponentiation of x
+log1p_exp_int = _XXX_TODO_XXX_('log1p_exp')
+log1p_exp_real = _XXX_TODO_XXX_('log1p_exp')
+log1p_exp_vector = _XXX_TODO_XXX_('log1p_exp')
+log1p_exp_rowvector = _XXX_TODO_XXX_('log1p_exp')
+log1p_exp_matrix = _XXX_TODO_XXX_('log1p_exp')
+log1p_exp_array = _XXX_TODO_XXX_('log1p_exp')
+
+# R log1m_exp(T x)
+# logarithm of one minus the natural exponentiation of x
+log1m_exp_int = _XXX_TODO_XXX_('log1m_exp')
+log1m_exp_real = _XXX_TODO_XXX_('log1m_exp')
+log1m_exp_vector = _XXX_TODO_XXX_('log1m_exp')
+log1m_exp_rowvector = _XXX_TODO_XXX_('log1m_exp')
+log1m_exp_matrix = _XXX_TODO_XXX_('log1m_exp')
+log1m_exp_array = _XXX_TODO_XXX_('log1m_exp')
+
+# real log_diff_exp(real x, real y)
+# Return the natural logarithm of the difference of the natural exponentiation of x and the natural exponentiation of y.
+log_diff_exp_real_real = _XXX_TODO_XXX_('log_diff_exp')
+
+# real log_mix(real theta, real lp1, real lp2)
+# Return the log mixture of the log densities lp1 and lp2 with mixing proportion theta, defined by log_mix(θ,λ1,λ2)=log(θexp(λ1)+(1−θ)exp(λ2))=log_sum_exp(log(θ)+λ1, log(1−θ)+λ2).
+def log_mix_real_real_real(theta, lp1, lp2):
+    return log_sum_exp_real_real(log_real(theta) + lp1, log_real(1 - theta) + lp2)
+
+# real log_sum_exp(real x, real y)
+# Return the natural logarithm of the sum of the natural exponentiation of x and the natural exponentiation of y. log_sum_exp(x,y)=log(exp(x)+exp(y))
+from torch import logsumexp
+def log_sum_exp_real_real(x, y):
+    max = x if x > y else y
+    dx = x - max
+    dy = y - max
+    sum_of_exp = exp_real(dx) + exp_real(dy)
+    return max + log_real(sum_of_exp)
+
+# R log_inv_logit(T x)
+# natural logarithm of the inverse logit function of x
+log_inv_logit_int = _XXX_TODO_XXX_('log_inv_logit')
+log_inv_logit_real = _XXX_TODO_XXX_('log_inv_logit')
+log_inv_logit_vector = _XXX_TODO_XXX_('log_inv_logit')
+log_inv_logit_rowvector = _XXX_TODO_XXX_('log_inv_logit')
+log_inv_logit_matrix = _XXX_TODO_XXX_('log_inv_logit')
+log_inv_logit_array = _XXX_TODO_XXX_('log_inv_logit')
+
+# R log1m_inv_logit(T x)
+# natural logarithm of 1 minus the inverse logit function of x
+log_inv_logit_int = _XXX_TODO_XXX_('log_inv_logit')
+log_inv_logit_real = _XXX_TODO_XXX_('log_inv_logit')
+log_inv_logit_vector = _XXX_TODO_XXX_('log_inv_logit')
+log_inv_logit_rowvector = _XXX_TODO_XXX_('log_inv_logit')
+log_inv_logit_matrix = _XXX_TODO_XXX_('log_inv_logit')
+log_inv_logit_array = _XXX_TODO_XXX_('log_inv_logit')
+
+
 ## 4.1 Reductions
 
 # 4.1.1 Minimum and Maximum
@@ -167,7 +266,6 @@ prod_array = prod
 # real log_sum_exp(real[] x)
 # The natural logarithm of the sum of the exponentials of the elements in x, or −∞
 # if the array is empty.
-from torch import logsumexp
 log_sum_exp_array = logsumexp
 
 ## 4.1.3 Sample Mean, Variance, and Standard Deviation
