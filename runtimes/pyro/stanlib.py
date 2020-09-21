@@ -1,7 +1,7 @@
 import math
 import torch
-from torch import ones, tensor
-from numbers import Number
+import torch.nn
+from torch import ones, tensor, Tensor
 
 def _XXX_TODO_XXX_(f):
     def todo(x):
@@ -129,7 +129,38 @@ inv_square_matrix = _XXX_TODO_XXX_('inv_square')
 inv_square_array = _XXX_TODO_XXX_('inv_square')
 
 
-# 3.14 Composed Functions
+## 3.11 Link Functions
+
+# R logit(T x)
+# log odds, or logit, function applied to x
+logit_int = _XXX_TODO_XXX_('logit')
+logit_real = _XXX_TODO_XXX_('logit')
+logit_vector = _XXX_TODO_XXX_('logit')
+logit_rowvector = _XXX_TODO_XXX_('logit')
+logit_matrix = _XXX_TODO_XXX_('logit')
+logit_array = _XXX_TODO_XXX_('logit')
+
+# R inv_logit(T x)
+# logistic sigmoid function applied to x
+from torch import sigmoid
+inv_logit_int = lambda x: sigmoid(Tensor([x]))
+inv_logit_real = lambda x: sigmoid(Tensor([x]))
+inv_logit_vector = sigmoid
+inv_logit_rowvector = sigmoid
+inv_logit_matrix = sigmoid
+inv_logit_array = sigmoid
+
+# R inv_cloglog(T x)
+# inverse of the complementary log-log function applied to x
+inv_cloglog_int = _XXX_TODO_XXX_('inv_cloglog')
+inv_cloglog_real = _XXX_TODO_XXX_('inv_cloglog')
+inv_cloglog_vector = _XXX_TODO_XXX_('inv_cloglog')
+inv_cloglog_rowvector = _XXX_TODO_XXX_('inv_cloglog')
+inv_cloglog_matrix = _XXX_TODO_XXX_('inv_cloglog')
+inv_cloglog_array = _XXX_TODO_XXX_('inv_cloglog')
+
+
+## 3.14 Composed Functions
 
 # R expm1(T x)
 # natural exponential of x minus 1
@@ -210,21 +241,22 @@ def log_sum_exp_real_real(x, y):
 
 # R log_inv_logit(T x)
 # natural logarithm of the inverse logit function of x
-log_inv_logit_int = _XXX_TODO_XXX_('log_inv_logit')
-log_inv_logit_real = _XXX_TODO_XXX_('log_inv_logit')
-log_inv_logit_vector = _XXX_TODO_XXX_('log_inv_logit')
-log_inv_logit_rowvector = _XXX_TODO_XXX_('log_inv_logit')
-log_inv_logit_matrix = _XXX_TODO_XXX_('log_inv_logit')
-log_inv_logit_array = _XXX_TODO_XXX_('log_inv_logit')
+from torch.nn import LogSigmoid
+log_inv_logit_int = lambda x: LogSigmoid(Tensor([x]))
+log_inv_logit_real = lambda x: LogSigmoid(Tensor([x]))
+log_inv_logit_vector = LogSigmoid
+log_inv_logit_rowvector = LogSigmoid
+log_inv_logit_matrix = LogSigmoid
+log_inv_logit_array = LogSigmoid
 
 # R log1m_inv_logit(T x)
 # natural logarithm of 1 minus the inverse logit function of x
-log_inv_logit_int = _XXX_TODO_XXX_('log_inv_logit')
-log_inv_logit_real = _XXX_TODO_XXX_('log_inv_logit')
-log_inv_logit_vector = _XXX_TODO_XXX_('log_inv_logit')
-log_inv_logit_rowvector = _XXX_TODO_XXX_('log_inv_logit')
-log_inv_logit_matrix = _XXX_TODO_XXX_('log_inv_logit')
-log_inv_logit_array = _XXX_TODO_XXX_('log_inv_logit')
+log1m_inv_logit_int = _XXX_TODO_XXX_('log_inv_logit')
+log1m_inv_logit_real = _XXX_TODO_XXX_('log_inv_logit')
+log1m_inv_logit_vector = _XXX_TODO_XXX_('log_inv_logit')
+log1m_inv_logit_rowvector = _XXX_TODO_XXX_('log_inv_logit')
+log1m_inv_logit_matrix = _XXX_TODO_XXX_('log_inv_logit')
+log1m_inv_logit_array = _XXX_TODO_XXX_('log_inv_logit')
 
 
 ## 4.1 Reductions

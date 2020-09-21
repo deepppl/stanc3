@@ -65,6 +65,25 @@ let stanlib =
     "squared_distance_vector_vector"; "squared_distance_vector_row_vector";
     "squared_distance_row_vector_vector";
     "squared_distance_row_vector_row_vector";
+    (* 3.11 Link Functions *)
+    "logit_int";
+    "logit_real";
+    "logit_vector";
+    "logit_rowvector";
+    "logit_matrix";
+    "logit_array";
+    "inv_logit_int";
+    "inv_logit_real";
+    "inv_logit_vector";
+    "inv_logit_rowvector";
+    "inv_logit_matrix";
+    "inv_logit_array";
+    "inv_cloglog_int";
+    "inv_cloglog_real";
+    "inv_cloglog_vector";
+    "inv_cloglog_rowvector";
+    "inv_cloglog_matrix";
+    "inv_cloglog_array";
     (* 3.14 Composed Functions *)
     "expm1_int";
     "expm1_real";
@@ -108,12 +127,12 @@ let stanlib =
     "log_inv_logit_rowvector";
     "log_inv_logit_matrix";
     "log_inv_logit_array";
-    "log_inv_logit_int";
-    "log_inv_logit_real";
-    "log_inv_logit_vector";
-    "log_inv_logit_rowvector";
-    "log_inv_logit_matrix";
-    "log_inv_logit_array";
+    "log1m_inv_logit_int";
+    "log1m_inv_logit_real";
+    "log1m_inv_logit_vector";
+    "log1m_inv_logit_rowvector";
+    "log1m_inv_logit_matrix";
+    "log1m_inv_logit_array";
     (* 4.1 Reductions *)
     "dims_int"; "dims_real"; "dims_vector"; "dims_rowvector";
     "dims_matrix"; "dims_array";
