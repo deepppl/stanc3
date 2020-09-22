@@ -241,6 +241,12 @@ let is_real t =
   | Unsized (UnsizedType.UReal) -> true
   | _ -> false
 
+let is_tensor (type_ : typed_expression Type.t) =
+  match type_ with
+  | Sized (SInt | SReal)
+  | Unsized (UInt | UReal) -> false
+  | _ -> true
+
 let rec dims_of_sizedtype t =
   match t with
   | SizedType.SInt
@@ -335,8 +341,9 @@ let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
         trans_exprs eles
         dtype_of_unsized_type emeta.type_
   | Indexed (lhs, indices) ->
-      fprintf ff "%a%a" trans_expr lhs
+      fprintf ff "%a%a%s" trans_expr lhs
         (pp_print_list ~pp_sep:(fun _ff () -> ()) trans_idx) indices
+        (if UnsizedType.is_scalar_type emeta.type_ then ".item()" else "")
 
 and trans_numeral type_ ff x =
   begin match type_ with
@@ -450,12 +457,6 @@ and trans_dims ff (t : typed_expression Type.t) =
   | Unsized _ ->
       raise_s
         [%message "Expecting sized type" (t : typed_expression Type.t)]
-
-let is_tensor (type_ : typed_expression Type.t) =
-  match type_ with
-  | Sized (SInt | SReal)
-  | Unsized (UInt | UReal) -> false
-  | _ -> true
 
 let trans_expr_opt (type_ : typed_expression Type.t) ff = function
   | Some e -> trans_expr ff e
