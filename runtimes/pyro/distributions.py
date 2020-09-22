@@ -40,7 +40,10 @@ normal = d.Normal
 def normal_lpdf(y, mu, sigma):
     return d.Normal(mu, sigma).log_prob(y)
 normal_lpdf_real_real_real = normal_lpdf
+normal_lpdf_real_int_int = normal_lpdf
+normal_lpdf_vector_int_int = normal_lpdf
 normal_lpdf_vector_real_real = normal_lpdf
+normal_lpdf_vector_vector_real = normal_lpdf
 student_t = d.StudentT
 inv_gamma = d.InverseGamma
 gamma = d.Gamma
@@ -49,6 +52,7 @@ multi_normal = d.MultivariateNormal
 logistic = d.LogisticNormal
 cauchy = d.Cauchy
 lognormal = d.LogNormal
+double_exponential = d.Laplace
 
 def categorical_logit(logits):
     return d.Categorical(logits=logits)

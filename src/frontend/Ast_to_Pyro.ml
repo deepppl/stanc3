@@ -803,18 +803,25 @@ let rec trans_stmt ?(naive=false) ctx ff (ts : typed_statement) =
   match stmt_typed with
   | Assignment {assign_lhs; assign_rhs; assign_op} ->
       let rec expr_of_lval = function
-      | { lval= LVariable ident; lmeta } ->
-          { expr = Variable ident; emeta = lmeta }
-      | { lval= LIndexed (l, i); lmeta } ->
-          { expr= Indexed (expr_of_lval l, i); emeta=lmeta }
+      | { lval= LVariable id; lmeta } ->
+          {expr = Variable id; emeta = lmeta }
+      | { lval= LIndexed (lhs, indices); lmeta } ->
+          {expr = Indexed (expr_of_lval lhs, indices); emeta = lmeta; }
+      in
+      let rec trans_lval ff = function
+      | { lval= LVariable id; _ } -> trans_id ff id
+      | { lval= LIndexed (lhs, indices); _ } ->
+          fprintf ff "%a%a" trans_lval lhs
+            (pp_print_list ~pp_sep:(fun _ff () -> ()) trans_idx) indices
       in
       let trans_rhs lhs ff rhs =
         match assign_op with
         | Assign | ArrowAssign -> trans_expr ff rhs
         | OperatorAssign op -> trans_binop lhs rhs ff op
       in
-      let lhs = expr_of_lval assign_lhs in
-      fprintf ff "%a = %a" trans_expr lhs (trans_rhs lhs) assign_rhs
+      fprintf ff "%a = %a"
+        trans_lval assign_lhs
+        (trans_rhs (expr_of_lval assign_lhs)) assign_rhs
   | NRFunApp (fn_kind, id, args) ->
       trans_fun_app ff fn_kind id args
   | IncrementLogProb e | TargetPE e ->
