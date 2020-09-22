@@ -598,13 +598,13 @@ append_col_row_vector_row_vector = lambda x, y: cat(x, y)
 
 # row_vector append_col(real x, row_vector y)
 # Append x to the front of y, returning another row vector.
-append_col_real_row_vector = lambda x, y: cat([tensor([x], dtype=torch.double), y])
-append_col_int_row_vector = lambda x, y: cat([tensor([x], dtype=torch.double), y])
+append_col_real_row_vector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
+append_col_int_row_vector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
 
 # row_vector append_col(row_vector x, real y)
 # Append y to the end of x, returning another row vector.
-append_col_row_vector_real = lambda x, y: cat([x, tensor([y], dtype=torch.double)])
-append_col_row_vector_int = lambda x, y: cat([x, tensor([y], dtype=torch.double)])
+append_col_row_vector_real = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
+append_col_row_vector_int = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
 
 # 5.10.0.2 Vertical concatenation
 
@@ -630,10 +630,10 @@ append_row_vector_vector = lambda x, y: cat([x, y])
 
 # vector append_row(real x, vector y)
 # Append x to the top of y, returning another vector.
-append_row_real_vector = lambda x, y: cat([tensor([x], dtype=torch.double), y])
-append_row_int_vector = lambda x, y: cat([tensor([x], dtype=torch.double), y])
+append_row_real_vector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
+append_row_int_vector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
 
 # vector append_row(vector x, real y)
 # Append y to the bottom of x, returning another vector.
-append_row_vector_real = lambda x, y: cat([x, tensor([y], dtype=torch.double)])
-append_row_vector_int = lambda x, y: cat([x, tensor([y], dtype=torch.double)])
+append_row_vector_real = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
+append_row_vector_int = lambda x, y: cat([x, tensor([y], dtype=torch.float)])

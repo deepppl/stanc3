@@ -20,4 +20,4 @@ def register_network(name, x):
     pyro.module(name, x)
 
 dtype_long = torch.long
-dtype_double = torch.double
+dtype_float = torch.float

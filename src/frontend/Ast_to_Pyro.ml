@@ -31,7 +31,7 @@ let trans_id ff id =
 
 let dppllib =
   [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones"; "matmul";
-    "dtype_long"; "dtype_double"; "register_network" ]
+    "dtype_long"; "dtype_float"; "register_network" ]
 
 let stanlib =
   [ "sqrt_int"; "sqrt_real"; "sqrt_vector"; "sqrt_rowvector";
@@ -422,8 +422,8 @@ and trans_idx ff = function
 and dtype_of_unsized_type ff t =
   match t with
   | UInt -> fprintf ff "dtype_long"
-  | UReal -> fprintf ff "dtype_double"
-  | UVector | URowVector | UMatrix -> fprintf ff "dtype_double"
+  | UReal -> fprintf ff "dtype_float"
+  | UVector | URowVector | UMatrix -> fprintf ff "dtype_float"
   | UArray(t) -> dtype_of_unsized_type ff t
   | UFun _ | UMathLibraryFunction -> assert false
 

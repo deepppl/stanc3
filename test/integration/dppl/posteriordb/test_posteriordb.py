@@ -30,7 +30,7 @@ def _convert_to_tensor(value, typ):
         if typ == 'int':
             return tensor(value, dtype=torch.long)
         elif typ == 'real':
-            return tensor(value, dtype=torch.double)
+            return tensor(value, dtype=torch.float)
         else:
             raise "error"
     else:
