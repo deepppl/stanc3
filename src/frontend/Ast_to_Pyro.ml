@@ -34,7 +34,14 @@ let dppllib =
     "dtype_long"; "dtype_float"; "register_network" ]
 
 let stanlib =
-  [ "sqrt_int"; "sqrt_real"; "sqrt_vector"; "sqrt_rowvector";
+  [ (* 3.2 Mathematical Constants *)
+    "pi";
+    "e";
+    "sqrt2";
+    "log2";
+    "log10";
+    (* 3.8 Power and Logarithm Functions *)
+    "sqrt_int"; "sqrt_real"; "sqrt_vector"; "sqrt_rowvector";
     "sqrt_matrix"; "sqrt_array";
     "cbrt_int"; "cbrt_real"; "cbrt_vector"; "cbrt_rowvector";
     "cbrt_matrix"; "cbrt_array";
@@ -60,11 +67,87 @@ let stanlib =
     "min_array"; "max_array";
     "sum_array"; "prod_array"; "log_sum_exp_array";
     "mean_array"; "variance_array"; "sd_array";
-    "distance_vector_vector"; "distance_vector_row_vector";
-    "distance_row_vector_vector"; "distance_row_vector_row_vector";
-    "squared_distance_vector_vector"; "squared_distance_vector_row_vector";
-    "squared_distance_row_vector_vector";
-    "squared_distance_row_vector_row_vector";
+    "distance_vector_vector"; "distance_vector_rowvector";
+    "distance_rowvector_vector"; "distance_rowvector_rowvector";
+    "squared_distance_vector_vector"; "squared_distance_vector_rowvector";
+    "squared_distance_rowvector_vector";
+    "squared_distance_rowvector_rowvector";
+    (* 3.9 Trigonometric Functions *)
+    "hypot_real_real";
+    "cos_int";
+    "cos_real";
+    "cos_vector";
+    "cos_rowvector";
+    "cos_matrix";
+    "cos_array";
+    "sin_int";
+    "sin_real";
+    "sin_vector";
+    "sin_rowvector";
+    "sin_matrix";
+    "sin_array";
+    "tan_int";
+    "tan_real";
+    "tan_vector";
+    "tan_rowvector";
+    "tan_matrix";
+    "tan_array";
+    "acos_int";
+    "acos_real";
+    "acos_vector";
+    "acos_rowvector";
+    "acos_matrix";
+    "acos_array";
+    "asin_int";
+    "asin_real";
+    "asin_vector";
+    "asin_rowvector";
+    "asin_matrix";
+    "asin_array";
+    "atan_int";
+    "atan_real";
+    "atan_vector";
+    "atan_rowvector";
+    "atan_matrix";
+    "atan_array";
+    "atan2_real_real";
+    (* 3.10 Hyperbolic Trigonometric Functions *)
+    "cosh_int";
+    "cosh_real";
+    "cosh_vector";
+    "cosh_rowvector";
+    "cosh_matrix";
+    "cosh_array";
+    "sinh_int";
+    "sinh_real";
+    "sinh_vector";
+    "sinh_rowvector";
+    "sinh_matrix";
+    "sinh_array";
+    "tanh_int";
+    "tanh_real";
+    "tanh_vector";
+    "tanh_rowvector";
+    "tanh_matrix";
+    "tanh_array";
+    "acosh_int";
+    "acosh_real";
+    "acosh_vector";
+    "acosh_rowvector";
+    "acosh_matrix";
+    "acosh_array";
+    "asinh_int";
+    "asinh_real";
+    "asinh_vector";
+    "asinh_rowvector";
+    "asinh_matrix";
+    "asinh_array";
+    "atanh_int";
+    "atanh_real";
+    "atanh_vector";
+    "atanh_rowvector";
+    "atanh_matrix";
+    "atanh_array";
     (* 3.11 Link Functions *)
     "logit_int";
     "logit_real";
@@ -138,6 +221,17 @@ let stanlib =
     "dims_matrix"; "dims_array";
     "num_elements_array";
     "size_array";
+    (* 5.1 Integer-Valued Matrix Size Functions *)
+    "num_elements_vector";
+    "num_elements_rowvector";
+    "num_elements_matrix";
+    "rows_vector";
+    "rows_rowvector";
+    "rows_matrix";
+    "cols_vector";
+    "cols_rowvector";
+    "cols_matrix";
+    (* 5.6 Reductions *)
     "log_sum_exp_vector"; "log_sum_exp_rowvector"; "log_sum_exp_matrix";
     "min_vector"; "min_rowvector"; "min_matrix";
     "max_vector"; "max_rowvector"; "max_matrix";
@@ -160,11 +254,11 @@ let stanlib =
     "segment_array_int_int";
     "append_col_matrix_matrix"; "append_col_matrix_vector";
     "append_col_vector_matrix"; "append_col_vector_vector";
-    "append_col_row_vector_row_vector"; "append_col_real_row_vector";
-    "append_col_int_row_vector"; "append_col_row_vector_real";
-    "append_col_row_vector_int";
-    "append_row_matrix_matrix"; "append_row_matrix_row_vector";
-    "append_row_row_vector_matrix"; "append_row_row_vector_row_vector";
+    "append_col_rowvector_rowvector"; "append_col_real_rowvector";
+    "append_col_int_rowvector"; "append_col_rowvector_real";
+    "append_col_rowvector_int";
+    "append_row_matrix_matrix"; "append_row_matrix_rowvector";
+    "append_row_rowvector_matrix"; "append_row_rowvector_rowvector";
     "append_row_vector_vector"; "append_row_real_vector";
     "append_row_int_vector"; "append_row_vector_real";
     "append_row_vector_int";

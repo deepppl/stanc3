@@ -8,12 +8,36 @@ def _XXX_TODO_XXX_(f):
         assert false, f'{f}: not yet implemented'
     return todo
 
+# 3.2 Mathematical Constants
+
+# real pi()
+# π, the ratio of a circle’s circumference to its diameter
+pi = lambda: math.pi
+
+# real e()
+# e, the base of the natural logarithm
+e = lambda: math.e
+
+# real sqrt2()
+# The square root of 2
+from math import sqrt as msqrt
+sqrt2 = lambda: msqrt(2)
+
+# real log2()
+# The natural logarithm of 2
+from math import log as mlog
+log2 = lambda: mlog(2)
+
+# real log10()
+# The natural logarithm of 10
+log10 = lambda: mlog(10)
+
+
 ## 3.8 Power and Logarithm Functions
 
 # R sqrt(T x)
 # square root of x
 from torch import sqrt as tsqrt
-from math import sqrt as msqrt
 sqrt_int = msqrt
 sqrt_real = msqrt
 sqrt_vector = tsqrt
@@ -64,7 +88,6 @@ exp2_array = _XXX_TODO_XXX_('exp2')
 # R log(T x)
 # natural logarithm of x
 from torch import log as tlog
-from math import log as mlog
 log_int = mlog
 log_real = mlog
 log_vector = tlog
@@ -127,6 +150,154 @@ inv_square_vector = _XXX_TODO_XXX_('inv_square')
 inv_square_rowvector = _XXX_TODO_XXX_('inv_square')
 inv_square_matrix = _XXX_TODO_XXX_('inv_square')
 inv_square_array = _XXX_TODO_XXX_('inv_square')
+
+## 3.9 Trigonometric Functions
+
+# real hypot(real x, real y)
+# Return the length of the hypotenuse of a right triangle with sides of length x and y.
+from math import hypot
+hypot_real_real = hypot
+
+# R cos(T x)
+# cosine of the angle x (in radians)
+from torch import cos as tcos
+from math import cos as mcos
+cos_int = mcos
+cos_real = mcos
+cos_vector = tcos
+cos_rowvector = tcos
+cos_matrix = tcos
+cos_array = tcos
+
+# R sin(T x)
+# sine of the angle x (in radians)
+from torch import sin as tsin
+from math import sin as msin
+sin_int = msin
+sin_real = msin
+sin_vector = tsin
+sin_rowvector = tsin
+sin_matrix = tsin
+sin_array = tsin
+
+# R tan(T x)
+# tangent of the angle x (in radians)
+from torch import tan as ttan
+from math import tan as mtan
+tan_int = mtan
+tan_real = mtan
+tan_vector = ttan
+tan_rowvector = ttan
+tan_matrix = ttan
+tan_array = ttan
+
+# R acos(T x)
+# principal arc (inverse) cosine (in radians) of x
+from torch import acos as tacos
+from math import acos as macos
+acos_int = macos
+acos_real = macos
+acos_vector = tacos
+acos_rowvector = tacos
+acos_matrix = tacos
+acos_array = tacos
+
+# R asin(T x)
+# principal arc (inverse) sine (in radians) of x
+from torch import asin as tasin
+from math import asin as masin
+asin_int = masin
+asin_real = masin
+asin_vector = tasin
+asin_rowvector = tasin
+asin_matrix = tasin
+asin_array = tasin
+
+# R atan(T x)
+# principal arc (inverse) tangent (in radians) of x, with values from −π
+# to π
+from torch import atan as tatan
+from math import atan as matan
+atan_int = matan
+atan_real = matan
+atan_vector = tatan
+atan_rowvector = tatan
+atan_matrix = tatan
+atan_array = tatan
+
+# real atan2(real y, real x)
+# Return the principal arc (inverse) tangent (in radians) of y divided by x
+from math import atan2
+atan2_real_real = atan2
+
+
+## 3.10 Hyperbolic Trigonometric Functions
+
+# R cosh(T x)
+# hyperbolic cosine of x (in radians)
+from torch import cosh as tcosh
+from math import cosh as mcosh
+cosh_int = mcosh
+cosh_real = mcosh
+cosh_vector = tcosh
+cosh_rowvector = tcosh
+cosh_matrix = tcosh
+cosh_array = tcosh
+
+# R sinh(T x)
+# hyperbolic sine of x (in radians)
+from torch import sinh as tsinh
+from math import sinh as msinh
+sinh_int = msinh
+sinh_real = msinh
+sinh_vector = tsinh
+sinh_rowvector = tsinh
+sinh_matrix = tsinh
+sinh_array = tsinh
+
+# R tanh(T x)
+# hyperbolic tangent of x (in radians)
+from torch import tanh as ttanh
+from math import tanh as mtanh
+tanh_int = mtanh
+tanh_real = mtanh
+tanh_vector = ttanh
+tanh_rowvector = ttanh
+tanh_matrix = ttanh
+tanh_array = ttanh
+
+# R acosh(T x)
+# inverse hyperbolic cosine (in radians)
+from torch import acosh as tacosh
+from math import acosh as macosh
+acosh_int = macosh
+acosh_real = macosh
+acosh_vector = tacosh
+acosh_rowvector = tacosh
+acosh_matrix = tacosh
+acosh_array = tacosh
+
+# R asinh(T x)
+# inverse hyperbolic cosine (in radians)
+from torch import asinh as tasinh
+from math import asinh as masinh
+asinh_int = masinh
+asinh_real = masinh
+asinh_vector = tasinh
+asinh_rowvector = tasinh
+asinh_matrix = tasinh
+asinh_array = tasinh
+
+# R atanh(T x)
+# inverse hyperbolic tangent (in radians) of x
+from torch import atanh as tatanh
+from math import atanh as matanh
+atanh_int = matanh
+atanh_real = matanh
+atanh_vector = tatanh
+atanh_rowvector = tatanh
+atanh_matrix = tatanh
+atanh_array = tatanh
 
 
 ## 3.11 Link Functions
@@ -329,9 +500,9 @@ sd_array = std
 # real distance(row_vector x, row_vector y)
 # The Euclidean distance between x and y
 distance_vector_vector = _XXX_TODO_XXX_('distance')
-distance_vector_row_vector = _XXX_TODO_XXX_('distance')
-distance_row_vector_vector = _XXX_TODO_XXX_('distance')
-distance_row_vector_row_vector = _XXX_TODO_XXX_('distance')
+distance_vector_rowvector = _XXX_TODO_XXX_('distance')
+distance_rowvector_vector = _XXX_TODO_XXX_('distance')
+distance_rowvector_rowvector = _XXX_TODO_XXX_('distance')
 
 # real squared_distance(vector x, vector y)
 # real squared_distance(vector x, row_vector [] y)
@@ -339,9 +510,9 @@ distance_row_vector_row_vector = _XXX_TODO_XXX_('distance')
 # real squared_distance(row_vector x, row_vector[] y)
 # The squared Euclidean distance between x and y
 squared_distance_vector_vector = _XXX_TODO_XXX_('squared_distance')
-squared_distance_vector_row_vector = _XXX_TODO_XXX_('squared_distance')
-squared_distance_row_vector_vector = _XXX_TODO_XXX_('squared_distance')
-squared_distance_row_vector_row_vector = _XXX_TODO_XXX_('squared_distance')
+squared_distance_vector_rowvector = _XXX_TODO_XXX_('squared_distance')
+squared_distance_rowvector_vector = _XXX_TODO_XXX_('squared_distance')
+squared_distance_rowvector_rowvector = _XXX_TODO_XXX_('squared_distance')
 
 
 ## 4.2 Array Size and Dimension Function
@@ -352,10 +523,10 @@ squared_distance_row_vector_row_vector = _XXX_TODO_XXX_('squared_distance')
 # dimensions.
 dims_int = tensor([], dtype=torch.long)
 dims_real = tensor([], dtype=torch.long)
-dims_vector = lambda x: x.shape
-dims_rowvector = lambda x: x.shape
-dims_matrix = lambda x: x.shape
-dims_array = lambda x: x.shape
+dims_vector = lambda x: tensor(x.shape)
+dims_rowvector = lambda x: tensor(x.shape)
+dims_matrix = lambda x: tensor(x.shape)
+dims_array = lambda x: tensor(x.shape)
 
 # int num_elements(T[] x)
 # Return the total number of elements in the array x including all
@@ -371,6 +542,48 @@ num_elements_array = lambda x: math.prod(x.shape)
 # array, not the total number of elements contained. For example, if
 # x is of type real[4,3] then size(x) is 4.
 size_array = lambda x: x.shape[0]
+
+## 5 Matrix Operations
+
+# 5.1 Integer-Valued Matrix Size Functions
+
+# int num_elements(vector x)
+# The total number of elements in the vector x (same as function rows)
+num_elements_vector = lambda x: x.shape[0]
+
+# int num_elements(row_vector x)
+# The total number of elements in the vector x (same as function cols)
+num_elements_rowvector = lambda x: x.shape[0]
+
+# int num_elements(matrix x)
+# The total number of elements in the matrix x. For example, if x is a 5×3
+# matrix, then num_elements(x) is 15
+num_elements_matrix = lambda x: x.shape[0] * x.shape[1]
+
+# int rows(vector x)
+# The number of rows in the vector x
+rows_vector = lambda x: x.shape[0]
+
+# int rows(row_vector x)
+# The number of rows in the row vector x, namely 1
+rows_rowvector = lambda x: 1
+
+# int rows(matrix x)
+# The number of rows in the matrix x
+rows_matrix = lambda x: x.shape[0]
+
+# int cols(vector x)
+# The number of columns in the vector x, namely 1
+cols_vector = lambda x: 1
+
+# int cols(row_vector x)
+# The number of columns in the row vector x
+cols_rowvector = lambda x: x.shape[0]
+
+# int cols(matrix x)
+# The number of columns in the matrix x
+cols_matrix = lambda x: x.shape[1]
+
 
 ## 5.6 Reductions
 
@@ -594,17 +807,17 @@ append_col_vector_vector = lambda x, y: cat([x.expand(1,x.shape[0]), y.expand(1,
 
 # row_vector append_col(row_vector x, row_vector y)
 # Combine row vectors x and y of any size into another row vector.
-append_col_row_vector_row_vector = lambda x, y: cat(x, y)
+append_col_rowvector_rowvector = lambda x, y: cat(x, y)
 
 # row_vector append_col(real x, row_vector y)
 # Append x to the front of y, returning another row vector.
-append_col_real_row_vector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
-append_col_int_row_vector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
+append_col_real_rowvector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
+append_col_int_rowvector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
 
 # row_vector append_col(row_vector x, real y)
 # Append y to the end of x, returning another row vector.
-append_col_row_vector_real = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
-append_col_row_vector_int = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
+append_col_rowvector_real = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
+append_col_rowvector_int = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
 
 # 5.10.0.2 Vertical concatenation
 
@@ -614,15 +827,15 @@ append_row_matrix_matrix = lambda x, y: cat([x, y])
 
 # matrix append_row(matrix x, row_vector y)
 # Combine matrix x and row vector y by rows. The matrix and the row vector must have the same number of columns.
-append_row_matrix_row_vector = lambda x, y: cat([x, y.expand(1,y.shape[0])])
+append_row_matrix_rowvector = lambda x, y: cat([x, y.expand(1,y.shape[0])])
 
 # matrix append_row(row_vector x, matrix y)
 # Combine row vector x and matrix y by rows. The row vector and the matrix must have the same number of columns.
-append_row_row_vector_matrix = lambda x, y: cat([x.expand(1,x.shape[0]), y])
+append_row_rowvector_matrix = lambda x, y: cat([x.expand(1,x.shape[0]), y])
 
 # matrix append_row(row_vector x, row_vector y)
 # Combine row vectors x and y by row. The row vectors must have the same number of columns.
-append_row_row_vector_row_vector = lambda x, y: cat([x.expand(1,x.shape[0]), y.expand(1,y.shape[0])])
+append_row_rowvector_rowvector = lambda x, y: cat([x.expand(1,x.shape[0]), y.expand(1,y.shape[0])])
 
 # vector append_row(vector x, vector y)
 # Concatenate vectors x and y of any size into another vector.
