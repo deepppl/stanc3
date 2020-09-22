@@ -850,3 +850,129 @@ append_row_int_vector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
 # Append y to the bottom of x, returning another vector.
 append_row_vector_real = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
 append_row_vector_int = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
+
+## 7. Mixed Operations
+
+# matrix to_matrix(matrix m)
+# Return the matrix m itself.
+to_matrix_matrix = lambda m: m
+
+# matrix to_matrix(vector v)
+# Convert the column vector v to a size(v) by 1 matrix.
+to_matrix_vector = lambda v: v.expand(1, v.shape[0])
+
+# matrix to_matrix(row_vector v)
+# Convert the row vector v to a 1 by size(v) matrix.
+to_matrix_rowvector = lambda v: v.expand(1, v.shape[0]).t()
+
+# matrix to_matrix(matrix m, int m, int n)
+# Convert a matrix m to a matrix with m rows and n columns filled in column-major order.
+to_matrix_matrix_int_int = lambda mat, m, n: mat.t().reshape(m,n)
+
+# matrix to_matrix(vector v, int m, int n)
+# Convert a vector v to a matrix with m rows and n columns filled in column-major order.
+to_matrix_vector_int_int = _XXX_TODO_XXX_('to_matrix_vector_int_int')
+
+# matrix to_matrix(row_vector v, int m, int n)
+# Convert a row_vector a to a matrix with m rows and n columns filled in column-major order.
+to_matrix_rowvector_int_int = _XXX_TODO_XXX_('to_matrix')
+
+# matrix to_matrix(matrix m, int m, int n, int col_major)
+# Convert a matrix m to a matrix with m rows and n columns filled in row-major order if col_major equals 0 (otherwise, they get filled in column-major order).
+def to_matrix_matrix_int_int_int(mat, m, n, col_major):
+    if col_major == 0:
+        mat.reshape(m,n)
+    else:
+        to_matrix_matrix_int_int(mat, m, n)
+
+# matrix to_matrix(vector v, int m, int n, int col_major)
+# Convert a vector v to a matrix with m rows and n columns filled in row-major order if col_major equals 0 (otherwise, they get filled in column-major order).
+def to_matrix_vector_int_int_int(v, m, n, col_major):
+    if col_major == 0:
+        v.reshape(m,n)
+    else:
+        to_matrix_vector_int_int(v, m, n)
+
+# matrix to_matrix(row_vector v, int m, int n, int col_major)
+# Convert a row_vector a to a matrix with m rows and n columns filled in row-major order if col_major equals 0 (otherwise, they get filled in column-major order).
+def to_matrix_rowvector_int_int_int(v, m, n, col_major):
+    if col_major == 0:
+        v.reshape(m,n)
+    else:
+        to_matrix_rowvector_int_int(v, m, n)
+
+# matrix to_matrix(real[] a, int m, int n)
+# Convert a one-dimensional array a to a matrix with m rows and n columns filled in column-major order.
+# matrix to_matrix(int[] a, int m, int n)
+# Convert a one-dimensional array a to a matrix with m rows and n columns filled in column-major order.
+to_matrix_array_int_int = to_matrix_vector_int_int
+
+# matrix to_matrix(real[] a, int m, int n, int col_major)
+# Convert a one-dimensional array a to a matrix with m rows and n columns filled in row-major order if col_major equals 0 (otherwise, they get filled in column-major order).
+# matrix to_matrix(int[] a, int m, int n, int col_major)
+# Convert a one-dimensional array a to a matrix with m rows and n columns filled in row-major order if col_major equals 0 (otherwise, they get filled in column-major order).
+to_matrix_array_int_int_int = to_matrix_vector_int_int_int
+
+# matrix to_matrix(real[,] a)
+# Convert the two dimensional array a to a matrix with the same dimensions and indexing order.
+# matrix to_matrix(int[,] a)
+# Convert the two dimensional array a to a matrix with the same dimensions and indexing order. If any of the dimensions of a are zero, the result will be a 0×0 matrix.
+to_matrix_array = lambda a: a
+
+# vector to_vector(matrix m)
+# Convert the matrix m to a column vector in column-major order.
+to_vector_matrix = lambda m: m.reshape(-1)
+
+# vector to_vector(vector v)
+# Return the column vector v itself.
+to_vector_vector = lambda v: v
+
+# vector to_vector(row_vector v)
+# Convert the row vector v to a column vector.
+to_vector_rowvector = lambda v: v
+
+# vector to_vector(real[] a)
+# Convert the one-dimensional array a to a column vector.
+# vector to_vector(int[] a)
+# Convert the one-dimensional integer array a to a column vector.
+to_vector_array = lambda v: v
+
+# row_vector to_row_vector(matrix m)
+# Convert the matrix m to a row vector in column-major order.
+to_row_vector_matrix = lambda m: m.reshape(-1)
+
+# row_vector to_row_vector(vector v)
+# Convert the column vector v to a row vector.
+to_row_vector_vector = lambda v: v
+
+# row_vector to_row_vector(row_vector v)
+# Return the row vector v itself.
+to_row_vector_rowvector = lambda v: v
+
+# row_vector to_row_vector(real[] a)
+# Convert the one-dimensional array a to a row vector.
+# row_vector to_row_vector(int[] a)
+# Convert the one-dimensional array a to a row vector.
+to_row_vector_array = lambda v: v
+
+# real[,] to_array_2d(matrix m)
+# Convert the matrix m to a two dimensional array with the same dimensions and indexing order.
+to_array_2d_matrix = lambda m: m
+
+# real[] to_array_1d(vector v)
+# Convert the column vector v to a one-dimensional array.
+to_array_1d_vector = lambda v: v
+
+# real[] to_array_1d(row_vector v)
+# Convert the row vector v to a one-dimensional array.
+to_array_1d_rowvector = lambda v: v
+
+# real[] to_array_1d(matrix m)
+# Convert the matrix m to a one-dimensional array in column-major order.
+to_array_1d_matrix = lambda m: m.t().reshape(-1)
+
+# real[] to_array_1d(real[...] a)
+# Convert the array a (of any dimension up to 10) to a one-dimensional array in row-major order.
+# int[] to_array_1d(int[...] a)
+# Convert the array a (of any dimension up to 10) to a one-dimensional array in row-major order.
+to_array_1d_array = lambda a: a.reshape(-1)

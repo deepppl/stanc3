@@ -262,6 +262,32 @@ let stanlib =
     "append_row_vector_vector"; "append_row_real_vector";
     "append_row_int_vector"; "append_row_vector_real";
     "append_row_vector_int";
+    (* 7. Mixed Operations *)
+    "to_matrix_matrix";
+    "to_matrix_vector";
+    "to_matrix_rowvector";
+    "to_matrix_matrix_int_int";
+    "to_matrix_vector_int_int";
+    "to_matrix_rowvector_int_int";
+    "to_matrix_matrix_int_int_int";
+    "to_matrix_vector_int_int_int";
+    "to_matrix_rowvector_int_int_int";
+    "to_matrix_array_int_int";
+    "to_matrix_array_int_int_int";
+    "to_matrix_array";
+    "to_vector_matrix";
+    "to_vector_vector";
+    "to_vector_rowvector";
+    "to_vector_array";
+    "to_row_vector_matrix";
+    "to_row_vector_vector";
+    "to_row_vector_rowvector";
+    "to_row_vector_array";
+    "to_array_2d_matrix";
+    "to_array_1d_vector";
+    "to_array_1d_rowvector";
+    "to_array_1d_matrix";
+    "to_array_1d_array";
   ]
 
 let stanlib_id id args =
