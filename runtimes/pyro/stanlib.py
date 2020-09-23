@@ -32,6 +32,93 @@ log2 = lambda: mlog(2)
 # The natural logarithm of 10
 log10 = lambda: mlog(10)
 
+## 3.7 Step-like Functions
+
+## 3.7.1 Absolute Value Functions
+
+# R fabs(T x)
+# absolute value of x
+from torch import abs as tabs
+mabs = abs
+abs_int = mabs
+abs_real = mabs
+abs_vector = tabs
+abs_rowvector = tabs
+abs_matrix = tabs
+abs_array = tabs
+
+# real fdim(real x, real y)
+# Return the positive difference between x and y, which is x - y if x is greater than y and 0 otherwise; see warning above.
+fdim_real_real = lambda x, y: max(x - y, 0)
+
+## 3.7.2 Bounds Functions
+
+# real fmin(real x, real y)
+# Return the minimum of x and y; see warning above.
+fmin_real_real = lambda x, y: min(x, y)
+fmin_int_real = lambda x, y: min(x, y)
+fmin_real_int = lambda x, y: min(x, y)
+fmin_int_int = lambda x, y: min(x, y)
+
+# real fmax(real x, real y)
+# Return the maximum of x and y; see warning above.
+fmax_real_real = lambda x, y: max(x, y)
+fmax_int_real = lambda x, y: max(x, y)
+fmax_real_int = lambda x, y: max(x, y)
+fmax_int_int = lambda x, y: max(x, y)
+
+## 3.7.3 Arithmetic Functions
+
+# real fmod(real x, real y)
+# Return the real value remainder after dividing x by y; see warning above.
+fmod = lambda x, y: x % y
+
+
+## 3.7.4 Rounding Functions
+
+# R floor(T x)
+# floor of x, which is the largest integer less than or equal to x, converted to a real value; see warning at start of section step-like functions
+from torch import floor as tfloor
+from math import floor as mfloor
+floor_int = mfloor
+floor_real = mfloor
+floor_vector = tfloor
+floor_rowvector = tfloor
+floor_matrix = tfloor
+floor_array = tfloor
+
+# R ceil(T x)
+# ceiling of x, which is the smallest integer greater than or equal to x, converted to a real value; see warning at start of section step-like functions
+from torch import ceil as tceil
+from math import ceil as mceil
+ceil_int = mceil
+ceil_real = mceil
+ceil_vector = tceil
+ceil_rowvector = tceil
+ceil_matrix = tceil
+ceil_array = tceil
+
+# R round(T x)
+# nearest integer to x, converted to a real value; see warning at start of section step-like functions
+from torch import round as tround
+mround = round
+round_int = mround
+round_real = mround
+round_vector = tround
+round_rowvector = tround
+round_matrix = tround
+round_array = tround
+
+# R trunc(T x)
+# integer nearest to but no larger in magnitude than x, converted to a double value; see warning at start of section step-like functions
+from torch import trunc as ttrunc
+from math import trunc as mtrunc
+trunc_int = mtrunc
+trunc_real = mtrunc
+trunc_vector = ttrunc
+trunc_rowvector = ttrunc
+trunc_matrix = ttrunc
+trunc_array = ttrunc
 
 ## 3.8 Power and Logarithm Functions
 
@@ -314,8 +401,8 @@ logit_array = _XXX_TODO_XXX_('logit')
 # R inv_logit(T x)
 # logistic sigmoid function applied to x
 from torch import sigmoid
-inv_logit_int = lambda x: sigmoid(Tensor([x]))
-inv_logit_real = lambda x: sigmoid(Tensor([x]))
+inv_logit_int = lambda x: sigmoid(Tensor([x])).item()
+inv_logit_real = lambda x: sigmoid(Tensor([x])).item()
 inv_logit_vector = sigmoid
 inv_logit_rowvector = sigmoid
 inv_logit_matrix = sigmoid
@@ -413,8 +500,8 @@ def log_sum_exp_real_real(x, y):
 # R log_inv_logit(T x)
 # natural logarithm of the inverse logit function of x
 from torch.nn import LogSigmoid
-log_inv_logit_int = lambda x: LogSigmoid(Tensor([x]))
-log_inv_logit_real = lambda x: LogSigmoid(Tensor([x]))
+log_inv_logit_int = lambda x: LogSigmoid(Tensor([x])).item()
+log_inv_logit_real = lambda x: LogSigmoid(Tensor([x])).item()
 log_inv_logit_vector = LogSigmoid
 log_inv_logit_rowvector = LogSigmoid
 log_inv_logit_matrix = LogSigmoid
@@ -438,14 +525,14 @@ log1m_inv_logit_array = _XXX_TODO_XXX_('log_inv_logit')
 # The minimum value in x, or +∞  if x is size 0.
 # int min(int[] x)
 # The minimum value in x, or error if x is size 0.
-from torch import min
-min_array = min
+from torch import min as tmin
+min_array = tmin
 
 # real max(real[] x)
 # The maximum value in x, or −∞ if x is size 0.
 # int max(int[] x)
 # The maximum value in x, or error if x is size 0.
-from torch import max
+from torch import max as tmax
 max_array = max
 
 
@@ -605,27 +692,27 @@ log_sum_exp_matrix = logsumexp
 
 # real min(vector x)
 # The minimum value in x, or +∞ if x is empty
-min_vector = min
+min_vector = tmin
 
 # real min(row_vector x)
 # The minimum value in x, or +∞ if x is empty
-min_rowvector = min
+min_rowvector = tmin
 
 # real min(matrix x)
 # The minimum value in x, or +∞ if x is empty
-min_matrix = min
+min_matrix = tmin
 
 # real max(vector x)
 # The maximum value in x, or −∞ if x is empty
-max_vector = max
+max_vector = tmax
 
 # real max(row_vector x)
 # The maximum value in x, or −∞ if x is empty
-max_rowvector = max
+max_rowvector = tmax
 
 # real max(matrix x)
 # The maximum value in x, or −∞ if x is empty
-max_matrix = max
+max_matrix = tmax
 
 # 5.6.3 Sums and Products
 
