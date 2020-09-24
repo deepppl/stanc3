@@ -1332,8 +1332,9 @@ let trans_transformeddatablock ff data transformeddata =
 let trans_parameter ff p =
   match p.stmt with
   | VarDecl {identifier; initial_value = None; decl_type; transformation; _} ->
-    fprintf ff "%a = sample('%s', %a)" trans_id identifier identifier.name
+    fprintf ff "%a = sample('%s', %a)%s" trans_id identifier identifier.name
       (trans_prior decl_type) transformation
+      (if is_tensor decl_type then "" else ".item()")
   | _ -> assert false
 
 let trans_parametersblock ff parameters =
