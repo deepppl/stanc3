@@ -1005,12 +1005,20 @@ let rec trans_stmt ?(naive=false) ctx ff (ts : typed_statement) =
           trans_exprs args
           trans_truncation truncation
       else
-        fprintf ff "observe(%a, %a(%a), %a)%a"
-          (gen_id ctx) arg
-          trans_distribution distribution
-          trans_exprs args
-          trans_expr arg
-          trans_truncation truncation
+        if UnsizedType.is_scalar_type arg.emeta.type_ then
+          fprintf ff "observe(%a, %a(%a), array(%a, dtype=dtype_float))%a"
+            (gen_id ctx) arg
+            trans_distribution distribution
+            trans_exprs args
+            trans_expr arg
+            trans_truncation truncation
+        else
+          fprintf ff "observe(%a, %a(%a), %a)%a"
+            (gen_id ctx) arg
+            trans_distribution distribution
+            trans_exprs args
+            trans_expr arg
+            trans_truncation truncation
 
   | Print ps -> fprintf ff "print(%a)" trans_printables ps
   | Reject ps -> fprintf ff "stanlib.reject(%a)" trans_printables ps
