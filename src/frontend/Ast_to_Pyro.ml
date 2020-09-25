@@ -528,7 +528,12 @@ and trans_binop e1 e2 ff op =
         end
     | Divide -> fprintf ff "true_divide(%a, %a)" trans_expr e1 trans_expr e2
     | IntDivide ->
-      fprintf ff "floor_divide(%a, %a)" trans_expr e1 trans_expr e2
+        begin match e1.emeta.type_, e2.emeta.type_ with
+        | (UInt, UInt) ->
+            fprintf ff "%a / %a" trans_expr e1 trans_expr e2
+        | _ ->
+            fprintf ff "floor_divide(%a, %a)" trans_expr e1 trans_expr e2
+        end
     | Modulo -> fprintf ff "%a %s %a" trans_expr e1 "%" trans_expr e2
     | LDivide -> fprintf ff "true_divide(%a, %a)" trans_expr e2 trans_expr e1
     | EltTimes -> fprintf ff "%a * %a" trans_expr e1 trans_expr e2

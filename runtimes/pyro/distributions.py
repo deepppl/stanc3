@@ -65,3 +65,6 @@ def binomial_logit(n, logits):
 
 def poisson_log(alpha):
     return d.Poisson(torch.exp(alpha))
+
+def std_normal():
+    return d.Normal(0,1)

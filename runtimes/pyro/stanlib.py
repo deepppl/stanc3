@@ -41,7 +41,7 @@ log10 = lambda: mlog(10)
 from torch import abs as tabs
 mabs = abs
 abs_int = mabs
-abs_real = mabs
+abs_real = tabs
 abs_vector = tabs
 abs_rowvector = tabs
 abs_matrix = tabs
@@ -81,7 +81,7 @@ fmod = lambda x, y: x % y
 from torch import floor as tfloor
 from math import floor as mfloor
 floor_int = mfloor
-floor_real = mfloor
+floor_real = tfloor
 floor_vector = tfloor
 floor_rowvector = tfloor
 floor_matrix = tfloor
@@ -92,7 +92,7 @@ floor_array = tfloor
 from torch import ceil as tceil
 from math import ceil as mceil
 ceil_int = mceil
-ceil_real = mceil
+ceil_real = tceil
 ceil_vector = tceil
 ceil_rowvector = tceil
 ceil_matrix = tceil
@@ -103,7 +103,7 @@ ceil_array = tceil
 from torch import round as tround
 mround = round
 round_int = mround
-round_real = mround
+round_real = tround
 round_vector = tround
 round_rowvector = tround
 round_matrix = tround
@@ -114,7 +114,7 @@ round_array = tround
 from torch import trunc as ttrunc
 from math import trunc as mtrunc
 trunc_int = mtrunc
-trunc_real = mtrunc
+trunc_real = ttrunc
 trunc_vector = ttrunc
 trunc_rowvector = ttrunc
 trunc_matrix = ttrunc
@@ -126,7 +126,7 @@ trunc_array = ttrunc
 # square root of x
 from torch import sqrt as tsqrt
 sqrt_int = msqrt
-sqrt_real = msqrt
+sqrt_real = tsqrt
 sqrt_vector = tsqrt
 sqrt_rowvector = tsqrt
 sqrt_matrix = tsqrt
@@ -145,7 +145,7 @@ cbrt_array = _XXX_TODO_XXX_('cbrt')
 # square of x
 from torch import square as tsquare
 square_int = lambda x: x * x
-square_real = lambda x: x * x
+square_real = tsquare
 square_vector = tsquare
 square_rowvector = tsquare
 square_matrix = tsquare
@@ -157,7 +157,7 @@ square_array = tsquare
 from torch import exp as texp
 from math import exp as mexp
 exp_int = mexp
-exp_real = mexp
+exp_real = texp
 exp_vector = texp
 exp_rowvector = texp
 exp_matrix = texp
@@ -176,7 +176,7 @@ exp2_array = _XXX_TODO_XXX_('exp2')
 # natural logarithm of x
 from torch import log as tlog
 log_int = mlog
-log_real = mlog
+log_real = tlog
 log_vector = tlog
 log_rowvector = tlog
 log_matrix = tlog
@@ -187,7 +187,7 @@ log_array = tlog
 from torch import log2 as tlog2
 from math import log2 as mlog2
 log2_int = mlog2
-log2_real = mlog2
+log2_real = tlog2
 log2_vector = tlog2
 log2_rowvector = tlog2
 log2_matrix = tlog2
@@ -198,7 +198,7 @@ log2_array = tlog2
 from torch import log10 as tlog10
 from math import log10 as mlog10
 log10_int = mlog10
-log10_real = mlog10
+log10_real = tlog10
 log10_vector = tlog10
 log10_rowvector = tlog10
 log10_matrix = tlog10
@@ -250,7 +250,7 @@ hypot_real_real = hypot
 from torch import cos as tcos
 from math import cos as mcos
 cos_int = mcos
-cos_real = mcos
+cos_real = tcos
 cos_vector = tcos
 cos_rowvector = tcos
 cos_matrix = tcos
@@ -261,7 +261,7 @@ cos_array = tcos
 from torch import sin as tsin
 from math import sin as msin
 sin_int = msin
-sin_real = msin
+sin_real = tsin
 sin_vector = tsin
 sin_rowvector = tsin
 sin_matrix = tsin
@@ -272,7 +272,7 @@ sin_array = tsin
 from torch import tan as ttan
 from math import tan as mtan
 tan_int = mtan
-tan_real = mtan
+tan_real = ttan
 tan_vector = ttan
 tan_rowvector = ttan
 tan_matrix = ttan
@@ -283,7 +283,7 @@ tan_array = ttan
 from torch import acos as tacos
 from math import acos as macos
 acos_int = macos
-acos_real = macos
+acos_real = tacos
 acos_vector = tacos
 acos_rowvector = tacos
 acos_matrix = tacos
@@ -294,7 +294,7 @@ acos_array = tacos
 from torch import asin as tasin
 from math import asin as masin
 asin_int = masin
-asin_real = masin
+asin_real = tasin
 asin_vector = tasin
 asin_rowvector = tasin
 asin_matrix = tasin
@@ -306,7 +306,7 @@ asin_array = tasin
 from torch import atan as tatan
 from math import atan as matan
 atan_int = matan
-atan_real = matan
+atan_real = tatan
 atan_vector = tatan
 atan_rowvector = tatan
 atan_matrix = tatan
@@ -314,8 +314,8 @@ atan_array = tatan
 
 # real atan2(real y, real x)
 # Return the principal arc (inverse) tangent (in radians) of y divided by x
-from math import atan2
-atan2_real_real = atan2
+from torch import atan2 as tatan2
+atan2_real_real = tatan2
 
 
 ## 3.10 Hyperbolic Trigonometric Functions
@@ -325,7 +325,7 @@ atan2_real_real = atan2
 from torch import cosh as tcosh
 from math import cosh as mcosh
 cosh_int = mcosh
-cosh_real = mcosh
+cosh_real = tcosh
 cosh_vector = tcosh
 cosh_rowvector = tcosh
 cosh_matrix = tcosh
@@ -336,7 +336,7 @@ cosh_array = tcosh
 from torch import sinh as tsinh
 from math import sinh as msinh
 sinh_int = msinh
-sinh_real = msinh
+sinh_real = tsinh
 sinh_vector = tsinh
 sinh_rowvector = tsinh
 sinh_matrix = tsinh
@@ -347,7 +347,7 @@ sinh_array = tsinh
 from torch import tanh as ttanh
 from math import tanh as mtanh
 tanh_int = mtanh
-tanh_real = mtanh
+tanh_real = ttanh
 tanh_vector = ttanh
 tanh_rowvector = ttanh
 tanh_matrix = ttanh
@@ -358,7 +358,7 @@ tanh_array = ttanh
 from torch import acosh as tacosh
 from math import acosh as macosh
 acosh_int = macosh
-acosh_real = macosh
+acosh_real = tacosh
 acosh_vector = tacosh
 acosh_rowvector = tacosh
 acosh_matrix = tacosh
@@ -369,7 +369,7 @@ acosh_array = tacosh
 from torch import asinh as tasinh
 from math import asinh as masinh
 asinh_int = masinh
-asinh_real = masinh
+asinh_real = tasinh
 asinh_vector = tasinh
 asinh_rowvector = tasinh
 asinh_matrix = tasinh
@@ -380,7 +380,7 @@ asinh_array = tasinh
 from torch import atanh as tatanh
 from math import atanh as matanh
 atanh_int = matanh
-atanh_real = matanh
+atanh_real = tatanh
 atanh_vector = tatanh
 atanh_rowvector = tatanh
 atanh_matrix = tatanh
@@ -402,7 +402,7 @@ logit_array = _XXX_TODO_XXX_('logit')
 # logistic sigmoid function applied to x
 from torch import sigmoid
 inv_logit_int = lambda x: sigmoid(Tensor([x])).item()
-inv_logit_real = lambda x: sigmoid(Tensor([x])).item()
+inv_logit_real = sigmoid
 inv_logit_vector = sigmoid
 inv_logit_rowvector = sigmoid
 inv_logit_matrix = sigmoid
@@ -501,7 +501,7 @@ def log_sum_exp_real_real(x, y):
 # natural logarithm of the inverse logit function of x
 from torch.nn import LogSigmoid
 log_inv_logit_int = lambda x: LogSigmoid(Tensor([x])).item()
-log_inv_logit_real = lambda x: LogSigmoid(Tensor([x])).item()
+log_inv_logit_real = LogSigmoid
 log_inv_logit_vector = LogSigmoid
 log_inv_logit_rowvector = LogSigmoid
 log_inv_logit_matrix = LogSigmoid
@@ -609,7 +609,7 @@ squared_distance_rowvector_rowvector = _XXX_TODO_XXX_('squared_distance')
 # of the argument T can be any Stan type with up to 8 array
 # dimensions.
 dims_int = tensor([], dtype=torch.long)
-dims_real = tensor([], dtype=torch.long)
+dims_real = lambda x: tensor(x.shape)
 dims_vector = lambda x: tensor(x.shape)
 dims_rowvector = lambda x: tensor(x.shape)
 dims_matrix = lambda x: tensor(x.shape)
