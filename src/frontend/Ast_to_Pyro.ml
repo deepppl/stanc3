@@ -30,7 +30,8 @@ let trans_id ff id =
 
 
 let dppllib =
-  [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones"; "matmul";
+  [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones";
+    "matmul"; "true_divide"; "floor_divide";
     "dtype_long"; "dtype_float"; "register_network" ]
 
 let stanlib =
@@ -501,14 +502,15 @@ let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
         trans_exprs eles
         dtype_of_unsized_type emeta.type_
   | Indexed (lhs, indices) ->
-      fprintf ff "%a%a%s" trans_expr lhs
+      fprintf ff "%a%a" trans_expr lhs
         (pp_print_list ~pp_sep:(fun _ff () -> ()) trans_idx) indices
-        (if UnsizedType.is_scalar_type emeta.type_ then ".item()" else "")
 
 and trans_numeral type_ ff x =
   begin match type_ with
   | UInt -> fprintf ff "%s" (format_number x)
-  | UReal -> fprintf ff "%s" (format_number x)
+  | UReal ->
+      fprintf ff "array(%s, dtype=%a)"
+        (format_number x) dtype_of_unsized_type type_
   | _ ->
       raise_s [%message "Unexpected type for a numeral" (type_ : UnsizedType.t)]
   end
@@ -524,12 +526,14 @@ and trans_binop e1 e2 ff op =
         | _ ->
             fprintf ff "matmul(%a, %a)" trans_expr e1 trans_expr e2
         end
-    | Divide -> fprintf ff "%a / %a" trans_expr e1 trans_expr e2
-    | IntDivide -> fprintf ff "%a // %a" trans_expr e1 trans_expr e2
+    | Divide -> fprintf ff "true_divide(%a, %a)" trans_expr e1 trans_expr e2
+    | IntDivide ->
+      fprintf ff "floor_divide(%a, %a)" trans_expr e1 trans_expr e2
     | Modulo -> fprintf ff "%a %s %a" trans_expr e1 "%" trans_expr e2
-    | LDivide -> fprintf ff "%a / %a" trans_expr e2 trans_expr e1
+    | LDivide -> fprintf ff "true_divide(%a, %a)" trans_expr e2 trans_expr e1
     | EltTimes -> fprintf ff "%a * %a" trans_expr e1 trans_expr e2
-    | EltDivide -> fprintf ff "%a / %a" trans_expr e1 trans_expr e2
+    | EltDivide ->
+      fprintf ff "true_divide(%a, %a)" trans_expr e1 trans_expr e2
     | Pow -> fprintf ff "%a ** %a" trans_expr e1 trans_expr e2
     | EltPow -> fprintf ff "%a ** %a" trans_expr e1 trans_expr e2
     | Or -> fprintf ff "%a or %a" trans_expr e1 trans_expr e2
@@ -989,8 +993,10 @@ let rec trans_stmt ?(naive=false) ctx ff (ts : typed_statement) =
         (gen_id ctx) e
         trans_expr e
   | Tilde {arg; distribution; args; truncation} ->
-      let trans_distribution ff dist =
-        fprintf ff "%a" trans_id dist
+      let trans_distribution ff (dist, args) =
+        fprintf ff "%a(%a)"
+          trans_id dist
+          (print_list_comma trans_expr) args
       in
       let trans_truncation _ff = function
         | NoTruncate -> ()
@@ -998,27 +1004,17 @@ let rec trans_stmt ?(naive=false) ctx ff (ts : typed_statement) =
           raise_s [%message "Truncations are currently not supported."]
       in
       if naive then
-        fprintf ff "%a = sample(%a, %a(%a))%a"
+        fprintf ff "%a = sample(%a, %a)%a"
           trans_expr arg
           (gen_id ~fresh:(not naive) ctx) arg
-          trans_distribution distribution
-          trans_exprs args
+          trans_distribution (distribution, args)
           trans_truncation truncation
       else
-        if UnsizedType.is_scalar_type arg.emeta.type_ then
-          fprintf ff "observe(%a, %a(%a), array(%a, dtype=dtype_float))%a"
-            (gen_id ctx) arg
-            trans_distribution distribution
-            trans_exprs args
-            trans_expr arg
-            trans_truncation truncation
-        else
-          fprintf ff "observe(%a, %a(%a), %a)%a"
-            (gen_id ctx) arg
-            trans_distribution distribution
-            trans_exprs args
-            trans_expr arg
-            trans_truncation truncation
+        fprintf ff "observe(%a, %a, %a)%a"
+          (gen_id ctx) arg
+          trans_distribution (distribution, args)
+          trans_expr arg
+          trans_truncation truncation
 
   | Print ps -> fprintf ff "print(%a)" trans_printables ps
   | Reject ps -> fprintf ff "stanlib.reject(%a)" trans_printables ps
@@ -1332,9 +1328,8 @@ let trans_transformeddatablock ff data transformeddata =
 let trans_parameter ff p =
   match p.stmt with
   | VarDecl {identifier; initial_value = None; decl_type; transformation; _} ->
-    fprintf ff "%a = sample('%s', %a)%s" trans_id identifier identifier.name
+    fprintf ff "%a = sample('%s', %a)" trans_id identifier identifier.name
       (trans_prior decl_type) transformation
-      (if is_tensor decl_type then "" else ".item()")
   | _ -> assert false
 
 let trans_parametersblock ff parameters =
