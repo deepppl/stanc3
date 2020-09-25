@@ -50,10 +50,12 @@ def test(posterior, config):
                                warmups=config.warmups,
                                chains=config.chains,
                                thin=config.thin)
-        inputs_info = model.information['inputs']
-        inputs = {k: _convert_to_tensor(data.values()[k], v['type']) for k, v in inputs_info.items()}
+        # inputs_info = model.information['inputs']
+        # inputs = {k: _convert_to_tensor(data.values()[k], v['type']) for k, v in inputs_info.items()}
+        inputs = pyro_model.convert_inputs(data.values())
         mcmc.run(**inputs)
     except Exception as e:
+    # except torch.Tensor as e:
         return { 'code': 2, 'msg': f'Inference error ({posterior.name}): {model.name}({data.name})', 'exn': e }
     return { 'code': 0, 'samples': mcmc.get_samples() }
 
@@ -77,24 +79,25 @@ bugs = [
     # not defined (easy?)
     ('mnist-nn_rbm1bJ100', 'append_col is not defined'),
     ('mnist_100-nn_rbm1bJ10', 'append_col is not defined'),
-    ('butterfly-multi_occupancy', 'Tensor object is not callable'),
     ('mcycle_gp-accel_gp', 'dims is not defined'),
     ('dogs-dogs_log', 'inv_logit is not defined'),
-    ('low_dim_gauss_mix_collapse', 'log_mix is not defined'),
-    ('low_dim_gauss_mix_collapse-low_dim_gauss_mix_collapse', 'log_mix is not defined'),
-    ('normal_2-normal_mixture', 'log_mix'),
+    # ('low_dim_gauss_mix_collapse', 'log_mix is not defined'),
+    # ('low_dim_gauss_mix_collapse-low_dim_gauss_mix_collapse', 'log_mix is not defined'),
+    # ('normal_2-normal_mixture', 'log_mix'),
     ('mcycle_splines-accel_splines', 'dot is not defined'),
-    ('sblrc-blr', 'dot is not defined'),
-    ('sblri-blr', 'dot is not defined'),
+    # ('sblrc-blr', 'dot is not defined'),
+    # ('sblri-blr', 'dot is not defined'),
     ('ovarian-logistic_regression_rhs', 'std_normal is not defined'),
     ('prostate-logistic_regression_rhs', 'std_normal is not defined'),
     # compile?
-    ('rstan_downloads-prophet', 'index 1 is out of bounds for dimension 0 with size 1'),
+    ('butterfly-multi_occupancy', 'Tensor object is not callable'),
+    # ('rstan_downloads-prophet', 'index 1 is out of bounds for dimension 0 with size 1'),
     ('dogs-dogs', 'result type Float can t be cast to the desired output type Long'),
     ('irt_2pl-irt_2pl', 'result type Float can t be cast to the desired output type Long'),
     ('election88-election88_full', 'result type Float can t be cast to the desired output type Long'),
     ('arma-arma11', 'one of the variables needed for gradient computation has been modified by an inplace operation'),
     ('garch-garch11', 'one of the variables needed for gradient computation has been modified by an inplace operation') ]
+
 constraints = [
     ('bball_drive_event_0-hmm_drive_0', 'hmm_drive_0'),
     ('bball_drive_event_1-hmm_drive_1', 'hmm_drive_1'),
@@ -105,9 +108,22 @@ constraints = [
     ('low_dim_gauss_mix-low_dim_gauss_mix', 'low_dim_gauss_mix'),
     ('normal_5-normal_mixture_k', 'normal_mixture_k') ]
 
+# posterior = my_pdb.posterior('mesquite-logmesquite_logvas')
 # posterior = my_pdb.posterior('radon_mn-radon_variable_intercept_centered')
 # posterior = my_pdb.posterior('mesquite-logmesquite_logvas')
 # posterior = my_pdb.posterior('irt_2pl-irt_2pl')
+# posterior = my_pdb.posterior('butterfly-multi_occupancy')
+# posterior = my_pdb.posterior('mcycle_gp-accel_gp')
+# posterior = my_pdb.posterior('election88-election88_full')
+# posterior = my_pdb.posterior('dogs-dogs_log')
+# posterior = my_pdb.posterior('sblri-blr')
+# posterior = my_pdb.posterior('rstan_downloads-prophet')
+# posterior = my_pdb.posterior('ecdc0401-covid19imperial_v2')
+# posterior = my_pdb.posterior('dogs-dogs')
+# posterior = my_pdb.posterior('mcycle_gp-accel_gp')
+# posterior = my_pdb.posterior('mnist_100-nn_rbm1bJ10')
+# posterior = my_pdb.posterior('garch-garch11')
+# posterior = my_pdb.posterior('prostate-logistic_regression_rhs')
 # config = Config()
 # res = test(posterior, config)
 # print(res['code'])
@@ -119,7 +135,8 @@ compile_error = 0
 inference_error = 0
 
 for name in my_pdb.posterior_names():
-    print(f'Test {name}')
+# for name, _ in bugs:
+    print(f'- Test {name}')
     posterior = my_pdb.posterior(name)
     config = Config()
     res = test(posterior, config)

@@ -14,6 +14,7 @@ class PyroModel:
         spec = importlib.util.spec_from_file_location(self.name, self.pyfile)
         Module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(Module)
+        self.convert_inputs = Module.convert_inputs
         self._model = Module.model
         self._transformed_data = None
         self._generated_quantities = None

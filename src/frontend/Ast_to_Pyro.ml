@@ -383,15 +383,6 @@ let drop_leading_zeros s =
 
 let format_number s = s |> without_underscores |> drop_leading_zeros
 
-let rec base_type ff = function
-  | UnsizedType.UInt -> fprintf ff "long"
-  | UReal
-  | UVector
-  | URowVector
-  | UMatrix -> fprintf ff "float"
-  | UArray t -> base_type ff t
-  | _ -> raise_s [%message "Unexpected base type"]
-
 let expr_one =
   { expr = IntNumeral "1";
     emeta = { type_ = UInt; loc = Location_span.empty; ad_level = DataOnly; } }
@@ -602,6 +593,18 @@ and dtype_of_unsized_type ff t =
   | UVector | URowVector | UMatrix -> fprintf ff "dtype_float"
   | UArray(t) -> dtype_of_unsized_type ff t
   | UFun _ | UMathLibraryFunction -> assert false
+
+and dtype_of_sized_type ff t =
+  match t with
+  | SizedType.SInt -> fprintf ff "dtype_long"
+  | SReal -> fprintf ff "dtype_float"
+  | SVector _ | SRowVector _ | SMatrix _ -> fprintf ff "dtype_float"
+  | SArray(t, _) -> dtype_of_sized_type ff t
+
+and dtype_of_type ff t =
+  match t with
+  | Type.Unsized t -> dtype_of_unsized_type ff t
+  | Sized t -> dtype_of_sized_type ff t
 
 and trans_exprs ff exprs =
   fprintf ff "%a" (print_list_comma trans_expr) exprs
@@ -1259,6 +1262,42 @@ let trans_block_as_args ff block =
                 (print_list_comma trans_id) args)
     block
 
+
+let convert_input ff stmt =
+  match stmt.stmt with
+  | VarDecl {decl_type; identifier; _} ->
+      begin match decl_type with
+      | Type.Sized SInt | Unsized UInt ->
+          fprintf ff "%a = inputs['%s']" trans_id identifier identifier.name
+      | Sized SReal | Unsized UReal
+      | Sized (SVector _) | Unsized UVector
+      | Sized (SRowVector _) | Unsized URowVector
+      | Sized (SMatrix _) | Unsized UMatrix
+      | Sized (SArray (_, _)) | Unsized (UArray _) ->
+          fprintf ff "%a = array(inputs['%s'], dtype=%a)"
+            trans_id identifier identifier.name
+            dtype_of_type decl_type
+      | Type.Unsized (UMathLibraryFunction | UFun _) ->
+          raise_s [%message "Unexpected input type: "
+              (decl_type: typed_expression Type.t)]
+      end
+  | _ -> ()
+
+
+let trans_datablock ff odata =
+  match odata with
+  | Some data ->
+      fprintf ff
+        "@[<v 0>@[<v 4>def convert_inputs(inputs):@,%a@,return { %a }@]@,@,@]"
+        (print_list_newline convert_input) data
+        (print_list_comma
+           (fun ff x -> fprintf ff "'%a': %a" trans_id x trans_id x))
+        (get_var_decl_names data)
+  | None ->
+      fprintf ff
+        "@[<v 0>@[<v 4>def convert_inputs(inputs):@,return { }@]@,@,@]"
+
+
 let trans_networks_as_arg ff networks =
   match networks with
   | None -> ()
@@ -1421,6 +1460,7 @@ let trans_prog runtime ff (p : typed_program) =
     (pp_imports ("runtimes."^runtime^".stanlib"))
     (SSet.to_list (get_stanlib_calls p));
   Option.iter ~f:(trans_functionblock ff) p.functionblock;
+  trans_datablock ff p.datablock;
   trans_transformeddatablock ff p.datablock p.transformeddatablock;
   trans_modelblock ff
     p.networkblock p.datablock p.transformeddatablock

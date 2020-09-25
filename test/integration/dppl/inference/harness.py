@@ -40,14 +40,6 @@ def _compare(res, ref, compare_params, dist):
             divergence[k] = _distance(a, b, dist)
     return divergence
 
-def _convert_to_tensor(value):
-    if isinstance(value, (list, np.ndarray)):
-        return Tensor(value)
-    elif isinstance(value, dict):
-        return {k: _convert_to_tensor(v) for k, v in value.items()}
-    else:
-        return value
-
 def _convert_to_np(value):
     if type(value) == Tensor:
         return value.cpu().numpy()
@@ -110,7 +102,7 @@ class MCMCTest:
                     chains=self.config.chains,
                     thin=self.config.thin,
                 )
-                data = {k: _convert_to_tensor(v) for k, v in self.data.items()}
+                data = model.convert_inputs(self.data)
                 mcmc.run(**data)
                 self.pyro_samples = mcmc.get_samples()
         if self.with_numpyro:
@@ -137,7 +129,7 @@ class MCMCTest:
                     chains=self.config.chains,
                     thin=self.config.thin,
                 )
-                data = {k: _convert_to_tensor(v) for k, v in self.data.items()}
+                data = model.convert_inputs(self.data)
                 mcmc.run(**data)
                 self.pyro_naive_samples = mcmc.get_samples()
         if self.with_numpyro:
