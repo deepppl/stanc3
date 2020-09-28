@@ -303,6 +303,13 @@ let stanlib =
     "append_row_vector_vector"; "append_row_real_vector";
     "append_row_int_vector"; "append_row_vector_real";
     "append_row_vector_int";
+    (* 5.12 Covariance Functions *)
+    "cov_exp_quad_rowvector_real_real";
+    "cov_exp_quad_vector_real_real";
+    "cov_exp_quad_array_real_real";
+    "cov_exp_quad_rowvector_rowvector_real_real";
+    "cov_exp_quad_vector_vector_real_real";
+    "cov_exp_quad_array_array_real_real";
     (* 7. Mixed Operations *)
     "to_matrix_matrix";
     "to_matrix_vector";

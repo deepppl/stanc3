@@ -12,25 +12,25 @@ def _XXX_TODO_XXX_(f):
 
 # real pi()
 # π, the ratio of a circle’s circumference to its diameter
-pi = lambda: math.pi
+pi = lambda: tensor(math.pi, dtype=torch.float)
 
 # real e()
 # e, the base of the natural logarithm
-e = lambda: math.e
+e = lambda: tensor(math.e, dtype=torch.float)
 
 # real sqrt2()
 # The square root of 2
 from math import sqrt as msqrt
-sqrt2 = lambda: msqrt(2)
+sqrt2 = lambda: tensor(msqrt(2), dtype=torch.float)
 
 # real log2()
 # The natural logarithm of 2
 from math import log as mlog
-log2 = lambda: mlog(2)
+log2 = lambda: tensor(mlog(2), dtype=torch.float)
 
 # real log10()
 # The natural logarithm of 10
-log10 = lambda: mlog(10)
+log10 = lambda: tensor(mlog(10), dtype=torch.float)
 
 ## 3.7 Step-like Functions
 
@@ -937,6 +937,36 @@ append_row_int_vector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
 # Append y to the bottom of x, returning another vector.
 append_row_vector_real = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
 append_row_vector_int = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
+
+## 5.12 Covariance Functions
+## 5.12.1 Exponentiated quadratic covariance function
+
+def cov_exp_quad(x, alpha, rho):
+    return alpha * alpha * torch.exp(-0.5 * torch.pow(torch.cdist(x, x) / rho, 2))
+
+# matrix cov_exp_quad(row_vectors x, real alpha, real rho)
+# The covariance matrix with an exponentiated quadratic kernel of x.
+cov_exp_quad_rowvector_real_real = cov_exp_quad
+
+# matrix cov_exp_quad(vectors x, real alpha, real rho)
+# The covariance matrix with an exponentiated quadratic kernel of x.
+cov_exp_quad_vector_real_real = cov_exp_quad
+
+# matrix cov_exp_quad(real[] x, real alpha, real rho)
+# The covariance matrix with an exponentiated quadratic kernel of x.
+cov_exp_quad_array_real_real = cov_exp_quad
+
+# matrix cov_exp_quad(row_vectors x1, row_vectors x2, real alpha, real rho)
+# The covariance matrix with an exponentiated quadratic kernel of x1 and x2.
+cov_exp_quad_rowvector_rowvector_real_real = cov_exp_quad
+
+# matrix cov_exp_quad(vectors x1, vectors x2, real alpha, real rho)
+# The covariance matrix with an exponentiated quadratic kernel of x1 and x2.
+cov_exp_quad_vector_vector_real_real = cov_exp_quad
+
+# matrix cov_exp_quad(real[] x1, real[] x2, real alpha, real rho)
+# The covariance matrix with an exponentiated quadratic kernel of x1 and x2.
+cov_exp_quad_array_array_real_real = cov_exp_quad
 
 ## 7. Mixed Operations
 
