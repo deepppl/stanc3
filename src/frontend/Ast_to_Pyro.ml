@@ -500,8 +500,8 @@ let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
         trans_exprs eles
         dtype_of_unsized_type emeta.type_
   | Indexed (lhs, indices) ->
-      fprintf ff "%a%a" trans_expr lhs
-        (pp_print_list ~pp_sep:(fun _ff () -> ()) trans_idx) indices
+      fprintf ff "%a[%a]" trans_expr lhs
+        (print_list_comma trans_idx) indices
 
 and trans_numeral type_ ff x =
   begin match type_ with
@@ -581,14 +581,14 @@ and trans_unop e ff op =
       raise_s [%message "Unary operator expected" (op: Operator.t)]
 
 and trans_idx ff = function
-  | All -> fprintf ff "[:]"
-  | Upfrom e -> fprintf ff "[%a - 1:]" trans_expr e
-  | Downfrom e -> fprintf ff "[:%a]" trans_expr e
-  | Between (lb, ub) -> fprintf ff "[%a - 1:%a]" trans_expr lb trans_expr ub
+  | All -> fprintf ff ":"
+  | Upfrom e -> fprintf ff "%a - 1:" trans_expr e
+  | Downfrom e -> fprintf ff ":%a" trans_expr e
+  | Between (lb, ub) -> fprintf ff "%a - 1:%a" trans_expr lb trans_expr ub
   | Single e -> (
     match e.emeta.type_ with
-    | UInt -> fprintf ff "[%a - 1]" trans_expr e
-    | UArray _ -> fprintf ff "[%a - 1]" trans_expr e
+    | UInt -> fprintf ff "%a - 1" trans_expr e
+    | UArray _ -> fprintf ff "%a - 1" trans_expr e
     | _ ->
         raise_s
           [%message "Expecting int or array" (e.emeta.type_ : UnsizedType.t)] )
@@ -990,8 +990,8 @@ let rec trans_stmt ?(naive=false) ctx ff (ts : typed_statement) =
       let rec trans_lval ff = function
       | { lval= LVariable id; _ } -> trans_id ff id
       | { lval= LIndexed (lhs, indices); _ } ->
-          fprintf ff "%a%a" trans_lval lhs
-            (pp_print_list ~pp_sep:(fun _ff () -> ()) trans_idx) indices
+          fprintf ff "%a[%a]" trans_lval lhs
+            (print_list_comma trans_idx) indices
       in
       let trans_rhs lhs ff rhs =
         match assign_op with
