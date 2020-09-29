@@ -303,6 +303,12 @@ let stanlib =
     "append_row_vector_vector"; "append_row_real_vector";
     "append_row_int_vector"; "append_row_vector_real";
     "append_row_vector_int";
+    (* 5.11 Special Matrix Functions *)
+    "softmax_vector";
+    "softmax_vector";
+    "cumulative_sum_array";
+    "cumulative_sum_vector";
+    "cumulative_sum_rowvector";
     (* 5.12 Covariance Functions *)
     "cov_exp_quad_rowvector_real_real";
     "cov_exp_quad_vector_real_real";

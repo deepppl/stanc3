@@ -45,9 +45,12 @@ normal_lpdf_vector_int_int = normal_lpdf
 normal_lpdf_vector_real_real = normal_lpdf
 normal_lpdf_vector_vector_real = normal_lpdf
 student_t = d.StudentT
-def student_t_lpdf(y, nu, sigma):
-    return d.StudentT(nu, sigma).log_prob(y)
+def student_t_lpdf(y, nu, mu, sigma):
+    return d.StudentT(nu, mu, sigma).log_prob(y)
+def student_t_lccdf(y, nu, mu, sigma):
+    return torch.log(d.StudentT(nu, mu, sigma).icdf(y))
 student_t_lpdf_real_int_int_int = student_t_lpdf
+student_t_lccdf_int_int_int_int = student_t_lccdf
 inv_gamma = d.InverseGamma
 gamma = d.Gamma
 dirichlet = d.Dirichlet

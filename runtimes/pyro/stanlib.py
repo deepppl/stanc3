@@ -938,6 +938,34 @@ append_row_int_vector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
 append_row_vector_real = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
 append_row_vector_int = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
 
+## 5.11 Special Matrix Functions
+## 5.11.1 Softmax
+
+# vector softmax(vector x)
+# The softmax of x
+from torch.nn import Softmax as tSoftmax
+softmax_vector = lambda x: tSoftmax(dim=x.shape)(x)
+
+# vector log_softmax(vector x)
+# The natural logarithm of the softmax of x
+from torch.nn import LogSoftmax as tLogSoftmax
+softmax_vector = lambda x: tLogSoftmax(dim=x.shape)(x)
+
+# 5.11.2 Cumulative Sums
+
+# real[] cumulative_sum(real[] x)
+# The cumulative sum of x
+from torch import cumsum as tcumsum
+cumulative_sum_array = lambda x: tcumsum(x, dim=0)
+
+# vector cumulative_sum(vector v)
+# The cumulative sum of v
+cumulative_sum_vector = lambda x: tcumsum(x, dim=0)
+
+# row_vector cumulative_sum(row_vector rv)
+# The cumulative sum of rv
+cumulative_sum_rowvector = lambda x: tcumsum(x, dim=0)
+
 ## 5.12 Covariance Functions
 ## 5.12.1 Exponentiated quadratic covariance function
 
