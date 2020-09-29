@@ -1,5 +1,7 @@
 import pyro.distributions as d
 from torch.distributions import constraints, transform_to
+from pyro.distributions.transforms import CorrLCholeskyTransform
+from torch import sort
 import torch
 
 class improper_uniform(d.Normal):
@@ -35,12 +37,56 @@ class upper_constrained_improper_uniform(improper_uniform):
 
 class simplex_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=None):
-        super(simplex_constrained_improper_uniform, self).__init__(shape)
+        super().__init__(shape)
         self.support = constraints.simplex
+
+    _transform = transform_to(constraints.simplex)
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return transform_to(constraints.simplex)(s)
+        return _transform(s)
+
+class unit_constrained_improper_uniform(improper_uniform):
+    def __init__(self, shape=None):
+        super().__init__(shape)
+
+    def sample(self, *args, **kwargs):
+        s = super().sample(*args, **kwargs)
+        return s / torch.norm(s)
+
+class ordered_constrained_improper_uniform(improper_uniform):
+    def __init__(self, shape=None):
+        super().__init__(shape)
+
+    def sample(self, *args, **kwargs):
+        s = super().sample(*args, **kwargs)
+        return sort(s)
+
+class positive_ordered_constrained_improper_uniform(improper_uniform):
+    def __init__(self, shape=None):
+        super().__init__(shape)
+        self.support = constraints.positive
+
+    _to_positive = transform_to(constraints.positive)
+    def _transform(x):
+        sort(_to_positive(x))
+
+    def sample(self, *args, **kwargs):
+        s = super().sample(*args, **kwargs)
+        return _transform(s)
+
+
+class cholesky_factor_corr_constrained_improper_uniform(improper_uniform):
+    def __init__(self, shape=None):
+        super().__init__(shape[0])
+        self.support = constraints.lower_cholesky
+
+    _transform = CorrLCholeskyTransform()
+
+    def sample(self, *args, **kwargs):
+        s = super().sample(*args, **kwargs)
+        return _transform(s)
+
 
 uniform = d.Uniform
 beta = d.Beta

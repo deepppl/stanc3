@@ -1360,14 +1360,22 @@ let trans_prior (decl_type: typed_expression Type.t) ff transformation =
   | Simplex ->
       fprintf ff "simplex_constrained_improper_uniform(shape=%a)"
         trans_dims decl_type
+  | UnitVector ->
+      fprintf ff "unit_constrained_improper_uniform(shape=%a)"
+        trans_dims decl_type
+  | Ordered ->
+      fprintf ff "ordered_constrained_improper_uniform(shape=%a)"
+        trans_dims decl_type
+  | PositiveOrdered ->
+      fprintf ff "positive_ordered_constrained_improper_uniform(shape=%a)"
+        trans_dims decl_type
+  | CholeskyCorr ->
+      fprintf ff "cholesky_factor_corr_constrained_improper_uniform(shape=%a)"
+        trans_dims decl_type
   | Offset _
   | Multiplier _
   | OffsetMultiplier _ ->
       assert false (* XXX TODO XXX *)
-  | Ordered
-  | PositiveOrdered
-  | UnitVector
-  | CholeskyCorr
   | CholeskyCov
   | Correlation
   | Covariance ->
