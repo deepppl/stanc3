@@ -79,7 +79,7 @@ compile_tests = [
     ('kmeans', None),
     ('schools', None),
     ('logistic', None),
-    ('lda', 'XXX TODO?: simplex XXX'),
+    ('lda', None),
     ('cockroaches', None),
     ('posterior_twice', None),
     ('seeds', None),
