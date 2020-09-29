@@ -556,7 +556,7 @@ prod_array = prod
 # real log_sum_exp(real[] x)
 # The natural logarithm of the sum of the exponentials of the elements in x, or −∞
 # if the array is empty.
-log_sum_exp_array = logsumexp
+log_sum_exp_array = lambda x: logsumexp(x, 0)
 
 ## 4.1.3 Sample Mean, Variance, and Standard Deviation
 
@@ -678,15 +678,15 @@ cols_matrix = lambda x: x.shape[1]
 
 # real log_sum_exp(vector x)
 # The natural logarithm of the sum of the exponentials of the elements in x
-log_sum_exp_vector = logsumexp
+log_sum_exp_vector = lambda x: logsumexp(x, 0)
 
 # real log_sum_exp(row_vector x)
 # The natural logarithm of the sum of the exponentials of the elements in x
-log_sum_exp_rowvector = logsumexp
+log_sum_exp_rowvector = lambda x: logsumexp(x, 0)
 
 # real log_sum_exp(matrix x)
 # The natural logarithm of the sum of the exponentials of the elements in x
-log_sum_exp_matrix = logsumexp
+log_sum_exp_matrix = lambda x: logsumexp(x, (0, 1))
 
 ## 5.6.2 Minimum and Maximum
 
