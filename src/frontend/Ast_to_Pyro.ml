@@ -352,7 +352,7 @@ let stanlib_id id args =
     | UVector -> "_vector"
     | URowVector -> "_rowvector"
     | UMatrix -> "_matrix"
-    | UArray _ -> "_matrix"
+    | UArray _ -> "_array"
     | UMathLibraryFunction | UFun _ -> ""
   in
   List.fold_left ~init:id.name
@@ -1339,13 +1339,14 @@ let trans_block_as_return ff block =
 
 let trans_prior (decl_type: typed_expression Type.t) ff transformation =
   match transformation with
-  | Program.Identity -> fprintf ff "improper_uniform(shape=%a)" trans_dims decl_type
+  | Program.Identity ->
+      fprintf ff "improper_uniform(shape=%a)" trans_dims decl_type
   | Lower lb ->
-     fprintf ff "lower_constrained_improper_uniform(%a, shape=%a)"
-       trans_expr lb trans_dims decl_type
+      fprintf ff "lower_constrained_improper_uniform(%a, shape=%a)"
+        trans_expr lb trans_dims decl_type
   | Upper ub ->
-     fprintf ff "upper_constrained_improper_uniform(%a, shape=%a)"
-       trans_expr ub trans_dims decl_type
+      fprintf ff "upper_constrained_improper_uniform(%a, shape=%a)"
+        trans_expr ub trans_dims decl_type
   | LowerUpper (lb, ub) ->
       if is_tensor decl_type then
         fprintf ff "uniform(%a * ones(%a), %a)"
@@ -1356,11 +1357,13 @@ let trans_prior (decl_type: typed_expression Type.t) ff transformation =
         fprintf ff "uniform(%a, %a)"
           trans_expr lb
           trans_expr ub
+  | Simplex ->
+      fprintf ff "simplex_constrained_improper_uniform(shape=%a)"
+        trans_dims decl_type
   | Offset _
   | Multiplier _
   | OffsetMultiplier _ ->
       assert false (* XXX TODO XXX *)
-  | Simplex
   | Ordered
   | PositiveOrdered
   | UnitVector

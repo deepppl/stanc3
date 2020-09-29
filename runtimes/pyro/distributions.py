@@ -1,5 +1,5 @@
 import pyro.distributions as d
-from torch.distributions import constraints
+from torch.distributions import constraints, transform_to
 import torch
 
 class improper_uniform(d.Normal):
@@ -16,7 +16,7 @@ class lower_constrained_improper_uniform(improper_uniform):
     def __init__(self, lower_bound=0, shape=None):
         self.lower_bound = lower_bound
         super(lower_constrained_improper_uniform, self).__init__(shape)
-        self.support = constraints.greater_than(lower_bound)
+        self.support = constraints.greater_than_eq(lower_bound)
 
     def sample(self, *args, **kwargs):
         s = d.Uniform(self.lower_bound, self.lower_bound + 2).sample(*args, **kwargs)
@@ -32,6 +32,15 @@ class upper_constrained_improper_uniform(improper_uniform):
     def sample(self, *args, **kwargs):
         s = d.Uniform(self.upper_bound - 2.0, self.upper_bound).sample(*args, **kwargs)
         return s
+
+class simplex_constrained_improper_uniform(improper_uniform):
+    def __init__(self, shape=None):
+        super(simplex_constrained_improper_uniform, self).__init__(shape)
+        self.support = constraints.simplex
+
+    def sample(self, *args, **kwargs):
+        s = super().sample(*args, **kwargs)
+        return transform_to(constraints.simplex)(s)
 
 uniform = d.Uniform
 beta = d.Beta
