@@ -1,7 +1,7 @@
 import pyro
 from pyro.distributions import Exponential, Bernoulli, Binomial, Poisson
 from torch import tensor as array
-from torch import zeros, ones, Tensor, matmul, true_divide, floor_divide
+from torch import zeros, ones, Tensor, matmul, true_divide, floor_divide, transpose
 from torch import LongTensor
 from torch import long as dtype_long
 from torch import float as dtype_float

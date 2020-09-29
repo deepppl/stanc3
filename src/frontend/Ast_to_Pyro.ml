@@ -31,7 +31,7 @@ let trans_id ff id =
 
 let dppllib =
   [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones";
-    "matmul"; "true_divide"; "floor_divide";
+    "matmul"; "true_divide"; "floor_divide"; "transpose";
     "dtype_long"; "dtype_float"; "register_network" ]
 
 let stanlib =
@@ -558,7 +558,14 @@ and trans_unop e ff op =
   | Operator.PNot -> fprintf ff "+ %a" trans_expr e
   | PPlus -> fprintf ff "+ %a" trans_expr e
   | PMinus -> fprintf ff "- %a" trans_expr e
-  | Transpose -> fprintf ff "transpose(%a)" trans_expr e
+  | Transpose ->
+      begin match e.emeta.type_ with
+      | UnsizedType.UVector | URowVector -> fprintf ff "%a" trans_expr e
+      | UMatrix -> fprintf ff "transpose(%a, 0, 1)" trans_expr e
+      | _ ->
+        raise_s [%message "transpose: unexpected type"
+            (e.emeta.type_: UnsizedType.t)]
+      end
   | Plus
   | Minus
   | Times
