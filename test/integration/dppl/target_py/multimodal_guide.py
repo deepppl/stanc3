@@ -1,6 +1,9 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones
-from runtimes.pyro.stanlib import sqrt, exp, log
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
+from runtimes.pyro.stanlib import exp_real
+
+def convert_inputs(inputs):
+    return { }
 
 def model():
     # Parameters
@@ -25,6 +28,6 @@ def guide():
     # Guide
     cluster = sample('cluster', normal(mu_cluster, 1))
     if cluster > 0:
-        theta = sample('theta', normal(mu1, exp(log_sigma1)))
+        theta = sample('theta', normal(mu1, exp_real(log_sigma1)))
     else:
-        theta = sample('theta', normal(mu2, exp(log_sigma2)))
+        theta = sample('theta', normal(mu2, exp_real(log_sigma2)))

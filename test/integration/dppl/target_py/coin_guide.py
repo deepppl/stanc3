@@ -1,6 +1,10 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones
-from runtimes.pyro.stanlib import sqrt, exp, log
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
+
+def convert_inputs(inputs):
+    N = inputs['N']
+    x = array(inputs['x'], dtype=dtype_long)
+    return { 'N': N, 'x': x }
 
 def model(*, N, x):
     # Parameters
