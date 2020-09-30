@@ -30,7 +30,7 @@ let trans_id ff id =
 
 
 let dppllib =
-  [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones";
+  [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones"; "empty";
     "matmul"; "true_divide"; "floor_divide"; "transpose";
     "dtype_long"; "dtype_float"; "register_network" ]
 
@@ -687,7 +687,7 @@ and trans_dims ff (t : typed_expression Type.t) =
 let trans_expr_opt (type_ : typed_expression Type.t) ff = function
   | Some e -> trans_expr ff e
   | None ->
-      if is_tensor type_ then fprintf ff "zeros(%a)" trans_dims type_
+      if is_tensor type_ then fprintf ff "empty(%a)" trans_dims type_
       else fprintf ff "None"
 
 let trans_arg ff (_, _, ident) =
