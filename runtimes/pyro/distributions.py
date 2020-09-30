@@ -117,6 +117,8 @@ cauchy = d.Cauchy
 lognormal = d.LogNormal
 double_exponential = d.Laplace
 exponential = d.Exponential
+pareto = d.Pareto
+neg_binomial_2 = d.GammaPoisson
 
 def categorical_logit(logits):
     return d.Categorical(logits=logits)
