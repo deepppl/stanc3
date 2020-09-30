@@ -671,6 +671,143 @@ cols_rowvector = lambda x: x.shape[0]
 # The number of columns in the matrix x
 cols_matrix = lambda x: x.shape[1]
 
+## 5.5 Dot Products and Specialized Products
+
+# real dot_product(vector x, vector y)
+# The dot product of x and y
+from torch import dot as tdot
+dot_product_vector_vector = tdot
+
+# real dot_product(vector x, row_vector y)
+# The dot product of x and y
+dot_product_vector_rowvector = tdot
+
+# real dot_product(row_vector x, vector y)
+# The dot product of x and y
+dot_product_rowvector_vector = tdot
+
+# real dot_product(row_vector x, row_vector y)
+# The dot product of x and y
+dot_product_rowvector_rowvector = tdot
+
+# row_vector columns_dot_product(vector x, vector y)
+# The dot product of the columns of x and y
+columns_dot_product_vector_vector = _XXX_TODO_XXX_('columns_dot_product')
+
+# row_vector columns_dot_product(row_vector x, row_vector y)
+# The dot product of the columns of x and y
+columns_dot_product_rowvector_rowvector = _XXX_TODO_XXX_('columns_dot_product')
+
+# row_vector columns_dot_product(matrix x, matrix y)
+# The dot product of the columns of x and y
+columns_dot_product_matrix_matrix = _XXX_TODO_XXX_('columns_dot_product')
+
+# vector rows_dot_product(vector x, vector y)
+# The dot product of the rows of x and y
+rows_dot_product_vector_vector = _XXX_TODO_XXX_('rows_dot_product')
+
+# vector rows_dot_product(row_vector x, row_vector y)
+# The dot product of the rows of x and y
+rows_dot_product_rowvector_rowvector = _XXX_TODO_XXX_('rows_dot_product')
+
+# vector rows_dot_product(matrix x, matrix y)
+# The dot product of the rows of x and y
+rows_dot_product_matrix_matrix = _XXX_TODO_XXX_('rows_dot_product')
+
+# real dot_self(vector x)
+# The dot product of the vector x with itself
+dot_self_vector = lambda x: dot_product_vector_vector(x, x)
+
+# real dot_self(row_vector x)
+# The dot product of the row vector x with itself
+dot_self_rowvector = lambda x: dot_product_rowvector_rowvector(x, x)
+
+# row_vector columns_dot_self(vector x)
+# The dot product of the columns of x with themselves
+columns_dot_self_vector = lambda x: columns_dot_product_vector_vector(x, x)
+
+# row_vector columns_dot_self(row_vector x)
+# The dot product of the columns of x with themselves
+columns_dot_self_rowvector = lambda x: columns_dot_product_rowvector_rowvector(x, x)
+
+# row_vector columns_dot_self(matrix x)
+# The dot product of the columns of x with themselves
+columns_dot_self_matrix = lambda x: columns_dot_product_matrix_matrix(x, x)
+
+# vector rows_dot_self(vector x)
+# The dot product of the rows of x with themselves
+rows_dot_self_vector = lambda x: rows_dot_product_vector_vector(x, x)
+
+# vector rows_dot_self(row_vector x)
+# The dot product of the rows of x with themselves
+rows_dot_self_rowvector = lambda x: rows_dot_product_rowvector_rowvector(x, x)
+
+# vector rows_dot_self(matrix x)
+# The dot product of the rows of x with themselves
+rows_dot_self_matrix = lambda x: rows_dot_product_matrix_matrix(x, x)
+
+## 5.5.1 Specialized Products
+
+# matrix tcrossprod(matrix x)
+# The product of x postmultiplied by its own transpose, similar to the tcrossprod(x) function in R. The result is a symmetric matrix.
+tcrossprod_matrix = _XXX_TODO_XXX_('tcrossprod')
+
+# matrix crossprod(matrix x)
+# The product of x premultiplied by its own transpose, similar to the crossprod(x) function in R. The result is a symmetric matrix.
+crossprod_matrix = _XXX_TODO_XXX_('crossprod')
+
+# matrix quad_form(matrix A, matrix B)
+# The quadratic form, i.e., B' * A * B.
+quad_form_matrix_matrix = _XXX_TODO_XXX_('quad_form')
+
+# real quad_form(matrix A, vector B)
+# The quadratic form, i.e., B' * A * B.
+quad_form_matrix_vector = _XXX_TODO_XXX_('quad_form')
+
+# matrix quad_form_diag(matrix m, vector v)
+# The quadratic form using the column vector v as a diagonal matrix, i.e., diag_matrix(v) * m * diag_matrix(v).
+quad_form_diag_matrix_vector = _XXX_TODO_XXX_('quad_form_diag')
+
+# matrix quad_form_diag(matrix m, row_vector rv)
+# The quadratic form using the row vector rv as a diagonal matrix, i.e., diag_matrix(rv) * m * diag_matrix(rv).
+quad_form_diag_matrix_row_vector  = _XXX_TODO_XXX_('quad_form_diag')
+
+# matrix quad_form_sym(matrix A, matrix B)
+# Similarly to quad_form, gives B' * A * B, but additionally checks if A is symmetric and ensures that the result is also symmetric.
+quad_form_sym_matrix_matrix = _XXX_TODO_XXX_('quad_form_sym')
+
+# real quad_form_sym(matrix A, vector B)
+# Similarly to quad_form, gives B' * A * B, but additionally checks if A is symmetric and ensures that the result is also symmetric.
+quad_form_sym_matrix_vector = _XXX_TODO_XXX_('quad_form_sym')
+
+# real trace_quad_form(matrix A, matrix B)
+# The trace of the quadratic form, i.e., trace(B' * A * B).
+trace_quad_form_matrix_matrix = _XXX_TODO_XXX_('trace_quad_form')
+
+# real trace_gen_quad_form(matrix D, matrix A, matrix B)
+# The trace of a generalized quadratic form, i.e., trace(D * B' * A * B).
+trace_gen_quad_form_matrix_matrix_matrix = _XXX_TODO_XXX_('trace_gen_quad_form')
+
+# matrix multiply_lower_tri_self_transpose(matrix x)
+# The product of the lower triangular portion of x (including the diagonal) times its own transpose; that is, if L is a matrix of the same dimensions as x with L(m,n) equal to x(m,n) for n≤m
+# and L(m,n) equal to 0 if n>m, the result is the symmetric matrix LL⊤. This is a specialization of tcrossprod(x) for lower-triangular matrices. The input matrix does not need to be square.
+multiply_lower_tri_self_matrix = _XXX_TODO_XXX_('multiply_lower_tri_self')
+
+# matrix diag_pre_multiply(vector v, matrix m)
+# Return the product of the diagonal matrix formed from the vector v and the matrix m, i.e., diag_matrix(v) * m.
+diag_pre_multiply_vector_matrix = _XXX_TODO_XXX_('diag_pre_multiply')
+
+# matrix diag_pre_multiply(row_vector rv, matrix m)
+# Return the product of the diagonal matrix formed from the vector rv and the matrix m, i.e., diag_matrix(rv) * m.
+diag_pre_multiply_rowvector_matrix = _XXX_TODO_XXX_('diag_pre_multiply')
+
+# matrix diag_post_multiply(matrix m, vector v)
+# Return the product of the matrix m and the diagonal matrix formed from the vector v, i.e., m * diag_matrix(v).
+diag_post_multiply_matrix_vector = _XXX_TODO_XXX_('diag_post_multiply')
+
+# matrix diag_post_multiply(matrix m, row_vector rv)
+# Return the product of the matrix m and the diagonal matrix formed from the the row vector rv, i.e., m * diag_matrix(rv).
+diag_post_multiply_matrix_rowvector = _XXX_TODO_XXX_('diag_post_multiply')
 
 ## 5.6 Reductions
 
@@ -826,7 +963,7 @@ block_matrix_int_int_int_int = lambda x, i, j, n_rows, n_cols: x[i - 1 : i - 1 +
 
 # vector sub_col(matrix x, int i, int j, int n_rows)
 # Return the sub-column of x that starts at row i and column j and extends n_rows rows and 1 column.
-sub_col_matrix_int_int_int = lambda x, i, j, n_rows: x[i - 1 : i - 1 + n_rows, j - 1 : j]
+sub_col_matrix_int_int_int = lambda x, i, j, n_rows: (x[i - 1 : i - 1 + n_rows, j - 1 : j])[:,0]
 
 # row_vector sub_row(matrix x, int i, int j, int n_cols)
 # Return the sub-row of x that starts at row i and column j and extends 1 row and n_cols columns.

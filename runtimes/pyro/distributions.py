@@ -116,6 +116,7 @@ logistic = d.LogisticNormal
 cauchy = d.Cauchy
 lognormal = d.LogNormal
 double_exponential = d.Laplace
+exponential = d.Exponential
 
 def categorical_logit(logits):
     return d.Categorical(logits=logits)
