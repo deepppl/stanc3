@@ -16,7 +16,7 @@ class improper_uniform(d.Normal):
 
 class lower_constrained_improper_uniform(improper_uniform):
     def __init__(self, lower_bound=0, shape=None):
-        self.lower_bound = lower_bound
+        self.lower_bound = lower_bound if shape == None else lower_bound * torch.ones(shape)
         super(lower_constrained_improper_uniform, self).__init__(shape)
         self.support = constraints.greater_than_eq(lower_bound)
 
@@ -27,7 +27,7 @@ class lower_constrained_improper_uniform(improper_uniform):
 
 class upper_constrained_improper_uniform(improper_uniform):
     def __init__(self, upper_bound=0.0, shape=None):
-        self.upper_bound = upper_bound
+        self.upper_bound = upper_bound if shape == None else upper_bound * torch.ones(shape)
         super(upper_constrained_improper_uniform, self).__init__(shape)
         self.support = constraints.less_than(upper_bound)
 
@@ -44,7 +44,7 @@ class simplex_constrained_improper_uniform(improper_uniform):
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return _transform(s)
+        return self._transform(s)
 
 class unit_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=None):
@@ -73,7 +73,7 @@ class positive_ordered_constrained_improper_uniform(improper_uniform):
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return _transform(s)
+        return self._transform(s)
 
 
 class cholesky_factor_corr_constrained_improper_uniform(improper_uniform):
@@ -85,7 +85,7 @@ class cholesky_factor_corr_constrained_improper_uniform(improper_uniform):
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return _transform(s)
+        return self._transform(s)
 
 
 uniform = d.Uniform
@@ -109,6 +109,8 @@ student_t_lccdf_int_int_int_int = student_t_lccdf
 inv_gamma = d.InverseGamma
 gamma = d.Gamma
 dirichlet = d.Dirichlet
+def dirichlet_lpdf_vector_vector(y, x):
+    return d.Dirichlet(x).log_prob(y)
 multi_normal = d.MultivariateNormal
 logistic = d.LogisticNormal
 cauchy = d.Cauchy
