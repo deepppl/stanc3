@@ -1,7 +1,7 @@
 import math
 import torch
 import torch.nn
-from torch import ones, tensor, Tensor
+from torch import ones, tensor
 
 def _XXX_TODO_XXX_(f):
     def todo(x):
@@ -401,7 +401,7 @@ logit_array = _XXX_TODO_XXX_('logit')
 # R inv_logit(T x)
 # logistic sigmoid function applied to x
 from torch import sigmoid
-inv_logit_int = lambda x: sigmoid(Tensor([x])).item()
+inv_logit_int = lambda x: sigmoid(tensor(x, dtype=torch.float))
 inv_logit_real = sigmoid
 inv_logit_vector = sigmoid
 inv_logit_rowvector = sigmoid
@@ -500,12 +500,12 @@ def log_sum_exp_real_real(x, y):
 # R log_inv_logit(T x)
 # natural logarithm of the inverse logit function of x
 from torch.nn import LogSigmoid
-log_inv_logit_int = lambda x: LogSigmoid(Tensor([x])).item()
-log_inv_logit_real = LogSigmoid
-log_inv_logit_vector = LogSigmoid
-log_inv_logit_rowvector = LogSigmoid
-log_inv_logit_matrix = LogSigmoid
-log_inv_logit_array = LogSigmoid
+log_inv_logit_int = lambda x: LogSigmoid()(tensor(x, dtype=torch.float))
+log_inv_logit_real = LogSigmoid()
+log_inv_logit_vector = LogSigmoid()
+log_inv_logit_rowvector = LogSigmoid()
+log_inv_logit_matrix = LogSigmoid()
+log_inv_logit_array = LogSigmoid()
 
 # R log1m_inv_logit(T x)
 # natural logarithm of 1 minus the inverse logit function of x
@@ -608,7 +608,7 @@ squared_distance_rowvector_rowvector = _XXX_TODO_XXX_('squared_distance')
 # Return an integer array containing the dimensions of x; the type
 # of the argument T can be any Stan type with up to 8 array
 # dimensions.
-dims_int = tensor([], dtype=torch.long)
+dims_int = lambda x: tensor([], dtype=torch.long)
 dims_real = lambda x: tensor(x.shape)
 dims_vector = lambda x: tensor(x.shape)
 dims_rowvector = lambda x: tensor(x.shape)
@@ -621,7 +621,7 @@ dims_array = lambda x: tensor(x.shape)
 # array type. For example, if x is of type real[4,3] then
 # num_elements(x) is 12, and if y is declared as matrix[3,4] y[5],
 # then size(y) evaluates to 60.
-num_elements_array = lambda x: math.prod(x.shape)
+num_elements_array = lambda x: x.shape.numel()
 
 # int size(T[] x)
 # Return the number of elements in the array x; the type of the array T
@@ -1010,7 +1010,7 @@ segment_array_int_int = lambda v, i, n: v[i - 1 : i - 1 + n]
 
 ## 5.10 Matrix Concatenation
 
-# Horizontal concatenation
+## 5.10.0.1 Horizontal concatenation
 from torch import cat
 
 # matrix append_col(matrix x, matrix y)
@@ -1043,7 +1043,7 @@ append_col_int_rowvector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
 append_col_rowvector_real = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
 append_col_rowvector_int = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
 
-# 5.10.0.2 Vertical concatenation
+## 5.10.0.2 Vertical concatenation
 
 # matrix append_row(matrix x, matrix y)
 # Combine matrices x and y by rows. The matrices must have the same number of columns.
@@ -1107,7 +1107,7 @@ cumulative_sum_rowvector = lambda x: tcumsum(x, dim=0)
 ## 5.12.1 Exponentiated quadratic covariance function
 
 def cov_exp_quad(x, alpha, rho):
-    return alpha * alpha * torch.exp(-0.5 * torch.pow(torch.cdist(x, x) / rho, 2))
+    return alpha * alpha * texp(-0.5 * torch.pow(torch.cdist(x, x) / rho, 2))
 
 # matrix cov_exp_quad(row_vectors x, real alpha, real rho)
 # The covariance matrix with an exponentiated quadratic kernel of x.
