@@ -1,5 +1,5 @@
 import numpyro.distributions as d
-from numpyro.distributions import constraints as constraints
+from numpyro.distributions import constraints
 import jax.numpy as jnp
 
 class improper_uniform(d.Normal):
@@ -42,7 +42,7 @@ inv_gamma = d.InverseGamma
 gamma = d.Gamma
 dirichlet = d.Dirichlet
 multi_normal = d.MultivariateNormal
-logistic = d.LogisticNormal
+# logistic = d.LogisticNormal
 cauchy = d.Cauchy
 
 def categorical_logit(logits):
