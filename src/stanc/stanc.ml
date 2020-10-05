@@ -211,9 +211,11 @@ let use_file filename =
       Out_channel.write_all !output_file ~data:cpp ;
       if !print_model_cpp then print_endline cpp
     | Pyro ->
+      Frontend.Ast_to_Pyro.with_numpyro := false;
       let py = Fmt.strf "%a" (Frontend.Ast_to_Pyro.trans_prog "pyro") typed_ast in
       Out_channel.write_all !output_file ~data:py
     | Numpyro ->
+      Frontend.Ast_to_Pyro.with_numpyro := true;
       let py = Fmt.strf "%a" (Frontend.Ast_to_Pyro.trans_prog "numpyro") typed_ast in
       Out_channel.write_all !output_file ~data:py)
 

@@ -3,6 +3,8 @@ open Ast
 open Middle
 open Format
 
+let with_numpyro = ref false
+
 module SSet = Set.Make(String)
 
 let print_warning loc message =
@@ -1028,26 +1030,52 @@ let rec trans_stmt ?(naive=false) ctx ff (ts : typed_statement) =
   let stmt_typed = ts.stmt in
   match stmt_typed with
   | Assignment {assign_lhs; assign_rhs; assign_op} ->
-      let rec expr_of_lval = function
+    let rec expr_of_lval = function
       | { lval= LVariable id; lmeta } ->
-          {expr = Variable id; emeta = lmeta }
+        {expr = Variable id; emeta = lmeta }
       | { lval= LIndexed (lhs, indices); lmeta } ->
-          {expr = Indexed (expr_of_lval lhs, indices); emeta = lmeta; }
-      in
-      let rec trans_lval ff = function
-      | { lval= LVariable id; _ } -> trans_id ff id
-      | { lval= LIndexed (lhs, indices); _ } ->
-          fprintf ff "%a[%a]" trans_lval lhs
-            (print_list_comma trans_idx) indices
-      in
-      let trans_rhs lhs ff rhs =
-        match assign_op with
-        | Assign | ArrowAssign -> trans_expr ff rhs
-        | OperatorAssign op -> trans_binop lhs rhs ff op
-      in
-      fprintf ff "%a = %a"
-        trans_lval assign_lhs
-        (trans_rhs (expr_of_lval assign_lhs)) assign_rhs
+        {expr = Indexed (expr_of_lval lhs, indices); emeta = lmeta; }
+    in
+    let trans_rhs lhs ff rhs =
+      match assign_op with
+      | Assign | ArrowAssign -> trans_expr ff rhs
+      | OperatorAssign op -> trans_binop lhs rhs ff op
+    in
+    begin match assign_lhs with
+      | { lval= LVariable id; _ } ->
+          fprintf ff "%a = %a"
+            trans_id id
+            (trans_rhs (expr_of_lval assign_lhs)) assign_rhs
+      | { lval= LIndexed (_, _indices); _ } as assign_lhs ->
+          if !with_numpyro then
+            let rec trans_variable ff = function
+              | { lval= LVariable id; _ } -> trans_id ff id
+              | { lval= LIndexed (lhs, _); _ } -> trans_variable ff lhs
+            in
+            let trans_updated ff = function
+              | { lval= LVariable _; _ } -> assert false
+              | { lval= LIndexed ({ lval= LVariable id; _ }, indices); _ } ->
+                fprintf ff "%a, jax.ops.index[%a]" trans_id id
+                  (print_list_comma trans_idx) indices
+              | _ -> assert false (* XXX TODO XXX *)
+            in
+            fprintf ff "%a = jax.ops.index_update(%a, %a)"
+            (* fprintf ff "%a = %a.set(%a)" *)
+              trans_variable assign_lhs
+              trans_updated assign_lhs
+              (trans_rhs (expr_of_lval assign_lhs)) assign_rhs
+
+          else
+            let rec trans_lval ff = function
+              | { lval= LVariable id; _ } -> trans_id ff id
+              | { lval= LIndexed (lhs, indices); _ } ->
+                fprintf ff "%a[%a]" trans_lval lhs
+                  (print_list_comma trans_idx) indices
+            in
+            fprintf ff "%a = %a"
+              trans_lval assign_lhs
+              (trans_rhs (expr_of_lval assign_lhs)) assign_rhs
+    end
   | NRFunApp (fn_kind, id, args) ->
       trans_fun_app ff fn_kind id args
   | IncrementLogProb e | TargetPE e ->
@@ -1519,7 +1547,8 @@ let pp_imports lib ff funs =
       funs
 
 let trans_prog runtime ff (p : typed_program) =
-  fprintf ff "@[<v 0>%a%a%a@,@]"
+  fprintf ff "@[<v 0>%s%a%a%a@,@]"
+    (if !with_numpyro then "import jax\n" else "")
     (pp_imports ("runtimes."^runtime^".distributions")) ["*"]
     (pp_imports ("runtimes."^runtime^".dppllib")) dppllib
     (pp_imports ("runtimes."^runtime^".stanlib"))
