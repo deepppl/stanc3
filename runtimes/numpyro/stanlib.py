@@ -2,6 +2,9 @@ import math
 import jax.numpy as jnp
 from jax.numpy import ones, array
 
+dtype_float=jnp.dtype('float32')
+dtype_long=jnp.dtype('int32')
+
 def _XXX_TODO_XXX_(f):
     def todo(x):
         assert false, f'{f}: not yet implemented'
@@ -11,25 +14,25 @@ def _XXX_TODO_XXX_(f):
 
 # real pi()
 # π, the ratio of a circle’s circumference to its diameter
-pi = lambda: array(math.pi, dtype=float)
+pi = lambda: array(math.pi, dtype=dtype_float)
 
 # real e()
 # e, the base of the natural logarithm
-e = lambda: array(math.e, dtype=float)
+e = lambda: array(math.e, dtype=dtype_float)
 
 # real sqrt2()
 # The square root of 2
 from math import sqrt as msqrt
-sqrt2 = lambda: array(msqrt(2), dtype=float)
+sqrt2 = lambda: array(msqrt(2), dtype=dtype_float)
 
 # real log2()
 # The natural logarithm of 2
 from math import log as mlog
-log2 = lambda: array(mlog(2), dtype=float)
+log2 = lambda: array(mlog(2), dtype=dtype_float)
 
 # real log10()
 # The natural logarithm of 10
-log10 = lambda: array(mlog(10), dtype=float)
+log10 = lambda: array(mlog(10), dtype=dtype_float)
 
 ## 3.7 Step-like Functions
 
@@ -70,7 +73,7 @@ fmax_int_int = lambda x, y: max(x, y)
 
 # real fmod(real x, real y)
 # Return the real value remainder after dividing x by y; see warning above.
-fmod = lambda x, y: x % y
+fmod_real_real = lambda x, y: x % y
 
 
 ## 3.7.4 Rounding Functions
@@ -124,7 +127,7 @@ trunc_array = ttrunc
 # R sqrt(T x)
 # square root of x
 from jax.numpy import sqrt as tsqrt
-sqrt_int = msqrt
+sqrt_int = lambda x: array(msqrt(x), dtype=dtype_float)
 sqrt_real = tsqrt
 sqrt_vector = tsqrt
 sqrt_rowvector = tsqrt
@@ -155,7 +158,7 @@ square_array = tsquare
 # natural exponential of x
 from jax.numpy import exp as texp
 from math import exp as mexp
-exp_int = mexp
+exp_int = lambda x: array(mexp(x), dtype=dtype_float)
 exp_real = texp
 exp_vector = texp
 exp_rowvector = texp
@@ -174,7 +177,7 @@ exp2_array = _XXX_TODO_XXX_('exp2')
 # R log(T x)
 # natural logarithm of x
 from jax.numpy import log as tlog
-log_int = mlog
+log_int = lambda x: array(mlog(x), dtype=dtype_float)
 log_real = tlog
 # log_vector = tlog
 def log_vector(x):
@@ -188,7 +191,7 @@ log_array = tlog
 # base-2 logarithm of x
 from jax.numpy import log2 as tlog2
 from math import log2 as mlog2
-log2_int = mlog2
+log2_int = lambda x: array(mlog2(x), dtype=dtype_float)
 log2_real = tlog2
 log2_vector = tlog2
 log2_rowvector = tlog2
@@ -199,7 +202,7 @@ log2_array = tlog2
 # base-10 logarithm of x
 from jax.numpy import log10 as tlog10
 from math import log10 as mlog10
-log10_int = mlog10
+log10_int = lambda x: array(mlog10(x), dtype=dtype_float)
 log10_real = tlog10
 log10_vector = tlog10
 log10_rowvector = tlog10
@@ -208,7 +211,7 @@ log10_array = tlog10
 
 # real pow(real x, real y)
 # Return x raised to the power of y.
-pow_int_int = lambda x, y: x ** y
+pow_int_int = lambda x, y: array(x ** y, dtype=dtype_float)
 pow_int_real = lambda x, y: x ** y
 pow_real_int = lambda x, y: x ** y
 pow_real_real = lambda x, y: x ** y
@@ -251,7 +254,7 @@ hypot_real_real = hypot
 # cosine of the angle x (in radians)
 from jax.numpy import cos as tcos
 from math import cos as mcos
-cos_int = mcos
+cos_int = lambda x: array(mcos(x), dtype=dtype_float)
 cos_real = tcos
 cos_vector = tcos
 cos_rowvector = tcos
@@ -262,7 +265,7 @@ cos_array = tcos
 # sine of the angle x (in radians)
 from jax.numpy import sin as tsin
 from math import sin as msin
-sin_int = msin
+sin_int = lambda x: array(msin(x), dtype=dtype_float)
 sin_real = tsin
 sin_vector = tsin
 sin_rowvector = tsin
@@ -273,7 +276,7 @@ sin_array = tsin
 # tangent of the angle x (in radians)
 from jax.numpy import tan as ttan
 from math import tan as mtan
-tan_int = mtan
+tan_int = lambda x: array(mtan(x), dtype=dtype_float)
 tan_real = ttan
 tan_vector = ttan
 tan_rowvector = ttan
@@ -284,7 +287,7 @@ tan_array = ttan
 # principal arc (inverse) cosine (in radians) of x
 from jax.numpy import arccos as tacos
 from math import acos as macos
-acos_int = macos
+acos_int = lambda x: array(macos(x), dtype=dtype_float)
 acos_real = tacos
 acos_vector = tacos
 acos_rowvector = tacos
@@ -295,7 +298,7 @@ acos_array = tacos
 # principal arc (inverse) sine (in radians) of x
 from jax.numpy import arcsin as tasin
 from math import asin as masin
-asin_int = masin
+asin_int = lambda x: array(masin(x), dtype=dtype_float)
 asin_real = tasin
 asin_vector = tasin
 asin_rowvector = tasin
@@ -307,7 +310,7 @@ asin_array = tasin
 # to π
 from jax.numpy import arctan as tatan
 from math import atan as matan
-atan_int = matan
+atan_int = lambda x: array(matan(x), dtype=dtype_float)
 atan_real = tatan
 atan_vector = tatan
 atan_rowvector = tatan
@@ -326,7 +329,7 @@ atan2_real_real = tatan2
 # hyperbolic cosine of x (in radians)
 from jax.numpy import cosh as tcosh
 from math import cosh as mcosh
-cosh_int = mcosh
+cosh_int = lambda x: array(mcosh(x), dtype=dtype_float)
 cosh_real = tcosh
 cosh_vector = tcosh
 cosh_rowvector = tcosh
@@ -337,7 +340,7 @@ cosh_array = tcosh
 # hyperbolic sine of x (in radians)
 from jax.numpy import sinh as tsinh
 from math import sinh as msinh
-sinh_int = msinh
+sinh_int = lambda x: array(msinh(x), dtype=dtype_float)
 sinh_real = tsinh
 sinh_vector = tsinh
 sinh_rowvector = tsinh
@@ -348,7 +351,7 @@ sinh_array = tsinh
 # hyperbolic tangent of x (in radians)
 from jax.numpy import tanh as ttanh
 from math import tanh as mtanh
-tanh_int = mtanh
+tanh_int = lambda x: array(mtanh(x), dtype=dtype_float)
 tanh_real = ttanh
 tanh_vector = ttanh
 tanh_rowvector = ttanh
@@ -359,7 +362,7 @@ tanh_array = ttanh
 # inverse hyperbolic cosine (in radians)
 from jax.numpy import arccosh as tacosh
 from math import acosh as macosh
-acosh_int = macosh
+acosh_int = lambda x: array(macosh(x), dtype=dtype_float)
 acosh_real = tacosh
 acosh_vector = tacosh
 acosh_rowvector = tacosh
@@ -370,7 +373,7 @@ acosh_array = tacosh
 # inverse hyperbolic cosine (in radians)
 from jax.numpy import arcsinh as tasinh
 from math import asinh as masinh
-asinh_int = masinh
+asinh_int = lambda x: array(masinh(x), dtype=dtype_float)
 asinh_real = tasinh
 asinh_vector = tasinh
 asinh_rowvector = tasinh
@@ -381,7 +384,7 @@ asinh_array = tasinh
 # inverse hyperbolic tangent (in radians) of x
 from jax.numpy import arctanh as tatanh
 from math import atanh as matanh
-atanh_int = matanh
+atanh_int = lambda x: array(matanh(x), dtype=dtype_float)
 atanh_real = tatanh
 atanh_vector = tatanh
 atanh_rowvector = tatanh
@@ -403,7 +406,7 @@ logit_array = _XXX_TODO_XXX_('logit')
 # R inv_logit(T x)
 # logistic sigmoid function applied to x
 from jax.nn import sigmoid
-inv_logit_int = lambda x: sigmoid(array(x, dtype=float))
+inv_logit_int = lambda x: sigmoid(array(x, dtype=dtype_float))
 inv_logit_real = sigmoid
 inv_logit_vector = sigmoid
 inv_logit_rowvector = sigmoid
@@ -1034,13 +1037,13 @@ append_col_rowvector_rowvector = lambda x, y: append(x, y, axis=0)
 
 # row_vector append_col(real x, row_vector y)
 # Append x to the front of y, returning another row vector.
-append_col_real_rowvector = lambda x, y: append(array([x], dtype=float), y)
-append_col_int_rowvector = lambda x, y: append(array([x], dtype=float), y)
+append_col_real_rowvector = lambda x, y: append(array([x], dtype=dtype_float), y)
+append_col_int_rowvector = lambda x, y: append(array([x], dtype=dtype_float), y)
 
 # row_vector append_col(row_vector x, real y)
 # Append y to the end of x, returning another row vector.
-append_col_rowvector_real = lambda x, y: append(x, array([y], dtype=float))
-append_col_rowvector_int = lambda x, y: append(x, array([y], dtype=float))
+append_col_rowvector_real = lambda x, y: append(x, array([y], dtype=dtype_float))
+append_col_rowvector_int = lambda x, y: append(x, array([y], dtype=dtype_float))
 
 ## 5.10.0.2 Vertical concatenation
 
@@ -1066,13 +1069,13 @@ append_row_vector_vector = lambda x, y: append(x, y)
 
 # vector append_row(real x, vector y)
 # Append x to the top of y, returning another vector.
-append_row_real_vector = lambda x, y: append(array([x], dtype=float), y)
-append_row_int_vector = lambda x, y: append(array([x], dtype=float), y)
+append_row_real_vector = lambda x, y: append(array([x], dtype=dtype_float), y)
+append_row_int_vector = lambda x, y: append(array([x], dtype=dtype_float), y)
 
 # vector append_row(vector x, real y)
 # Append y to the bottom of x, returning another vector.
-append_row_vector_real = lambda x, y: append(x, array([y], dtype=float))
-append_row_vector_int = lambda x, y: append(x, array([y], dtype=float))
+append_row_vector_real = lambda x, y: append(x, array([y], dtype=dtype_float))
+append_row_vector_int = lambda x, y: append(x, array([y], dtype=dtype_float))
 
 ## 5.11 Special Matrix Functions
 ## 5.11.1 Softmax

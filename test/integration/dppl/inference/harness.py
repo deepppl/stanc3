@@ -115,7 +115,8 @@ class MCMCTest:
                     chains=self.config.chains,
                     thin=self.config.thin,
                 )
-                mcmc.run(**self.data)
+                data = model.convert_inputs(self.data)
+                mcmc.run(**data)
                 self.numpyro_samples = mcmc.get_samples()
 
     def run_naive_pyro(self):
@@ -141,7 +142,8 @@ class MCMCTest:
                     chains=self.config.chains,
                     thin=self.config.thin,
                 )
-                mcmc.run(**self.data)
+                data = model.convert_inputs(self.data)
+                mcmc.run(**data)
                 self.numpyro_naive_samples = mcmc.get_samples()
 
     def run_stan(self):

@@ -40,7 +40,7 @@ log10 = lambda: tensor(mlog(10), dtype=torch.float)
 # absolute value of x
 from torch import abs as tabs
 mabs = abs
-abs_int = mabs
+abs_int = lambda x: array(mabs(x), dtype=dtype_float)
 abs_real = tabs
 abs_vector = tabs
 abs_rowvector = tabs
@@ -71,7 +71,7 @@ fmax_int_int = lambda x, y: max(x, y)
 
 # real fmod(real x, real y)
 # Return the real value remainder after dividing x by y; see warning above.
-fmod = lambda x, y: x % y
+fmod_real_real = lambda x, y: x % y
 
 
 ## 3.7.4 Rounding Functions
@@ -80,7 +80,7 @@ fmod = lambda x, y: x % y
 # floor of x, which is the largest integer less than or equal to x, converted to a real value; see warning at start of section step-like functions
 from torch import floor as tfloor
 from math import floor as mfloor
-floor_int = mfloor
+floor_int = lambda x: array(mfloor(x), dtype=dtype_float)
 floor_real = tfloor
 floor_vector = tfloor
 floor_rowvector = tfloor
@@ -91,7 +91,7 @@ floor_array = tfloor
 # ceiling of x, which is the smallest integer greater than or equal to x, converted to a real value; see warning at start of section step-like functions
 from torch import ceil as tceil
 from math import ceil as mceil
-ceil_int = mceil
+ceil_int = lambda x: array(mceil(x), dtype=dtype_float)
 ceil_real = tceil
 ceil_vector = tceil
 ceil_rowvector = tceil
@@ -102,7 +102,7 @@ ceil_array = tceil
 # nearest integer to x, converted to a real value; see warning at start of section step-like functions
 from torch import round as tround
 mround = round
-round_int = mround
+round_int = lambda x: array(mround(x), dtype=dtype_float)
 round_real = tround
 round_vector = tround
 round_rowvector = tround
@@ -113,7 +113,7 @@ round_array = tround
 # integer nearest to but no larger in magnitude than x, converted to a double value; see warning at start of section step-like functions
 from torch import trunc as ttrunc
 from math import trunc as mtrunc
-trunc_int = mtrunc
+trunc_int = lambda x: array(mtrunc(x), dtype=dtype_float)
 trunc_real = ttrunc
 trunc_vector = ttrunc
 trunc_rowvector = ttrunc
@@ -125,7 +125,7 @@ trunc_array = ttrunc
 # R sqrt(T x)
 # square root of x
 from torch import sqrt as tsqrt
-sqrt_int = msqrt
+sqrt_int = lambda x: array(msqrt(x), dtype=dtype_float)
 sqrt_real = tsqrt
 sqrt_vector = tsqrt
 sqrt_rowvector = tsqrt
@@ -156,7 +156,7 @@ square_array = tsquare
 # natural exponential of x
 from torch import exp as texp
 from math import exp as mexp
-exp_int = mexp
+exp_int = lambda x: array(mexp(x), dtype=dtype_float)
 exp_real = texp
 exp_vector = texp
 exp_rowvector = texp
@@ -175,7 +175,7 @@ exp2_array = _XXX_TODO_XXX_('exp2')
 # R log(T x)
 # natural logarithm of x
 from torch import log as tlog
-log_int = mlog
+log_int = lambda x: array(mlog(x), dtype=dtype_float)
 log_real = tlog
 log_vector = tlog
 log_rowvector = tlog
@@ -186,7 +186,7 @@ log_array = tlog
 # base-2 logarithm of x
 from torch import log2 as tlog2
 from math import log2 as mlog2
-log2_int = mlog2
+log2_int = lambda x: array(mlog2(x), dtype=dtype_float)
 log2_real = tlog2
 log2_vector = tlog2
 log2_rowvector = tlog2
@@ -197,7 +197,7 @@ log2_array = tlog2
 # base-10 logarithm of x
 from torch import log10 as tlog10
 from math import log10 as mlog10
-log10_int = mlog10
+log10_int = lambda x: array(mlog10(x), dtype=dtype_float)
 log10_real = tlog10
 log10_vector = tlog10
 log10_rowvector = tlog10
@@ -206,7 +206,7 @@ log10_array = tlog10
 
 # real pow(real x, real y)
 # Return x raised to the power of y.
-pow_int_int = lambda x, y: x ** y
+pow_int_int = lambda x, y: array(x ** y, dtype=dtype_float)
 pow_int_real = lambda x, y: x ** y
 pow_real_int = lambda x, y: x ** y
 pow_real_real = lambda x, y: x ** y
@@ -249,7 +249,7 @@ hypot_real_real = hypot
 # cosine of the angle x (in radians)
 from torch import cos as tcos
 from math import cos as mcos
-cos_int = mcos
+cos_int = lambda x: array(mcos(x), dtype=dtype_float)
 cos_real = tcos
 cos_vector = tcos
 cos_rowvector = tcos
@@ -260,7 +260,7 @@ cos_array = tcos
 # sine of the angle x (in radians)
 from torch import sin as tsin
 from math import sin as msin
-sin_int = msin
+sin_int = lambda x: array(msin(x), dtype=dtype_float)
 sin_real = tsin
 sin_vector = tsin
 sin_rowvector = tsin
@@ -271,7 +271,7 @@ sin_array = tsin
 # tangent of the angle x (in radians)
 from torch import tan as ttan
 from math import tan as mtan
-tan_int = mtan
+tan_int = lambda x: array(mtan(x), dtype=dtype_float)
 tan_real = ttan
 tan_vector = ttan
 tan_rowvector = ttan
@@ -282,7 +282,7 @@ tan_array = ttan
 # principal arc (inverse) cosine (in radians) of x
 from torch import acos as tacos
 from math import acos as macos
-acos_int = macos
+acos_int = lambda x: array(macos(x), dtype=dtype_float)
 acos_real = tacos
 acos_vector = tacos
 acos_rowvector = tacos
@@ -293,7 +293,7 @@ acos_array = tacos
 # principal arc (inverse) sine (in radians) of x
 from torch import asin as tasin
 from math import asin as masin
-asin_int = masin
+asin_int = lambda x: array(masin(x), dtype=dtype_float)
 asin_real = tasin
 asin_vector = tasin
 asin_rowvector = tasin
@@ -305,7 +305,7 @@ asin_array = tasin
 # to π
 from torch import atan as tatan
 from math import atan as matan
-atan_int = matan
+atan_int = lambda x: array(matan(x), dtype=dtype_float)
 atan_real = tatan
 atan_vector = tatan
 atan_rowvector = tatan
@@ -324,7 +324,7 @@ atan2_real_real = tatan2
 # hyperbolic cosine of x (in radians)
 from torch import cosh as tcosh
 from math import cosh as mcosh
-cosh_int = mcosh
+cosh_int = lambda x: array(mcosh(x), dtype=dtype_float)
 cosh_real = tcosh
 cosh_vector = tcosh
 cosh_rowvector = tcosh
@@ -335,7 +335,7 @@ cosh_array = tcosh
 # hyperbolic sine of x (in radians)
 from torch import sinh as tsinh
 from math import sinh as msinh
-sinh_int = msinh
+sinh_int = lambda x: array(msinh(x), dtype=dtype_float)
 sinh_real = tsinh
 sinh_vector = tsinh
 sinh_rowvector = tsinh
@@ -346,7 +346,7 @@ sinh_array = tsinh
 # hyperbolic tangent of x (in radians)
 from torch import tanh as ttanh
 from math import tanh as mtanh
-tanh_int = mtanh
+tanh_int = lambda x: array(mtanh(x), dtype=dtype_float)
 tanh_real = ttanh
 tanh_vector = ttanh
 tanh_rowvector = ttanh
@@ -357,7 +357,7 @@ tanh_array = ttanh
 # inverse hyperbolic cosine (in radians)
 from torch import acosh as tacosh
 from math import acosh as macosh
-acosh_int = macosh
+acosh_int = lambda x: array(macosh(x), dtype=dtype_float)
 acosh_real = tacosh
 acosh_vector = tacosh
 acosh_rowvector = tacosh
@@ -368,7 +368,7 @@ acosh_array = tacosh
 # inverse hyperbolic cosine (in radians)
 from torch import asinh as tasinh
 from math import asinh as masinh
-asinh_int = masinh
+asinh_int = lambda x: array(masinh(x), dtype=dtype_float)
 asinh_real = tasinh
 asinh_vector = tasinh
 asinh_rowvector = tasinh
@@ -379,7 +379,7 @@ asinh_array = tasinh
 # inverse hyperbolic tangent (in radians) of x
 from torch import atanh as tatanh
 from math import atanh as matanh
-atanh_int = matanh
+atanh_int = lambda x: array(matanh(x), dtype=dtype_float)
 atanh_real = tatanh
 atanh_vector = tatanh
 atanh_rowvector = tatanh
