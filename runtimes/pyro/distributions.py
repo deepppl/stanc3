@@ -119,6 +119,15 @@ double_exponential = d.Laplace
 exponential = d.Exponential
 pareto = d.Pareto
 neg_binomial_2 = d.GammaPoisson
+def neg_binomial_2_lpmf(y, mu, phi):
+    y = y.type(torch.float) if isinstance(y, torch.LongTensor) else array(y, dtype=torch.long)
+    return d.GammaPoisson(mu, phi).log_prob(y)
+neg_binomial_2_lpmf_int_real_real = neg_binomial_2_lpmf
+neg_binomial_2_lpmf_array_vector_real = neg_binomial_2_lpmf
+def neg_binomial_2_rng(mu, phi):
+    return d.GammaPoisson(mu, phi).sample()
+neg_binomial_2_rng_real_real = neg_binomial_2_rng
+neg_binomial_2_rng_vector_real = neg_binomial_2_rng
 
 def categorical_logit(logits):
     return d.Categorical(logits=logits)

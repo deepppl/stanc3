@@ -10,6 +10,8 @@ def _XXX_TODO_XXX_(f):
         assert false, f'{f}: not yet implemented'
     return todo
 
+machine_precision = lambda: array(10 ** (-15.95), dtype=dtype_float)
+
 # 3.2 Mathematical Constants
 
 # real pi()

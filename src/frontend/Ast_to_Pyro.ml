@@ -37,7 +37,8 @@ let dppllib =
     "dtype_long"; "dtype_float"; "register_network" ]
 
 let stanlib =
-  [ (* 3.2 Mathematical Constants *)
+  [ "machine_precision";
+    (* 3.2 Mathematical Constants *)
     "pi";
     "e";
     "sqrt2";
@@ -689,7 +690,7 @@ and trans_dims ff (t : typed_expression Type.t) =
 let trans_expr_opt (type_ : typed_expression Type.t) ff = function
   | Some e -> trans_expr ff e
   | None ->
-      if is_tensor type_ then fprintf ff "empty(%a)" trans_dims type_
+      if is_tensor type_ then fprintf ff "ones(%a)" trans_dims type_
       else fprintf ff "None"
 
 let trans_arg ff (_, _, ident) =
