@@ -1,5 +1,6 @@
 import pyro.distributions as d
 from torch.distributions import constraints, transform_to
+from torch.distributions.constraints import Constraint
 from pyro.distributions.transforms import CorrLCholeskyTransform
 from torch import sort
 import torch
@@ -14,26 +15,59 @@ class improper_uniform(d.Normal):
         return x.new_zeros(x.shape)
 
 
+# class lower_constrained_improper_uniform(improper_uniform):
+#     def __init__(self, lower_bound=0, shape=None):
+#         self.lower_bound = lower_bound if shape == None else lower_bound * torch.ones(shape)
+#         super(lower_constrained_improper_uniform, self).__init__(shape)
+#         self.support = constraints.greater_than_eq(lower_bound)
+
+#     def sample(self, *args, **kwargs):
+#         s = d.Uniform(self.lower_bound, self.lower_bound + 2).sample(*args, **kwargs)
+#         return s
+
 class lower_constrained_improper_uniform(improper_uniform):
     def __init__(self, lower_bound=0, shape=None):
-        self.lower_bound = lower_bound if shape == None else lower_bound * torch.ones(shape)
-        super(lower_constrained_improper_uniform, self).__init__(shape)
+        super().__init__(shape)
+        self._cstr = constraints.greater_than_eq(lower_bound)
         self.support = constraints.greater_than_eq(lower_bound)
 
     def sample(self, *args, **kwargs):
-        s = d.Uniform(self.lower_bound, self.lower_bound + 2).sample(*args, **kwargs)
-        return s
+        s = super().sample(*args, **kwargs)
+        return transform_to(self._cstr)(s)
 
+
+# class upper_constrained_improper_uniform(improper_uniform):
+#     def __init__(self, upper_bound=0.0, shape=None):
+#         self.upper_bound = upper_bound if shape == None else upper_bound * torch.ones(shape)
+#         super(upper_constrained_improper_uniform, self).__init__(shape)
+#         self.support = constraints.less_than(upper_bound)
+
+#     def sample(self, *args, **kwargs):
+#         s = d.Uniform(self.upper_bound - 2.0, self.upper_bound).sample(*args, **kwargs)
+#         return s
+
+class _LessThanEq(Constraint):
+    """
+    Constrain to a real half line `[-inf, upper_bound]`.
+    """
+    def __init__(self, upper_bound):
+        self.upper_bound = upper_bound
+    def check(self, value):
+        return value <= self.upper_bound
+    def __repr__(self):
+        fmt_string = self.__class__.__name__[1:]
+        fmt_string += '(upper_bound={})'.format(self.upper_bound)
+        return fmt_string
 
 class upper_constrained_improper_uniform(improper_uniform):
     def __init__(self, upper_bound=0.0, shape=None):
-        self.upper_bound = upper_bound if shape == None else upper_bound * torch.ones(shape)
-        super(upper_constrained_improper_uniform, self).__init__(shape)
-        self.support = constraints.less_than(upper_bound)
+        super().__init__(shape)
+        self._cstr = _LessThanEq(upper_bound)
+        self.support = constraints.greater_than_eq(upper_bound)
 
     def sample(self, *args, **kwargs):
-        s = d.Uniform(self.upper_bound - 2.0, self.upper_bound).sample(*args, **kwargs)
-        return s
+        s = super().sample(*args, **kwargs)
+        return transform_to(self._cstr)(s)
 
 class simplex_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=None):
