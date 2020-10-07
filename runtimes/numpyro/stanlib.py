@@ -944,6 +944,33 @@ rep_matrix_vector_int = lambda v, n: tile(transpose(array([v])), (1,n))
 # Return the m by n matrix consisting of m copies of the row vector rv of size n.
 rep_matrix_rowvector_int = lambda v, n: tile(array([v]), (n,1))
 
+## 5.8 Diagonal Matrix Functions
+from jax.numpy import diag, eye
+
+# matrix add_diag(matrix m, row_vector d)
+# Add row_vector d to the diagonal of matrix m.
+
+add_diag_matrix_rowvector = lambda m, rv: m + diag(rv)
+
+# matrix add_diag(matrix m, vector d)
+# Add vector d to the diagonal of matrix m.
+
+add_diag_matrix_vector = lambda m, v: m + diag(v)
+
+# matrix add_diag(matrix m, real d)
+# Add scalar d to every diagonal element of matrix m.
+
+add_diag_matrix_real = lambda m, r: r*eye(m.shape[0]) + m
+
+# vector diagonal(matrix x)
+# The diagonal of the matrix x
+
+diagonal_matrix = lambda m: diag(m)
+
+# matrix diag_matrix(vector x)
+# The diagonal matrix with diagonal x
+
+diag_matrix_vector = lambda v: diag(v)
 
 ## 5.9 Slicing and Blocking Functions
 

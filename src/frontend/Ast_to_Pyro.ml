@@ -340,6 +340,12 @@ let stanlib =
     "append_row_vector_vector"; "append_row_real_vector";
     "append_row_int_vector"; "append_row_vector_real";
     "append_row_vector_int";
+    (* 5.8 Diagonal Matrix Functions *)
+    "add_diag_matrix_rowvector";
+    "add_diag_matrix_vector";
+    "add_diag_matrix_real";
+    "diagonal_matrix";
+    "diag_matrix_vector";
     (* 5.11 Special Matrix Functions *)
     "softmax_vector";
     "softmax_vector";
