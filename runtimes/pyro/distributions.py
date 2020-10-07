@@ -123,6 +123,9 @@ class cholesky_factor_corr_constrained_improper_uniform(improper_uniform):
 
 
 uniform = d.Uniform
+def uniform_rng(alpha, beta):
+    return uniform(alpha,beta).sample()
+uniform_rng_real_real = uniform_rng
 beta = d.Beta
 bernoulli = d.Bernoulli
 normal = d.Normal
