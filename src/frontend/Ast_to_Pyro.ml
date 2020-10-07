@@ -549,8 +549,12 @@ let rec trans_expr ff ({expr; emeta }: typed_expression) : unit =
         trans_exprs eles
         dtype_of_unsized_type emeta.type_
   | Indexed (lhs, indices) ->
-      fprintf ff "%a[%a]" trans_expr lhs
-        (print_list_comma trans_idx) indices
+      if !with_numpyro then
+        fprintf ff "%a[%a]" trans_expr lhs
+          (print_list_comma trans_idx) indices
+      else
+        fprintf ff "%a[%a].clone()" trans_expr lhs
+          (print_list_comma trans_idx) indices
 
 and trans_numeral type_ ff x =
   begin match type_ with
