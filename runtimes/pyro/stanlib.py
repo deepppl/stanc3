@@ -552,8 +552,8 @@ sum_array = sum
 # The product of the elements in x, or 1 if x is size 0.
 # real prod(int[] x)
 # The product of the elements in x, product(x)={∏Nn=1xnifN>01ifN=0
-from torch import prod
-prod_array = prod
+from torch import prod as tprod
+prod_array = tprod
 
 # real log_sum_exp(real[] x)
 # The natural logarithm of the sum of the exponentials of the elements in x, or −∞

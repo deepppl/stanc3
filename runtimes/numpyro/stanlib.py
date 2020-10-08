@@ -552,8 +552,8 @@ sum_array = sum
 # The product of the elements in x, or 1 if x is size 0.
 # real prod(int[] x)
 # The product of the elements in x, product(x)={∏Nn=1xnifN>01ifN=0
-from jax.numpy import prod
-prod_array = prod
+from jax.numpy import prod as tprod
+prod_array = tprod
 
 # real log_sum_exp(real[] x)
 # The natural logarithm of the sum of the exponentials of the elements in x, or −∞
@@ -870,15 +870,15 @@ sum_matrix = sum
 
 # real prod(vector x)
 # The product of the values in x, or 1 if x is empty
-prod_vector = prod
+prod_vector = tprod
 
 # real prod(row_vector x)
 # The product of the values in x, or 1 if x is empty
-prod_rowvector = prod
+prod_rowvector = tprod
 
 # real prod(matrix x)
 # The product of the values in x, or 1 if x is empty
-prod_matrix = prod
+prod_matrix = tprod
 
 ## 5.6.4 Sample Moments
 
