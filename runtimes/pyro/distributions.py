@@ -10,7 +10,7 @@ import torch
 ## Utility functions
 def _cast1(f):
     def f_casted(y, *args):
-        y = y.type(torch.float) if isinstance(y, torch.LongTensor) else array(y, dtype=torch.float)
+        y = y.type(torch.float) if isinstance(y, torch.LongTensor) else torch.tensor(y, dtype=torch.float)
         return f(y, *args)
     return f_casted
 
@@ -219,10 +219,10 @@ categorical_logit_rng = _rng(categorical_logit)
 # The negative binomial probability mass of n given location mu and precision phi.
 
 neg_binomial_2 = d.GammaPoisson
-neg_binomial_2_lpmf = _lpmf(_cast1(neg_binomial_2))
-neg_binomial_2_cdf = _cdf(_cast1(neg_binomial_2))
-neg_binomial_2_lcdf = _lcdf(_cast1(neg_binomial_2))
-neg_binomial_2_lccdf = _lccdf(_cast1(neg_binomial_2))
+neg_binomial_2_lpmf = _cast1(_lpmf(neg_binomial_2))
+neg_binomial_2_cdf = _cast1(_cdf(neg_binomial_2))
+neg_binomial_2_lcdf = _cast1(_lcdf(neg_binomial_2))
+neg_binomial_2_lccdf = _cast1(_lccdf(neg_binomial_2))
 neg_binomial_2_rng = _rng(neg_binomial_2)
 
 ## 14.5 Poisson Distribution
@@ -231,10 +231,10 @@ neg_binomial_2_rng = _rng(neg_binomial_2)
 # The log Poisson probability mass of n given rate lambda
 
 poisson = d.Poisson
-poisson_lpmf = _lpmf(_cast1(poisson))
-poisson_cdf = _cdf(_cast1(poisson))
-poisson_lcdf = _lcdf(_cast1(poisson))
-poisson_lccdf = _lccdf(_cast1(poisson))
+poisson_lpmf = _cast1(_lpmf(poisson))
+poisson_cdf = _cast1(_cdf(poisson))
+poisson_lcdf = _cast1(_lcdf(poisson))
+poisson_lccdf = _cast1(_lccdf(poisson))
 poisson_rng = _rng(poisson)
 
 ## 14.6 Poisson Distribution, Log Parameterization
