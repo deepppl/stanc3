@@ -944,7 +944,7 @@ rep_matrix_rowvector_int = lambda rv, m: rv.expand([m, rv.shape[0]])
 
 ## 5.8 Diagonal Matrix Functions
 
-from torch import diag
+from torch import diag, eye
 
 # matrix add_diag(matrix m, row_vector d)
 # Add row_vector d to the diagonal of matrix m.
@@ -1163,6 +1163,17 @@ cov_exp_quad_vector_vector_real_real = cov_exp_quad
 # The covariance matrix with an exponentiated quadratic kernel of x1 and x2.
 cov_exp_quad_array_array_real_real = cov_exp_quad
 
+# 5.13 Linear Algebra Functions and Solvers
+
+# 5.13.4.6 Cholesky Decomposition
+
+from torch import cholesky
+
+# matrix cholesky_decompose(matrix A)
+# The lower-triangular Cholesky factor of the symmetric positive-definite matrix A
+
+cholesky_decompose_matrix = lambda m: cholesky(m)
+
 ## 7. Mixed Operations
 
 # matrix to_matrix(matrix m)
@@ -1288,3 +1299,23 @@ to_array_1d_matrix = lambda m: m.t().reshape(-1)
 # int[] to_array_1d(int[...] a)
 # Convert the array a (of any dimension up to 10) to a one-dimensional array in row-major order.
 to_array_1d_array = lambda a: a.reshape(-1)
+
+# 9.2 Ordinary Differential Equation (ODE) Solvers
+
+# 9.2.2 Non-Stiff Solver
+
+# real[ , ] integrate_ode_rk45(function ode, real[] initial_state, real initial_time, real[] times, real[] theta, real[] x_r, int[] x_i)
+# Solves the ODE system for the times provided using the Runge Kutta Dopri algorithm with the implementation from Boost.
+
+from torchdiffeq import odeint
+
+def integrate_ode_rk45_array_real_array_array_array_array(ode, initial_state, initial_time, times, theta, x_r, x_i):
+    f = lambda t, y: ode(t, y, theta, x_r, x_i) 
+    odeint(f, initial_state, times)
+
+# real[ , ] integrate_ode_rk45(function ode, real[] initial_state, real initial_time, real[] times, real[] theta, real[] x_r, int[] x_i, real rel_tol, real abs_tol, int max_num_steps)
+# Solves the ODE system for the times provided using the Runge Kutta Dopri algorithm with the implementation from Boost with additional control parameters for the solver.
+
+def integrate_ode_rk45_array_real_array_array_array_array_real_real_int(ode, initial_state, times, theta, x_r, x_i, rtol, atol, mxstep):
+    f = lambda t, y: ode(t, y, theta, x_r, x_i) 
+    odeint(f, initial_state, times, rtol=rtol, atol=atol, options={"max_num_steps": mxstep})

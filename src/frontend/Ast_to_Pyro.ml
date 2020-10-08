@@ -359,6 +359,8 @@ let stanlib =
     "cov_exp_quad_rowvector_rowvector_real_real";
     "cov_exp_quad_vector_vector_real_real";
     "cov_exp_quad_array_array_real_real";
+    (* 5.13 Linear Algebra Functions and Solvers *)
+    "cholesky_decompose_matrix";
     (* 7. Mixed Operations *)
     "to_matrix_matrix";
     "to_matrix_vector";
@@ -385,6 +387,9 @@ let stanlib =
     "to_array_1d_rowvector";
     "to_array_1d_matrix";
     "to_array_1d_array";
+    (* 9.2 Ordinary Differential Equation (ODE) Solvers *)
+    "integrate_ode_rk45_array_real_array_array_array_array";
+    "integrate_ode_rk45_array_real_array_array_array_array_real_real_int";
   ]
 
 let stanlib_id id args =
