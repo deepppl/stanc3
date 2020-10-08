@@ -300,6 +300,7 @@ neg_binomial_2_rng = _rng(neg_binomial_2)
 # real poisson_log_lpmf(ints n | reals alpha)
 # The log Poisson probability mass of n given log rate alpha
 
+poisson = d.Poisson
 poisson_log = lambda alpha: d.Poisson(texp(alpha))
 poisson_log_lpmf = _lpmf(poisson_log)
 poisson_log_rng = _rng(poisson_log)
