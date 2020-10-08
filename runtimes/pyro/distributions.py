@@ -115,8 +115,7 @@ class ordered_constrained_improper_uniform(improper_uniform):
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        s, _indices = sort(s)
-        return s
+        return sort(s).values
 
 class positive_ordered_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=None):
