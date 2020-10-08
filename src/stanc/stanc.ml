@@ -140,7 +140,10 @@ let options =
       , Arg.Set Stan_math_code_gen.standalone_functions
       , " If set, the generated C++ will be the standalone functions C++ code."
       )
-    ; ( "--pyro"
+    ; ( "--filename-in-msg"
+      , Arg.Set_string Location.filename_for_msg
+      , " Sets the filename used in compiler errors. Uses actual filename by \
+         default." )    ; ( "--pyro"
       , Arg.Unit (fun () -> backend := Some Ast_to_Pyro.Pyro)
       , " If set, generate Pyro code." )
     ; ( "--pyro-cuda"
