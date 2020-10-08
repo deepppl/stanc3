@@ -163,10 +163,11 @@ class upper_constrained_improper_uniform(improper_uniform):
 
 class simplex_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=None):
-        super().__init__(shape)
+        # super().__init__(shape)
+        super().__init__([shape[0] - 1]) # XXX TODO: DANGER HACK !!!!! XXX
         self.support = constraints.simplex
 
-    _transform = _XXX_TODO_XXX_('XXX transform simplex XXX')
+    _transform = d.transforms.StickBreakingTransform()
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
