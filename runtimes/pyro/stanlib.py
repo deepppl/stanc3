@@ -4,8 +4,8 @@ import torch.nn
 from torch import ones, tensor
 
 def _XXX_TODO_XXX_(f):
-    def todo(x):
-        assert false, f'{f}: not yet implemented'
+    def todo(*args):
+        assert False, f'{f}: not yet implemented'
     return todo
 
 machine_precision = lambda: tensor(10 ** (-15.95), dtype=torch.float)

@@ -398,9 +398,16 @@ let stanlib_id id args =
     | UArray _ -> "_array"
     | UMathLibraryFunction | UFun _ -> ""
   in
-  List.fold_left ~init:id.name
-    ~f:(fun acc arg -> acc ^ (arg_type arg))
-    args
+  if
+    List.exists
+      ~f:(fun x -> String.is_suffix id.name ~suffix:x)
+      ["_lpdf"; "_lpmf"; "_lcdf"; "_lccdf"; "_rng"]
+ then
+   id.name
+ else
+   List.fold_left ~init:id.name
+     ~f:(fun acc arg -> acc ^ (arg_type arg))
+     args
 
 
 let gen_id =
@@ -679,7 +686,6 @@ and trans_exprs ff exprs =
 and trans_fun_app ff fn_kind id args =
   match fn_kind with
   | StanLib ->
-
       fprintf ff "%s(%a)"
         (stanlib_id id args) trans_exprs args
   | UserDefined ->
