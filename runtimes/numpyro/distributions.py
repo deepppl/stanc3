@@ -295,12 +295,23 @@ neg_binomial_2_lcdf = _lcdf(_cast1(neg_binomial_2))
 neg_binomial_2_lccdf = _lccdf(_cast1(neg_binomial_2))
 neg_binomial_2_rng = _rng(neg_binomial_2)
 
+## 14.5 Poisson Distribution
+
+# real poisson_lpmf(ints n | reals lambda)
+# The log Poisson probability mass of n given rate lambda
+
+poisson = d.Poisson
+poisson_lpmf = _lpmf(_cast1(poisson))
+poisson_cdf = _cdf(_cast1(poisson))
+poisson_lcdf = _lcdf(_cast1(poisson))
+poisson_lccdf = _lccdf(_cast1(poisson))
+poisson_rng = _rng(poisson)
+
 ## 14.6 Poisson Distribution, Log Parameterization
 
 # real poisson_log_lpmf(ints n | reals alpha)
 # The log Poisson probability mass of n given log rate alpha
 
-poisson = d.Poisson
 poisson_log = lambda alpha: d.Poisson(texp(alpha))
 poisson_log_lpmf = _lpmf(poisson_log)
 poisson_log_rng = _rng(poisson_log)
