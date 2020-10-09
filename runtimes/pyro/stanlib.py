@@ -869,15 +869,15 @@ sum_matrix = sum
 
 # real prod(vector x)
 # The product of the values in x, or 1 if x is empty
-prod_vector = prod
+prod_vector = tprod
 
 # real prod(row_vector x)
 # The product of the values in x, or 1 if x is empty
-prod_rowvector = prod
+prod_rowvector = tprod
 
 # real prod(matrix x)
 # The product of the values in x, or 1 if x is empty
-prod_matrix = prod
+prod_matrix = tprod
 
 ## 5.6.4 Sample Moments
 
