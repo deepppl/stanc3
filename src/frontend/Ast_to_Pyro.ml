@@ -48,11 +48,12 @@ let trans_id ff id =
   fprintf ff "%s" x
 
 
-let dppllib =
+let pyro_dppllib =
   [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones"; "empty";
     "matmul"; "true_divide"; "floor_divide"; "transpose";
-    "dtype_long"; "dtype_float"; "register_network";
-    "ops_index"; "ops_index_update"; ]
+    "dtype_long"; "dtype_float"; "register_network"; ]
+let numpyro_dppllib =
+  "ops_index" :: "ops_index_update" :: pyro_dppllib
 
 let stanlib =
   [ "machine_precision";
@@ -1638,6 +1639,11 @@ let trans_prog backend mode ff (p : typed_program) =
     match backend with
     | Pyro -> "pyro"
     | Numpyro -> "numpyro"
+  in
+  let dppllib =
+    match backend with
+    | Pyro -> pyro_dppllib
+    | Numpyro -> numpyro_dppllib
   in
   fprintf ff "@[<v 0>%a%a%a@,@]"
     (pp_imports ("runtimes."^runtime^".distributions")) ["*"]
