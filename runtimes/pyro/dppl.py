@@ -23,12 +23,23 @@ def _flatten_dict(d):
 
 
 class PyroModel:
-    def __init__(self, stanfile, pyfile=None, compile=True):
+    def __init__(self, stanfile, pyfile=None, compile=True, mode="comprehensive"):
         self.name = basename(stanfile)
         self.pyfile = splitext(stanfile)[0] + ".py" if pyfile == None else pyfile
         if compile:
             subprocess.check_call(
-                ["dune", "exec", "stanc", "--", "--pyro", "--o", self.pyfile, stanfile]
+                [
+                    "dune",
+                    "exec",
+                    "stanc",
+                    "--",
+                    "--pyro",
+                    "--mode",
+                    mode,
+                    "--o",
+                    self.pyfile,
+                    stanfile
+                ]
             )
         spec = importlib.util.spec_from_file_location(self.name, self.pyfile)
         Module = importlib.util.module_from_spec(spec)

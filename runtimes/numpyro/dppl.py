@@ -22,7 +22,7 @@ def _flatten_dict(d):
 
 
 class NumpyroModel:
-    def __init__(self, stanfile, pyfile=None, compile=True):
+    def __init__(self, stanfile, pyfile=None, compile=True, mode="comprehensive"):
         self.name = basename(stanfile)
         self.pyfile = splitext(stanfile)[0] + ".py" if pyfile == None else pyfile
         if compile:
@@ -33,6 +33,8 @@ class NumpyroModel:
                     "stanc",
                     "--",
                     "--numpyro",
+                    "--mode",
+                    mode,
                     "--o",
                     self.pyfile,
                     stanfile,
