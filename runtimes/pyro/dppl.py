@@ -7,17 +7,19 @@ from collections import defaultdict
 import subprocess
 import inspect
 
-def _flatten_array(d):
-    res = {}
-    for k, v in d.items():
-        if len(v.shape) == 0:
-            res[k] = v.tolist()
-        elif len(v.shape) == 1:
-            for i, vv in enumerate(v):
-                res[f"{k}[{i}]"] = vv.tolist()
+
+def _flatten_dict(d):
+    def _flatten(name, a):
+        if len(a.shape) == 0:
+            return {name: a.tolist()}
         else:
-            assert(False) # TODO
-    return res
+            return {
+                k: v
+                for d in [_flatten(name + f"[{i}]", v) for i, v in enumerate(a)]
+                for k, v in d.items()
+            }
+
+    return {k: _flatten(k, v) for k, v in d.items() }
 
 
 class PyroModel:
@@ -25,7 +27,9 @@ class PyroModel:
         self.name = basename(stanfile)
         self.pyfile = splitext(stanfile)[0] + ".py" if pyfile == None else pyfile
         if compile:
-            subprocess.check_call(["dune","exec","stanc","--","--pyro","--o",self.pyfile,stanfile])
+            subprocess.check_call(
+                ["dune", "exec", "stanc", "--", "--pyro", "--o", self.pyfile, stanfile]
+            )
         spec = importlib.util.spec_from_file_location(self.name, self.pyfile)
         Module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(Module)
@@ -44,7 +48,10 @@ class PyroModel:
         if kernel is None:
             kernel = pyro.infer.NUTS(self._model, adapt_step_size=True)
         mcmc = pyro.infer.MCMC(
-            kernel, samples - warmups, warmup_steps=warmups, num_chains=chains,
+            kernel,
+            samples - warmups,
+            warmup_steps=warmups,
+            num_chains=chains,
         )
         return MCMCProxy(mcmc, self._generated_quantities, self._transformed_data, thin)
 
@@ -56,9 +63,14 @@ class PyroModel:
         svi = pyro.infer.SVI(self._model, self._guide, optimizer, loss)
         return SVIProxy(svi, self._generated_quantities, self._transformed_data)
 
+
 class MCMCProxy:
     def __init__(
-        self, mcmc, generated_quantities=None, transformed_data=None, thin=1,
+        self,
+        mcmc,
+        generated_quantities=None,
+        transformed_data=None,
+        thin=1,
     ):
         self.mcmc = mcmc
         self.transformed_data = transformed_data
@@ -96,9 +108,14 @@ class MCMCProxy:
         return self.samples
 
     def summary(self):
-        d_mean = _flatten_array({k: torch.mean(v, axis=0) for k, v in self.samples.items()})
-        d_std = _flatten_array({k: torch.std(v, axis=0) for k, v in self.samples.items()})
+        d_mean = _flatten_dict(
+            {k: torch.mean(v, axis=0) for k, v in self.samples.items()}
+        )
+        d_std = _flatten_dict(
+            {k: torch.std(v, axis=0) for k, v in self.samples.items()}
+        )
         return DataFrame({"mean": Series(d_mean), "std": Series(d_std)})
+
 
 class SVIProxy(object):
     def __init__(self, svi, generated_quantities=None, transformed_data=None):

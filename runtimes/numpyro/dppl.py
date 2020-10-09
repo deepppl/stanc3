@@ -6,26 +6,38 @@ from pandas import DataFrame, Series
 from collections import defaultdict
 import subprocess
 
-def _flatten_array(d):
-    res = {}
-    for k, v in d.items():
-        if len(v.shape) == 0:
-            {k : v.tolist()}
-        elif len(v.shape) == 1:
-            for i, vv in enumerate(v):
-                res[f"{k}[{i}]"] = vv.tolist()
+
+def _flatten_dict(d):
+    def _flatten(name, a):
+        if len(a.shape) == 0:
+            return {name: a.tolist()}
         else:
-            for i, vv in enumerate(v):
-                d = _flatten_array(vv)
-            assert(False) # TODO
-    return res
+            return {
+                k: v
+                for d in [_flatten(name + f"[{i}]", v) for i, v in enumerate(a)]
+                for k, v in d.items()
+            }
+
+    return {k: _flatten(k, v) for k, v in d.items() }
+
 
 class NumpyroModel:
     def __init__(self, stanfile, pyfile=None, compile=True):
         self.name = basename(stanfile)
         self.pyfile = splitext(stanfile)[0] + ".py" if pyfile == None else pyfile
         if compile:
-            subprocess.check_call(["dune","exec","stanc","--","--numpyro","--o",self.pyfile,stanfile])
+            subprocess.check_call(
+                [
+                    "dune",
+                    "exec",
+                    "stanc",
+                    "--",
+                    "--numpyro",
+                    "--o",
+                    self.pyfile,
+                    stanfile,
+                ]
+            )
         spec = importlib.util.spec_from_file_location(self.name, self.pyfile)
         Module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(Module)
@@ -42,14 +54,21 @@ class NumpyroModel:
         if kernel is None:
             kernel = numpyro.infer.NUTS(self._model, adapt_step_size=True)
         mcmc = numpyro.infer.MCMC(
-            kernel, warmups, samples - warmups, num_chains=chains,
+            kernel,
+            warmups,
+            samples - warmups,
+            num_chains=chains,
         )
         return MCMCProxy(mcmc, self._generated_quantities, self._transformed_data, thin)
 
 
 class MCMCProxy:
     def __init__(
-        self, mcmc, generated_quantities=None, transformed_data=None, thin=1,
+        self,
+        mcmc,
+        generated_quantities=None,
+        transformed_data=None,
+        thin=1,
     ):
         self.mcmc = mcmc
         self.transformed_data = transformed_data
@@ -88,6 +107,10 @@ class MCMCProxy:
         return self.samples
 
     def summary(self):
-        d_mean = _flatten_array({k: jax.numpy.mean(v, axis=0) for k, v in self.samples.items()})
-        d_std = _flatten_array({k: jax.numpy.std(v, axis=0) for k, v in self.samples.items()})
+        d_mean = _flatten_dict(
+            {k: jax.numpy.mean(v, axis=0) for k, v in self.samples.items()}
+        )
+        d_std = _flatten_dict(
+            {k: jax.numpy.std(v, axis=0) for k, v in self.samples.items()}
+        )
         return DataFrame({"mean": Series(d_mean), "std": Series(d_std)})
