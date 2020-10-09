@@ -12,7 +12,6 @@ def _flatten_array(d):
         if len(v.shape) == 0:
             {k : v.tolist()}
         elif len(v.shape) == 1:
-            {f"{k}[{i}]" : vv}
             for i, vv in enumerate(v):
                 res[f"{k}[{i}]"] = vv.tolist()
         else:
