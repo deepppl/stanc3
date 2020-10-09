@@ -6,10 +6,11 @@ from collections import defaultdict
 import subprocess
 
 class NumpyroModel:
-    def __init__(self, stanfile, pyfile=None):
+    def __init__(self, stanfile, pyfile=None, compile=True):
         self.name = basename(stanfile)
         self.pyfile = splitext(stanfile)[0] + ".py" if pyfile == None else pyfile
-        subprocess.check_call(["dune","exec","stanc","--","--numpyro","--o",self.pyfile,stanfile])
+        if compile:
+            subprocess.check_call(["dune","exec","stanc","--","--numpyro","--o",self.pyfile,stanfile])
         spec = importlib.util.spec_from_file_location(self.name, self.pyfile)
         Module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(Module)
