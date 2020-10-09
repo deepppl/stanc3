@@ -408,6 +408,7 @@ let stanlib =
     "to_array_1d_array";
     (* 9.2 Ordinary Differential Equation (ODE) Solvers *)
     "integrate_ode_rk45_array_real_array_array_array_array";
+    "integrate_ode_rk45_array_int_array_array_array_array";
     "integrate_ode_rk45_array_real_array_array_array_array_real_real_int";
   ]
 

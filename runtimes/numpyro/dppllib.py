@@ -3,7 +3,8 @@ import jax.numpy as jnp
 from numpyro.distributions import Exponential
 from jax.numpy import array
 from jax.numpy import zeros, ones, matmul, true_divide, floor_divide, transpose, empty
-from jax import ops_index, ops_index_update
+from jax.ops import index as ops_index
+from jax.ops import index_update as ops_index_update
 
 dtype_float=jnp.dtype('float32')
 dtype_long=jnp.dtype('int32')
