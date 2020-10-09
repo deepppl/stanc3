@@ -1,16 +1,31 @@
 from os.path import splitext, basename, dirname
 import importlib.util
 import pyro
+import torch
+from pandas import DataFrame, Series
 from collections import defaultdict
 import subprocess
 import inspect
 
+def _flatten_array(d):
+    res = {}
+    for k, v in d.items():
+        if len(v.shape) == 0:
+            res[k] = v.tolist()
+        elif len(v.shape) == 1:
+            for i, vv in enumerate(v):
+                res[f"{k}[{i}]"] = vv.tolist()
+        else:
+            assert(False) # TODO
+    return res
+
 
 class PyroModel:
-    def __init__(self, stanfile, pyfile=None):
+    def __init__(self, stanfile, pyfile=None, compile=True):
         self.name = basename(stanfile)
         self.pyfile = splitext(stanfile)[0] + ".py" if pyfile == None else pyfile
-        subprocess.check_call(["dune","exec","stanc","--","--pyro","--o",self.pyfile,stanfile])
+        if compile:
+            subprocess.check_call(["dune","exec","stanc","--","--pyro","--o",self.pyfile,stanfile])
         spec = importlib.util.spec_from_file_location(self.name, self.pyfile)
         Module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(Module)
@@ -51,12 +66,6 @@ class MCMCProxy:
         self.thin = thin
         self.kwargs = {}
 
-    def run(self, **kwargs):
-        self.kwargs = kwargs
-        if self.transformed_data:
-            self.kwargs.update(self.transformed_data(**self.kwargs))
-        self.mcmc.run(**kwargs)
-
     def _sample_model(self):
         samples = self.mcmc.get_samples()
         return {x: samples[x][:: self.thin] for x in samples}
@@ -71,14 +80,25 @@ class MCMCProxy:
                 d = self.generated_quantities(**kwargs)
                 for k, v in d.items():
                     res[k].append(v)
-        return res
+        return {k: torch.stack(v) for k, v in res.items()}
+
+    def run(self, **kwargs):
+        self.kwargs = kwargs
+        if self.transformed_data:
+            self.kwargs.update(self.transformed_data(**self.kwargs))
+        self.mcmc.run(**kwargs)
+        self.samples = self._sample_model()
+        if self.generated_quantities:
+            gen = self._sample_generated(self.samples)
+            self.samples.update(gen)
 
     def get_samples(self):
-        samples = self._sample_model()
-        if self.generated_quantities:
-            gen = self._sample_generated(samples)
-            samples.update(gen)
-        return samples
+        return self.samples
+
+    def summary(self):
+        d_mean = _flatten_array({k: torch.mean(v, axis=0) for k, v in self.samples.items()})
+        d_std = _flatten_array({k: torch.std(v, axis=0) for k, v in self.samples.items()})
+        return DataFrame({"mean": Series(d_mean), "std": Series(d_std)})
 
 class SVIProxy(object):
     def __init__(self, svi, generated_quantities=None, transformed_data=None):

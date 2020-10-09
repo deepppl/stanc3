@@ -2,8 +2,24 @@ from os.path import splitext, basename, dirname
 import importlib.util
 import numpyro
 import jax
+from pandas import DataFrame, Series
 from collections import defaultdict
 import subprocess
+
+def _flatten_array(d):
+    res = {}
+    for k, v in d.items():
+        if len(v.shape) == 0:
+            {k : v.tolist()}
+        elif len(v.shape) == 1:
+            {f"{k}[{i}]" : vv}
+            for i, vv in enumerate(v):
+                res[f"{k}[{i}]"] = vv.tolist()
+        else:
+            for i, vv in enumerate(v):
+                d = _flatten_array(vv)
+            assert(False) # TODO
+    return res
 
 class NumpyroModel:
     def __init__(self, stanfile, pyfile=None, compile=True):
@@ -43,12 +59,6 @@ class MCMCProxy:
         self.rng_key, _ = jax.random.split(jax.random.PRNGKey(0))
         self.kwargs = {}
 
-    def run(self, **kwargs):
-        self.kwargs = kwargs
-        if self.transformed_data:
-            self.kwargs.update(self.transformed_data(**self.kwargs))
-        self.mcmc.run(self.rng_key, **self.kwargs)
-
     def _sample_model(self):
         samples = self.mcmc.get_samples()
         return {x: samples[x][:: self.thin] for x in samples}
@@ -63,11 +73,22 @@ class MCMCProxy:
                 d = self.generated_quantities(**kwargs)
                 for k, v in d.items():
                     res[k].append(v)
-        return res
+        return {k: jax.numpy.stack(v) for k, v in res.items()}
+
+    def run(self, **kwargs):
+        self.kwargs = kwargs
+        if self.transformed_data:
+            self.kwargs.update(self.transformed_data(**self.kwargs))
+        self.mcmc.run(self.rng_key, **self.kwargs)
+        self.samples = self._sample_model()
+        if self.generated_quantities:
+            gen = self._sample_generated(self.samples)
+            self.samples.update(gen)
 
     def get_samples(self):
-        samples = self._sample_model()
-        if self.generated_quantities:
-            gen = self._sample_generated(samples)
-            samples.update(gen)
-        return samples
+        return self.samples
+
+    def summary(self):
+        d_mean = _flatten_array({k: jax.numpy.mean(v, axis=0) for k, v in self.samples.items()})
+        d_std = _flatten_array({k: jax.numpy.std(v, axis=0) for k, v in self.samples.items()})
+        return DataFrame({"mean": Series(d_mean), "std": Series(d_std)})
