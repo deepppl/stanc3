@@ -15,11 +15,15 @@ def _flatten_dict(d):
         else:
             return {
                 k: v
-                for d in [_flatten(name + f"[{i}]", v) for i, v in enumerate(a)]
+                for d in (_flatten(name + f"[{i}]", v) for i, v in enumerate(a))
                 for k, v in d.items()
             }
 
-    return {k: _flatten(k, v) for k, v in d.items() }
+    return { 
+        fk:fv 
+        for f in (_flatten(k, v) for k, v in d.items())
+        for fk, fv in f.items()
+    }
 
 
 class PyroModel:
