@@ -39,21 +39,169 @@ let print_list_newline printer ff l =
   (pp_print_list ~pp_sep:(fun ff () -> fprintf ff "@,") printer)
   l
 
-let trans_id ff id =
-  let x =
-    match id.name with
-    | "lambda" -> "lambda_"
-    | x -> x
-  in
-  fprintf ff "%s" x
-
-
 let pyro_dppllib =
   [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones"; "empty";
     "matmul"; "true_divide"; "floor_divide"; "transpose";
     "dtype_long"; "dtype_float"; "register_network"; ]
 let numpyro_dppllib =
   "ops_index" :: "ops_index_update" :: pyro_dppllib
+
+let distribution =
+  [ "improper_uniform";
+    "lower_constrained_improper_uniform";
+    "upper_constrained_improper_uniform";
+    "simplex_constrained_improper_uniform";
+    "unit_constrained_improper_uniform";
+    "ordered_constrained_improper_uniform";
+    "positive_ordered_constrained_improper_uniform";
+    "cholesky_factor_corr_constrained_improper_uniform";
+    (* 19 Continuous Distributions on [0, 1] *)
+    (* 19.1 Beta Distribution *)
+    "beta";
+    "beta_lpdf";
+    "beta_cdf";
+    "beta_lcdf";
+    "beta_lccdf";
+    "beta_rng";
+    (* 12 Binary Distributions *)
+    (* 12.1 Bernoulli Distribution *)
+    "bernoulli";
+    "bernoulli_lpmf";
+    "bernoulli_cdf";
+    "bernoulli_lcdf";
+    "bernoulli_lccdf";
+    "bernoulli_rng";
+    (* 12.2 Bernoulli Distribution, Logit Parameterization *)
+    "bernoulli_logit";
+    "bernoulli_logit_lpmf";
+    (* 13 Bounded Discrete Distributions *)
+    (* 13.2 Binomial Distribution, Logit Parameterization *)
+    "binomial_logit";
+    "binomial_logit_lpmf";
+    (* 13.5 Categorical Distribution *)
+    "categorical";
+    "categorical_lpmf";
+    "categorical_rng";
+    "categorical_logit";
+    "categorical_logit_lpmf";
+    "categorical_logit_rng";
+    (* 14 Unbounded Discrete Distributions *)
+    (* 14.2 Negative Binomial Distribution (alternative parameterization) *)
+    "neg_binomial_2";
+    "neg_binomial_2_lpmf";
+    "neg_binomial_2_cdf";
+    "neg_binomial_2_lcdf";
+    "neg_binomial_2_lccdf";
+    "neg_binomial_2_rng";
+    (* 14.5 Poisson Distribution *)
+    "poisson";
+    "poisson_lpmf";
+    "poisson_cdf";
+    "poisson_lcdf";
+    "poisson_lccdf";
+    "poisson_rng";
+    (* 14.6 Poisson Distribution, Log Parameterization *)
+    "poisson_log";
+    "poisson_log_lpmf";
+    "poisson_log_rng";
+    (* 16 Unbounded Continuous Distributions *)
+    (* 16.1 Normal Distribution *)
+    "normal";
+    "normal_lpdf";
+    "normal_cdf";
+    "normal_lcdf";
+    "normal_lccdf";
+    "normal_rng";
+    "std_normal";
+    "std_normal_lpdf";
+    "std_normal_cdf";
+    "std_normal_lcdf";
+    "std_normal_lccdf";
+    "std_normal_rng";
+    (* 16.5 Student-T Distribution *)
+    "student_t";
+    "student_t_lpdf";
+    "student_t_cdf";
+    "student_t_lcdf";
+    "student_t_lccdf";
+    "student_t_rng";
+    (* 16.6 Cauchy Distribution *)
+    "cauchy";
+    "cauchy_lpdf";
+    "cauchy_cdf";
+    "cauchy_lcdf";
+    "cauchy_lccdf";
+    "cauchy_rng";
+    (* 16.7 Double Exponential (Laplace) Distribution *)
+    "double_exponential";
+    "double_exponential_lpdf";
+    "double_exponential_cdf";
+    "double_exponential_lcdf";
+    "double_exponential_lccdf";
+    "double_exponential_rng";
+    (* 16.8 Logistic Distribution *)
+    "logistic";
+    "logistic_lpdf";
+    "logistic_cdf";
+    "logistic_lcdf";
+    "logistic_lccdf";
+    "logistic_rng";
+    (* 17 Positive Continuous Distributions *)
+    (* 17.1 Lognormal Distribution *)
+    "lognormal";
+    "lognormal_lpdf";
+    "lognormal_cdf";
+    "lognormal_lcdf";
+    "lognormal_lccdf";
+    "lognormal_rng";
+    (* 17.5 Exponential Distribution *)
+    "exponential";
+    "exponential_lpdf";
+    "exponential_cdf";
+    "exponential_lcdf";
+    "exponential_lccdf";
+    "exponential_rng";
+    (* 17.6 Gamma Distribution *)
+    "gamma";
+    "gamma_lpdf";
+    "gamma_cdf";
+    "gamma_lcdf";
+    "gamma_lccdf";
+    "gamma_rng";
+    (* 17.7 Inverse Gamma Distribution *)
+    "inv_gamma";
+    "inv_gamma_lpdf";
+    "inv_gamma_cdf";
+    "inv_gamma_lcdf";
+    "inv_gamma_lccdf";
+    "inv_gamma_rng";
+    (* 18 Positive Lower-Bounded Distributions *)
+    (* 18.1 Pareto Distribution *)
+    "pareto";
+    "pareto_lpdf";
+    "pareto_cdf";
+    "pareto_lcdf";
+    "pareto_lccdf";
+    "pareto_rng";
+    (* 21 Bounded Continuous Probabilities *)
+    (* 21.1 Uniform Distribution *)
+    "uniform";
+    "uniform_lpdf";
+    "uniform_cdf";
+    "uniform_lcdf";
+    "uniform_lccdf";
+    "uniform_rng";
+    (* 22 Distributions over Unbounded Vectors *)
+    (* 22.1 Multivariate Normal Distribution *)
+    "multi_normal";
+    "multi_normal_lpdf";
+    "multi_normal_rng";
+    (* 23 Simplex Distributions *)
+    (* 23.1 Dirichlet Distribution *)
+    "dirichlet";
+    "dirichlet_lpdf";
+    "dirichlet_rng";
+  ]
 
 let stanlib =
   [ "machine_precision";
@@ -412,6 +560,20 @@ let stanlib =
     "integrate_ode_rk45_array_real_array_array_array_array_real_real_int";
   ]
 
+
+let keywords =
+  [ "lambda"; "def"; ]
+
+let avoid =
+  keywords @ pyro_dppllib @ numpyro_dppllib @ distribution @ stanlib
+
+let trans_id ff id =
+  let x =
+    if List.mem ~equal:(=) avoid id.name then id.name ^ "__"
+    else id.name
+  in
+  fprintf ff "%s" x
+
 let stanlib_id id args =
   let arg_type arg =
     match arg.emeta.type_ with
@@ -570,8 +732,10 @@ let rec trans_expr ctx ff ({expr; emeta }: typed_expression) : unit =
   | Variable id -> trans_id ff id
   | IntNumeral x -> trans_numeral emeta.type_ ff x
   | RealNumeral x -> trans_numeral emeta.type_ ff x
-  | FunApp (fn_kind, id, args) | CondDistApp (fn_kind, id, args) ->
+  | FunApp (fn_kind, id, args) ->
       trans_fun_app ctx fn_kind id ff args
+  | CondDistApp (fn_kind, id, args) ->
+      trans_cond_dist_app ctx fn_kind id ff args
   | GetLP | GetTarget -> fprintf ff "stanlib.target()" (* XXX TODO XXX *)
   | ArrayExpr eles ->
       fprintf ff "array([%a], dtype=%a)"
@@ -726,6 +890,15 @@ and trans_fun_app ctx fn_kind id ff args =
   | UserDefined ->
       fprintf ff "%a(%a)"
         trans_id id (trans_exprs ctx) args
+
+and trans_cond_dist_app ctx fn_kind id ff args =
+  match fn_kind with
+  | StanLib ->
+      fprintf ff "%s(%a)"
+        (stanlib_id id args) (trans_exprs ctx) args
+  | UserDefined ->
+      fprintf ff "%s(%a)"
+        id.name (trans_exprs ctx) args
 
 and trans_dims ctx ff (t : typed_expression Type.t) =
   match t with
@@ -1137,8 +1310,8 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
         (trans_expr ctx) e
   | Tilde {arg; distribution; args; truncation} ->
       let trans_distribution ff (dist, args) =
-        fprintf ff "%a(%a)"
-          trans_id dist
+        fprintf ff "%s(%a)"
+          dist.name
           (print_list_comma (trans_expr ctx)) args
       in
       let trans_truncation _ff = function
