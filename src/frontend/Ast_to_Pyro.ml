@@ -558,6 +558,7 @@ let stanlib =
     "integrate_ode_rk45_array_real_array_array_array_array";
     "integrate_ode_rk45_array_int_array_array_array_array";
     "integrate_ode_rk45_array_real_array_array_array_array_real_real_int";
+    "integrate_ode_rk45_array_int_array_array_array_array_real_real_real";
   ]
 
 

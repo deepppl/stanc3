@@ -1317,3 +1317,4 @@ integrate_ode_rk45_array_int_array_array_array_array = integrate_ode_rk45_array_
 # Solves the ODE system for the times provided using the Runge Kutta Dopri algorithm with the implementation from Boost with additional control parameters for the solver.
 
 integrate_ode_rk45_array_real_array_array_array_array_real_real_int = lambda ode, initial_state, times, theta, x_r, x_i, rtol, atol, mxstep,: odeint(ode, initial_state, times, theta, x_r, x_i, rtol=rtol, atol=atol, mxstep=mxstep)
+integrate_ode_rk45_array_int_array_array_array_array_real_real_real = integrate_ode_rk45_array_real_array_array_array_array_real_real_int

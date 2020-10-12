@@ -1320,3 +1320,5 @@ integrate_ode_rk45_array_int_array_array_array_array = integrate_ode_rk45_array_
 def integrate_ode_rk45_array_real_array_array_array_array_real_real_int(ode, initial_state, times, theta, x_r, x_i, rtol, atol, mxstep):
     f = lambda t, y: ode(t, y, theta, x_r, x_i)
     odeint(f, initial_state, times, rtol=rtol, atol=atol, options={"max_num_steps": mxstep})
+
+integrate_ode_rk45_array_int_array_array_array_array_real_real_real = integrate_ode_rk45_array_real_array_array_array_array_real_real_int

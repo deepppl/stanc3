@@ -118,12 +118,12 @@ constraints = [
 # posterior = my_pdb.posterior('low_dim_gauss_mix_collapse')
 # posterior = my_pdb.posterior('hmm_example-hmm_example')
 # posterior = my_pdb.posterior('butterfly-multi_occupancy')
-posterior = my_pdb.posterior('sat-hier_2pl')
-config = Config()
-res = test(posterior, config)
-print(res['code'])
-print(res['msg'])
-print(res['exn'])
+# posterior = my_pdb.posterior('sat-hier_2pl')
+# config = Config()
+# res = test(posterior, config)
+# print(res['code'])
+# print(res['msg'])
+# print(res['exn'])
 
 success = 0
 compile_error = 0
