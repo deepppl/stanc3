@@ -24,9 +24,9 @@ for i in \
  ; do cp -f $(which $i) drivers/bin ; done
 
 mkdir -p drivers/lib64
-ln -s ../lib64 drivers/lib
+ln -s ./lib64 drivers/lib
 
-cp -f \
+cp -fP \
   /lib64/libnvidia* \
   /lib64/libcuda* \
   drivers/lib64 

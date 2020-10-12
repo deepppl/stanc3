@@ -359,31 +359,28 @@ WORKDIR $InstallPath
 
 # Copy the relevant bits - pytorch is installed in miniconda so not need to copy it over 
 # separately.
-COPY --from=dev $InstallPath/antlr4 $InstallPath/antlr4
+COPY --chown=user:user --from=dev $InstallPath/antlr4 $InstallPath/antlr4
 
-COPY --from=dev $InstallPath/deepppl $InstallPath/deepppl
+COPY --chown=user:user --from=dev $InstallPath/deepppl $InstallPath/deepppl
 
-COPY --from=dev $InstallPath/fxdiv $InstallPath/fxdiv
+COPY --chown=user:user --from=dev $InstallPath/fxdiv $InstallPath/fxdiv
 
 RUN set -eux ; \
   mkdir $InstallPath/jax
-COPY --from=dev $InstallPath/jax/build $InstallPath/jax/build
-COPY --from=dev $InstallPath/jax/jaxlib $InstallPath/jax/jaxlib
-COPY --from=dev $InstallPath/jax/jax $InstallPath/jax/jax
-COPY --from=dev $InstallPath/jax/jax.egg-info $InstallPath/jax/jax.egg-info
+COPY --chown=user:user --from=dev $InstallPath/jax/build $InstallPath/jax/build
+COPY --chown=user:user --from=dev $InstallPath/jax/jaxlib $InstallPath/jax/jaxlib
+COPY --chown=user:user --from=dev $InstallPath/jax/jax $InstallPath/jax/jax
+COPY --chown=user:user --from=dev $InstallPath/jax/jax.egg-info $InstallPath/jax/jax.egg-info
 
-COPY --from=dev $InstallPath/magma $InstallPath/magma
+COPY --chown=user:user --from=dev $InstallPath/magma $InstallPath/magma
 
-COPY --from=dev $InstallPath/miniconda3 $InstallPath/miniconda3
+COPY --chown=user:user --from=dev $InstallPath/miniconda3 $InstallPath/miniconda3
 
 
 # Install notebook in miniconda
 RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; \
   conda install jupyter
-  
-# Copy example notebook
-COPY notebook $InstallPath/notebook
 
 # Install OCaml dependencies.
 RUN set -eux ; \
@@ -425,6 +422,9 @@ RUN set -eux ; \
   dune build @install --profile static 
 ENV PATH $InstallPath/stanc3/_build/install/default/bin:$PATH  
 RUN stanc --help
+
+# Copy example notebook
+COPY --chown=user:user notebook $InstallPath/notebook
 
 EXPOSE 8888  
 
