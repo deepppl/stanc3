@@ -142,7 +142,7 @@ class improper_uniform(d.Normal):
 # XXX TODO? XXX
 class lower_constrained_improper_uniform(improper_uniform):
     def __init__(self, lower_bound=0, shape=None):
-        self.lower_bound = lower_bound
+        self.lower_bound = lower_bound * jnp.ones(shape) if shape else 1
         super(lower_constrained_improper_uniform, self).__init__(shape)
         self.support = constraints.greater_than(lower_bound)
 
@@ -153,7 +153,7 @@ class lower_constrained_improper_uniform(improper_uniform):
 # XXX TODO? XXX
 class upper_constrained_improper_uniform(improper_uniform):
     def __init__(self, upper_bound=0.0, shape=None):
-        self.upper_bound = upper_bound
+        self.upper_bound = upper_bound * jnp.ones(shape) if shape else 1
         super(upper_constrained_improper_uniform, self).__init__(shape)
         self.support = constraints.less_than(upper_bound)
 
