@@ -1551,10 +1551,15 @@ let trans_parameter ctx ff p =
   | _ -> assert false
 
 let trans_parametersblock ctx ff parameters =
-  Option.iter
-    ~f:(fprintf ff "# Parameters@,%a@,"
-          (print_list_newline (trans_parameter ctx)))
-    parameters
+  match ctx.ctx_mode with
+  | Generative -> ()
+  | Comprehensive ->
+      Option.iter
+        ~f:(fprintf ff "# Parameters@,%a@,"
+              (print_list_newline (trans_parameter ctx)))
+        parameters
+  | Mixed ->
+      assert false (* XXX TODO XXX *)
 
 let register_network networks ff ostmts =
   Option.iter
