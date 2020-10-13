@@ -387,6 +387,8 @@ RUN set -eux ; \
   git clone --single-branch -b 4.07.1 https://github.com/ocaml/ocaml  ; \
   cd ocaml ; \
   ./configure --prefix $InstallPath/ocaml ; \
+# Looks like the makefile does have a race, so we run it twice to work around it.
+  (make world.opt -j || true) ; \
   make world.opt -j ; \
   make install -j
 ENV PATH $InstallPath/ocaml/bin:$PATH
@@ -417,7 +419,7 @@ RUN set -eux ; \
   git clone --single-branch -b deep https://github.com/mandel/stanc3 ; \
   cd stanc3 ; \
   dune subst ; \
-  dune build @install --profile static 
+  dune build @install --profile dynamic 
 ENV PATH $InstallPath/stanc3/_build/install/default/bin:$PATH  
 RUN stanc --help
 
