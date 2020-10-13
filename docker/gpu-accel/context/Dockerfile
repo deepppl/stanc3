@@ -161,7 +161,6 @@ ENV LIBRARY_PATH $InstallPath/fxdiv/lib64
 #
 # Install pytorch
 #
-COPY pytorch-v1.5.0.patch $InstallPath
 RUN set -eux ; \
   cd $InstallPath ; \
   . miniconda3/bin/activate ; \
