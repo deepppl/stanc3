@@ -250,22 +250,22 @@ RUN set -eux ; \
 #   pytorch (from source)
 #   pytorch-vision (from source)
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip3 install -y \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
     'antlr4-python3-runtime==4.7.2'
 RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install -y \
     'astor==0.7.1'
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install -y \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
     'astpretty==1.2.1'
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install -y \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
     'observations==0.1.4'
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install -y \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
     'pyro-ppl==1.3.1'
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install -y \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
     'numpyro==0.3.0'
 RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install -y \
@@ -274,7 +274,7 @@ RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install -y \
     'requests>=2.20.0'
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install -y \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
     'ipdb>=0.11'
 RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install -y \
