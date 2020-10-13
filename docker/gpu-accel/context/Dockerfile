@@ -117,9 +117,9 @@ RUN set -eux ; \
 RUN set -eux ; \
   cd $InstallPath ; \
   . miniconda3/bin/activate ; \
-  conda create -n magma python=3.7 ; \
+  conda create -y -n magma python=3.7 ; \
   conda activate magma ; \
-  conda install openblas
+  conda install -y openblas
 
 ENV OPENBLASDIR $InstallPath/miniconda3/envs/magma
   
@@ -165,7 +165,7 @@ COPY pytorch-v1.5.0.patch $InstallPath
 RUN set -eux ; \
   cd $InstallPath ; \
   . miniconda3/bin/activate ; \
-  conda create -n pytorch python=3.7
+  conda create -y -n pytorch python=3.7
   
 RUN set -eux ; \
   cd $InstallPath ; \
@@ -176,9 +176,9 @@ RUN set -eux ; \
   git apply < $InstallPath/pytorch-v1.5.0.patch ; \
   git submodule sync ; \
   git submodule update --init --recursive ; \
-  conda install numpy ninja pyyaml setuptools cffi ; \
+  conda install -y numpy ninja pyyaml setuptools cffi openblas; \
   if [ $(uname -m) = x86_64 ] ; then \
-    conda install mkl mkl-include ; \
+    conda install -y mkl mkl-include ; \
   fi ; \
   export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which conda))/../"} ; \
   export TORCH_CUDA_ARCH_LIST="3.7;6.0;7.0" ; \
@@ -207,7 +207,7 @@ RUN set -eux ; \
 RUN set -eux ; \
   cd $InstallPath ; \
   . miniconda3/bin/activate ; \
-  conda create --name deepppl --clone pytorch
+  conda create -y --name deepppl --clone pytorch
   
 # Install bazel needed to install JAX
 RUN set -eux ; \
@@ -227,7 +227,7 @@ ENV PATH=$InstallPath/bazel:$PATH
 # Install required python packages for JAX
 RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; \
-  conda install scipy cython six
+  conda install -y scipy cython six
 
 # Install JAX
 COPY jax-v0.1.51.patch $InstallPath
@@ -252,37 +252,37 @@ RUN set -eux ; \
 #   pytorch (from source)
 #   pytorch-vision (from source)
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip3 install \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip3 install -y \
     'antlr4-python3-runtime==4.7.2'
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install -y \
     'astor==0.7.1'
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install -y \
     'astpretty==1.2.1'
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install -y \
     'observations==0.1.4'
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install -y \
     'pyro-ppl==1.3.1'
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install -y \
     'numpyro==0.3.0'
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install -y \
     'pytest>=3.6.1'
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install -y \
     'requests>=2.20.0'
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install -y \
     'ipdb>=0.11'
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install -y \
     'matplotlib>=2.2.2'
 RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install -y \
     'pandas>=0.25.1'
   
 RUN set -eux ; \
@@ -380,7 +380,7 @@ COPY --chown=user:user --from=dev $InstallPath/miniconda3 $InstallPath/miniconda
 # Install notebook in miniconda
 RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; \
-  conda install jupyter
+  conda install -y jupyter
 
 # Install OCaml dependencies.
 RUN set -eux ; \
@@ -430,6 +430,7 @@ EXPOSE 8888
 
 WORKDIR $InstallPath/notebook
 CMD set -eux ; \
+  eval $(opam config env) ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; \
   nvidia-smi ; \
   jupyter-notebook --ip=0.0.0.0 --port=8888
