@@ -659,6 +659,154 @@ let rec dims_of_sizedtype t =
   | SMatrix (e1, e2) -> [e1; e2]
   | SArray (t, e) -> e :: dims_of_sizedtype t
 
+let dims_of_type t =
+  match t with
+  | Type.Sized t -> dims_of_sizedtype t
+  | Unsized _ ->
+      raise_s
+        [%message "Expecting sized type" (t : typed_expression Type.t)]
+
+let rec used_vars_expr acc e =
+  let acc =
+    match e.expr with
+    | Variable x -> SSet.add acc x.name
+    | _ -> acc
+  in
+  fold_expression used_vars_expr (fun acc _ -> acc) acc e.expr
+
+let rec used_vars_lval acc lv =
+  match lv.lval with
+  | LVariable id -> SSet.add acc id.name
+  | _ -> fold_lvalue used_vars_lval used_vars_expr acc lv.lval
+
+let used_vars_stmt stmt =
+  fold_statement_with
+    used_vars_expr
+    (fun acc _ -> acc)
+    used_vars_lval
+    (fun acc _ -> acc)
+    SSet.empty stmt
+
+let is_variable_sampling x stmt =
+  match stmt.stmt with
+  | Tilde { arg = { expr = Variable y; _ }; _ } -> x = y.name
+  | _ -> false
+
+let is_variable_initialization x stmt =
+  match stmt.stmt with
+  | Assignment { assign_lhs = { lval = LVariable y; _ };
+                 assign_op = (Assign | ArrowAssign); _ } -> x = y.name
+  | _ -> false
+
+let merge_decl_sample decl (stmt:typed_statement) =
+  match decl.stmt, stmt.stmt with
+  | VarDecl { decl_type; _ }, Tilde s ->
+      begin match dims_of_type decl_type with
+      | [] -> stmt
+      | shape ->
+          let shape_arg =
+            { expr = ArrayExpr shape;
+              emeta = { loc = Location_span.empty;
+                        ad_level = DataOnly;
+                        type_ = UArray UInt; }}
+          in
+          let args =
+            s.args @ [ shape_arg ]
+          in
+          { stmt with stmt = Tilde { s with args } }
+      end
+  | _, _ -> assert false
+
+let rec push_prior_stmts (x, decl) stmts =
+  match stmts with
+  | [] -> Some decl, [ ]
+  | stmt :: stmts ->
+      if is_variable_sampling x stmt then
+        None, merge_decl_sample decl stmt :: stmts
+      else if SSet.mem (used_vars_stmt stmt) x then
+        Some decl, stmt :: stmts
+      else
+        let prior, stmts = push_prior_stmts (x, decl) stmts in
+        prior, stmt ::  stmts
+
+let merge_decl_stmt decl stmt =
+  match decl.stmt, stmt.stmt with
+  | VarDecl d, Assignment { assign_rhs = e; _ } ->
+    { decl with stmt = VarDecl { d with initial_value = Some e } }
+  | _, _ -> assert false
+
+let rec push_vardecl_stmts (x, decl) stmts =
+  match stmts with
+  | [] -> [ decl ]
+  | stmt :: stmts ->
+      if is_variable_initialization x stmt then
+        merge_decl_stmt decl stmt :: stmts
+      else if SSet.mem (used_vars_stmt stmt) x then
+        decl :: stmt :: stmts
+      else stmt :: push_vardecl_stmts (x, decl) stmts
+
+let rec push_vardecls_stmts stmts =
+  List.fold_right
+    ~f:(fun s stmts ->
+        match s.stmt with
+        | VarDecl { identifier = id; initial_value = None; _ } ->
+            push_vardecl_stmts (id.name, s) stmts
+        | _ -> push_vardecls_stmt s :: stmts)
+    ~init:[] stmts
+
+and push_vardecls_stmt (stmt: typed_statement) =
+  match stmt.stmt with
+  | Block stmts -> { stmt with stmt = Block (push_vardecls_stmts stmts) }
+  | _ -> stmt
+      (* map_statement_with *)
+      (*   (fun e -> e) (fun m -> m) (fun lv -> lv) (fun f -> f) *)
+      (*   stmt *)
+
+let push_priors priors stmts =
+  List.fold_left
+    ~f:(fun (priors, stmts) decl ->
+        match decl.stmt with
+        | VarDecl { identifier = id; initial_value = None; _ } ->
+          begin match push_prior_stmts (id.name, decl) stmts with
+          | Some prior, stmts -> priors @ [prior], stmts
+          | None, stmts -> priors, stmts
+          end
+        | _ -> assert false)
+    ~init:([], stmts) priors
+
+let flatten_stmts stmts =
+  List.fold_right
+    ~f:(fun s acc ->
+        match s.stmt with
+        | Block stmts -> stmts @ acc
+        | _ -> s :: acc)
+    ~init:[] stmts
+
+let rewrite_program f p =
+  { functionblock = Option.map ~f p.functionblock
+  ; datablock = Option.map ~f p.datablock
+  ; transformeddatablock = Option.map ~f p.transformeddatablock
+  ; parametersblock = Option.map ~f p.parametersblock
+  ; transformedparametersblock = Option.map ~f p.transformedparametersblock
+  ; modelblock = Option.map ~f p.modelblock
+  ; generatedquantitiesblock = Option.map ~f p.generatedquantitiesblock
+  ; networkblock = p.networkblock
+  ; guideparametersblock = Option.map ~f p.guideparametersblock
+  ; guideblock = Option.map ~f p.guideblock
+  }
+
+let simplify_program (p: typed_program) =
+  let p = rewrite_program flatten_stmts p in
+  let p = rewrite_program push_vardecls_stmts p in
+  p
+
+let get_var_decl_names stmts =
+  List.fold_right
+    ~f:(fun stmt acc ->
+          match stmt.stmt with
+          | VarDecl {identifier; _} -> identifier :: acc
+          | _ -> acc)
+    ~init:[] stmts
 
 let get_stanlib_calls program =
   let rec get_stanlib_calls_in_expr acc e =
@@ -719,6 +867,20 @@ let get_networks_calls networks stmts =
               acc stmt)
         stmts
   | _ -> []
+
+let get_var_decl_type x prog =
+  let o =
+    fold_program
+      (fun acc s ->
+         match s.stmt with
+         | VarDecl { identifier = { name; _ }; decl_type; _} when x = name ->
+           Some decl_type
+         | _ -> acc)
+      None prog
+  in
+  match o with
+  | Some t -> t
+  | None -> raise_s [%message "Unexpected unbounded variable" (x: string)]
 
 let rec trans_expr ctx ff ({expr; emeta }: typed_expression) : unit =
   match expr with
@@ -902,15 +1064,9 @@ and trans_cond_dist_app ctx fn_kind id ff args =
         id.name (trans_exprs ctx) args
 
 and trans_dims ctx ff (t : typed_expression Type.t) =
-  match t with
-  | Sized t ->
-      begin match dims_of_sizedtype t with
-      | [] -> fprintf ff "None"
-      | l -> fprintf ff "[%a]" (trans_exprs ctx) l
-      end
-  | Unsized _ ->
-      raise_s
-        [%message "Expecting sized type" (t : typed_expression Type.t)]
+  match dims_of_type t with
+  | [] -> fprintf ff "[]"
+  | l -> fprintf ff "[%a]" (trans_exprs ctx) l
 
 let trans_expr_opt ctx (type_ : typed_expression Type.t) ff = function
   | Some e -> trans_expr ctx ff e
@@ -1322,14 +1478,13 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       in
       let is_sample =
         match ctx.ctx_mode with
-        | Generative -> true
         | Comprehensive -> false
-        | Mixed ->
+        | Generative | Mixed ->
           begin match arg.expr with
             | Variable {name; _} ->
-                if Hashtbl.mem ctx.ctx_ext.ext_params name then true
+                if Hashtbl.mem ctx.ctx_ext.ext_params name then false
                 else (Hashtbl.add_exn ctx.ctx_ext.ext_params ~key:name ~data:();
-                      false)
+                      true)
             | _ -> false
           end
       in
@@ -1581,13 +1736,6 @@ let migrate_checks_to_end_of_block stmts =
   let checks, not_checks = List.partition_tf ~f:is_check stmts in
   not_checks @ checks *)
 
-let get_var_decl_names stmts =
-  List.fold_right
-    ~f:(fun stmt acc ->
-          match stmt.stmt with
-          | VarDecl {identifier; _} -> identifier :: acc
-          | _ -> acc ) ~init:[] stmts
-
 let trans_block_as_args ff block =
   Option.iter
     ~f:(fun stmts ->
@@ -1727,13 +1875,11 @@ let trans_parameter ctx ff p =
 let trans_parametersblock ctx ff parameters =
   match ctx.ctx_mode with
   | Generative -> ()
-  | Comprehensive ->
+  | Comprehensive | Mixed ->
       Option.iter
         ~f:(fprintf ff "# Parameters@,%a@,"
               (print_list_newline (trans_parameter ctx)))
         parameters
-  | Mixed ->
-      assert false (* XXX TODO XXX *)
 
 let register_network networks ff ostmts =
   Option.iter
@@ -1747,13 +1893,31 @@ let register_network networks ff ostmts =
     ostmts
 
 let trans_modelblock ctx networks data tdata parameters tparameters ff model =
-  fprintf ff "@[<v 4>def model(%a%a):@,%a%a%a%a@]@,@,@."
-    trans_block_as_args (Option.merge ~f:(@) data tdata)
-    trans_networks_as_arg networks
-    (register_network networks) model
-    (trans_parametersblock ctx) parameters
-    (trans_block "Transformed parameters" ctx) tparameters
-    (trans_block ~eol:false "Model" ctx) model
+  match ctx.ctx_mode with
+  | Comprehensive | Generative ->
+      fprintf ff "@[<v 4>def model(%a%a):@,%a%a%a%a@]@,@,@."
+        trans_block_as_args (Option.merge ~f:(@) data tdata)
+        trans_networks_as_arg networks
+        (register_network networks) model
+        (trans_parametersblock ctx) parameters
+        (trans_block "Transformed parameters" ctx) tparameters
+        (trans_block ~eol:false "Model" ctx) model
+  | Mixed ->
+      let rem_parameters, model_ext =
+        match parameters, (Option.merge ~f:(@) tparameters model) with
+        | None, None -> None, None
+        | Some parameters, None -> Some parameters, None
+        | None, Some model -> None, Some model
+        | Some parameters, Some model ->
+          let priors, model = push_priors parameters model in
+          Some priors, Some model
+      in
+      fprintf ff "@[<v 4>def model(%a%a):@,%a%a%a@]@,@,@."
+        trans_block_as_args (Option.merge ~f:(@) data tdata)
+        trans_networks_as_arg networks
+        (register_network networks) model
+        (trans_parametersblock ctx) rem_parameters
+        (trans_block ~eol:false "Model" ctx) model_ext
 
 let trans_generatedquantitiesblock ctx data tdata params tparams ff
     genquantities =
@@ -1808,6 +1972,7 @@ let pp_imports lib ff funs =
       funs
 
 let trans_prog backend mode ff (p : typed_program) =
+  let p = simplify_program p in
   let ctx =
     { ctx_prog = p
     ; ctx_backend = backend

@@ -8,8 +8,8 @@ from torch import float as dtype_float
 
 import torch
 
-def sample(site_name, dist):
-    return pyro.sample(site_name, dist)
+def sample(site_name, dist, *args, **kwargs):
+    return pyro.sample(site_name, dist, *args, **kwargs)
 
 def param(site_name, init):
     return pyro.param(site_name, init)
