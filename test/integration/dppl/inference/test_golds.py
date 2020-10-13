@@ -5,22 +5,28 @@ from runtimes.numpyro.dppl import NumpyroModel
 import numpy
 from pandas import DataFrame, Series
 from posteriordb import PosteriorDatabase
+from os.path import splitext, basename
 
 pdb_root = "/Users/gbdrt/Projects/deepstan/posteriordb-mandel"
-gold_path = "test/integration/dppl/golds"
 pdb_path = os.path.join(pdb_root, "posterior_database")
+
 
 @dataclass
 class Config:
-    # iterations: int = 100
-    # warmups: int = 10
-    # chains: int = 1
-    # thin: int = 2
-    iterations: int = 100
-    warmups: int = 1
-    chains: int = 1
-    thin: int = 1
+    iterations: int
+    warmups: int
+    chains: int
+    thin: int
 
+
+def parse_config(posterior):
+    args = posterior.reference_draws_info()["inference"]["method_arguments"]
+    return Config(
+        iterations=args["iter"]//100,
+        warmups=args["warmup"]//100,
+        chains=args["chains"],
+        thin=args["thin"],
+    )
 
 
 def _flatten_dict(d):
@@ -34,34 +40,34 @@ def _flatten_dict(d):
                 for k, v in d.items()
             }
 
-    return { 
-        fk:fv 
-        for f in (_flatten(k, v) for k, v in d.items())
-        for fk, fv in f.items()
+    return {
+        fk: fv for f in (_flatten(k, v) for k, v in d.items()) for fk, fv in f.items()
     }
 
-def pdb_summary(samples):
+
+def gold_summary(posterior):
     """
     Summary for pdb reference_draws
     - Aggregate all chains and compute mean, std for all params
     - Flatten results in a DataFrame
     """
+    samples = posterior.reference_draws()
     if isinstance(samples, list):
         # Multiple chains
         assert len(samples) > 0
         res = samples[0]
-        for c in samples:
-            res = {k:v + c[k] for k, v in res.items()}
-        d_mean = _flatten_dict(
-            {k: numpy.mean(v, axis=0) for k, v in res.items()}
-        )
-        d_std = _flatten_dict(
-            {k: numpy.std(v, axis=0) for k, v in res.items()}
-        )
-        return DataFrame({"mean": Series(d_mean), "std": Series(d_std)})
+        for c in samples[1:]:
+            res = {k: v + c[k] for k, v in res.items()}
+    else:
+        # Only one chain
+        assert isinstance(samples, dict)
+        res = samples
+    d_mean = _flatten_dict({k: numpy.mean(v, axis=0) for k, v in res.items()})
+    d_std = _flatten_dict({k: numpy.std(v, axis=0) for k, v in res.items()})
+    return DataFrame({"mean": Series(d_mean), "std": Series(d_std)})
 
 
-def parse_gold_summary(gold):
+def parse_gold_summary(gold, gold_path):
     """
     Parse CmdStan gold summary format: param, mean, std
     where param.1.2 means param[1][2]
@@ -79,36 +85,38 @@ def parse_gold_summary(gold):
         return DataFrame({"mean": Series(d_mean), "std": Series(d_std)})
 
 
-def run_model(gold_model: str, data_file: str, config:Config=Config()):
-    model = PyroModel(os.path.join(gold_path, gold_model))
-    mcmc = model.mcmc(
+def run_model(posterior, config: Config):
+    model = posterior.model
+    data = posterior.data
+    stanfile = model.code_file_path("stan")
+    pythonfile = os.path.join(os.getcwd(), splitext(basename(stanfile))[0] + ".py")
+    pyro_model = PyroModel(stanfile, pyfile=pythonfile)
+    mcmc = pyro_model.mcmc(
         config.iterations,
         warmups=config.warmups,
         chains=config.chains,
         thin=config.thin,
     )
-    try:
-        with open(os.path.join(gold_path, data_file), "r") as f:
-            data = eval(f.read())
-    except FileNotFoundError:
-        data = {}
-    inputs = model.convert_inputs(data)
+    inputs = pyro_model.convert_inputs(data.values())
     mcmc.run(**inputs)
     return mcmc.summary()
 
 
-def compare(gold_model, gold_data, gold, config=Config):
-    sg = parse_gold_summary(gold)
-    sm = run_model(gold_model, gold_data, config=config)
-    sm["err"]  = abs(sm["mean"] - sg["mean"])
+def compare(posterior):
+    config = parse_config(posterior)
+    sg = gold_summary(posterior)
+    sm = run_model(posterior, config=config)
+    sm["err"] = abs(sm["mean"] - sg["mean"])
+    sm = sm.dropna()
     # perf_cmdstan condition: err > 0.0001 and (err / stdev) > 0.3
-    comp = sm[(sm["err"] > 0.0001) & (sm["err"] / sm["std"] > 0.3)]
+    comp = sm[(sm["err"] > 0.0001) & (sm["err"] / sm["std"] > 0.3)].dropna()
     if not comp.empty:
-        print(f"Failed {gold_model}")
+        print(f"Failed {posterior.name}")
         print(comp)
     else:
-        print(f"Success {gold_model}")
-       
+        print(f"Success {posterior.name}")
+
+
 # Stan gold models
 golds = [
     "arK",
@@ -125,13 +133,16 @@ golds = [
 ]
 
 if __name__ == "__main__":
-    my_pdb = PosteriorDatabase(pdb_path)
-    posterior = my_pdb.posterior("eight_schools-eight_schools_centered")
-    g = pdb_summary(posterior.reference_draws())
-    print(g)
 
-#     for g in golds:
-#         try:
-#             compare(f"{g}.stan", f"{g}.data.py", f"{g}_{g}.gold")
-#         except Exception as s:
-#             print(f"Failed {g} with {s}")
+    my_pdb = PosteriorDatabase(pdb_path)
+
+    # # Launch only the eight_school model
+    # posterior = my_pdb.posterior("eight_schools-eight_schools_centered")
+    # compare(posterior)
+
+    for name in my_pdb.posterior_names():
+        if name.startswith(tuple(golds)):
+            try:
+                compare(my_pdb.posterior(name))
+            except Exception as e:
+                print(f"Failed {name} with {s}")
