@@ -173,7 +173,6 @@ RUN set -eux ; \
   conda activate pytorch ; \
   git clone --single-branch -b v1.6.0 --recursive https://github.com/pytorch/pytorch pytorch-v1.6.0 ; \
   cd pytorch*/ ; \
-#  git apply < $InstallPath/pytorch-v1.5.0.patch ; \
   git submodule sync ; \
   git submodule update --init --recursive ; \
   conda install numpy ninja pyyaml setuptools cffi openblas ; \
@@ -184,8 +183,8 @@ RUN set -eux ; \
   export TORCH_CUDA_ARCH_LIST="3.7;6.0;7.0" ; \
   python setup.py install ; \
   cd ; \
-  rm -rf $InstallPath/pytorch-v1.5.0.patch
-  
+  true
+
 #
 # Install pytorch-vision and test
 #
