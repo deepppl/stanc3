@@ -31,7 +31,7 @@ def test(posterior, config):
     stanfile = model.code_file_path("stan")
     pythonfile = os.path.join(os.getcwd(), splitext(basename(stanfile))[0] + ".py")
     try:
-        pyro_model = PyroModel(stanfile, pyfile=pythonfile)
+        pyro_model = PyroModel(stanfile, mode='mixed', pyfile=pythonfile, compile=True)
         # pyro_model = NumpyroModel(stanfile, pyfile=pythonfile)
     except Exception as e:
     # except torch.Tensor as e:
@@ -119,6 +119,7 @@ constraints = [
 # posterior = my_pdb.posterior('hmm_example-hmm_example')
 # posterior = my_pdb.posterior('butterfly-multi_occupancy')
 # posterior = my_pdb.posterior('sat-hier_2pl')
+# posterior = my_pdb.posterior('nes1984-nes')
 # config = Config()
 # res = test(posterior, config)
 # print(res['code'])

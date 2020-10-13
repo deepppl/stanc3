@@ -1788,6 +1788,16 @@ let trans_block_as_args ff block =
                 (print_list_comma trans_id) args)
     block
 
+let trans_block_as_unpack name ff block =
+  let unpack ff x =
+    fprintf ff "%a = %s['%s']" trans_id x name x.name
+  in
+  Option.iter
+    ~f:(fun stmts ->
+          match get_var_decl_names stmts with
+          | [] -> ()
+          | args -> fprintf ff "%a@," (print_list_newline unpack) args)
+    block
 
 let convert_input ff stmt =
   match stmt.stmt with
@@ -1965,8 +1975,9 @@ let trans_generatedquantitiesblock ctx data tdata params tparams ff
     genquantities =
   if tparams <> None || genquantities <> None then begin
     fprintf ff
-      "@[<v 0>@,@[<v 4>def generated_quantities(%a):@,%a%a%a"
-      trans_block_as_args Option.(merge ~f:(@) data (merge ~f:(@) tdata params))
+      "@[<v 0>@,@[<v 4>def generated_quantities(__inputs__):@,%a%a%a%a"
+      (trans_block_as_unpack "__inputs__")
+      Option.(merge ~f:(@) data (merge ~f:(@) tdata params))
       (trans_block "Transformed parameters" ctx) tparams
       (trans_block "Generated quantities" ctx) genquantities
       trans_block_as_return (Option.merge ~f:(@) tparams genquantities);

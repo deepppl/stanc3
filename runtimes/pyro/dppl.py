@@ -102,7 +102,7 @@ class MCMCProxy:
         for i in range(num_samples):
             kwargs.update({x: samples[x][i] for x in samples})
             if self.generated_quantities:
-                d = self.generated_quantities(**kwargs)
+                d = self.generated_quantities(kwargs)
                 for k, v in d.items():
                     res[k].append(v)
         return {k: torch.stack(v) for k, v in res.items()}
