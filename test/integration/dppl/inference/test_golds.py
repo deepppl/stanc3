@@ -19,11 +19,11 @@ class Config:
     thin: int
 
 
-def parse_config(posterior):
+def parse_config(posterior, acc):
     args = posterior.reference_draws_info()["inference"]["method_arguments"]
     return Config(
-        iterations=args["iter"]//100,
-        warmups=args["warmup"]//100,
+        iterations=args["iter"]//acc,
+        warmups=args["warmup"]//acc,
         chains=args["chains"],
         thin=args["thin"],
     )
@@ -102,8 +102,8 @@ def run_model(posterior, config: Config):
     return mcmc.summary()
 
 
-def compare(posterior):
-    config = parse_config(posterior)
+def compare(posterior, acc=1):
+    config = parse_config(posterior, acc)
     sg = gold_summary(posterior)
     sm = run_model(posterior, config=config)
     sm["err"] = abs(sm["mean"] - sg["mean"])
@@ -143,6 +143,6 @@ if __name__ == "__main__":
     for name in my_pdb.posterior_names():
         if name.startswith(tuple(golds)):
             try:
-                compare(my_pdb.posterior(name))
+                compare(my_pdb.posterior(name), acc=100)
             except Exception as e:
-                print(f"Failed {name} with {s}")
+                print(f"Failed {name} with {e}")
