@@ -94,12 +94,12 @@ def _cast1(f):
         return f(y, *args)
     return f_casted
 
-def _distrib(d, nargs):
+def _distrib(d, nargs, typ):
     def d_ext(*args):
         if len(args) <= nargs:
             return d(*args)
         else:
-            return d(args[0] * tones(args[nargs], dtype=args[nargs+1]), *args[1:nargs])
+            return d(args[0] * tones(args[nargs], dtype=typ), *args[1:nargs])
     return d_ext
 
 def _lpdf(d):

@@ -181,10 +181,7 @@ exp2_array = _XXX_TODO_XXX_('exp2')
 from jax.numpy import log as tlog
 log_int = lambda x: array(mlog(x), dtype=dtype_float)
 log_real = tlog
-# log_vector = tlog
-def log_vector(x):
-    print('XXXXXXXXXXXXXXXXXXX', type(x))
-    return tlog(x)
+log_vector = tlog
 log_rowvector = tlog
 log_matrix = tlog
 log_array = tlog

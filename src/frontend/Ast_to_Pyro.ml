@@ -1524,9 +1524,18 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
         | Generative | Mixed ->
           begin match arg.expr with
             | Variable {name; _} ->
-                if Hashtbl.mem ctx.ctx_ext.ext_params name then false
-                else (Hashtbl.add_exn ctx.ctx_ext.ext_params ~key:name ~data:();
-                      true)
+                let is_parameter =
+                  match ctx.ctx_prog.parametersblock with
+                  | None -> false
+                  | Some params ->
+                    List.exists ~f:(fun x -> x.name = name)
+                      (get_var_decl_names params)
+                in
+                if is_parameter &&
+                   not (Hashtbl.mem ctx.ctx_ext.ext_params name) then
+                  (Hashtbl.add_exn ctx.ctx_ext.ext_params ~key:name ~data:();
+                   true)
+                else false
             | _ -> false
           end
       in
@@ -1961,8 +1970,8 @@ let trans_modelblock ctx networks data tdata parameters tparameters ff model =
         | Some parameters, None -> Some parameters, None
         | None, Some model -> None, Some model
         | Some parameters, Some model ->
-          let priors, model = push_priors parameters model in
-          Some priors, Some model
+          let parameters, model = push_priors parameters model in
+          Some parameters, Some model
       in
       fprintf ff "@[<v 4>def model(%a%a):@,%a%a%a@]@,@,@."
         trans_block_as_args (Option.merge ~f:(@) data tdata)
