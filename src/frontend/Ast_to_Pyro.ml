@@ -22,7 +22,9 @@ type 'a context =
 
 type stmt_ext =
   { ext_loops: string list
-  ; ext_params: (string, unit) Hashtbl.t }
+  ; ext_params: (string, unit) Hashtbl.t
+  ; ext_in_assign: bool
+  ; ext_to_clone: SSet.t }
 
 let print_warning loc message =
   Fmt.pf Fmt.stderr
@@ -666,6 +668,16 @@ let dims_of_type t =
       raise_s
         [%message "Expecting sized type" (t : typed_expression Type.t)]
 
+let var_of_lval lv =
+  let rec var_of_lval acc lv =
+    match lv.lval with
+    | LVariable id -> id.name
+    | _ -> fold_lvalue var_of_lval (fun _ _ -> "") acc lv.lval
+  in
+  let x = var_of_lval "" lv in
+  assert (x <> "");
+  x
+
 let rec used_vars_expr acc e =
   let acc =
     match e.expr with
@@ -679,13 +691,13 @@ let rec used_vars_lval acc lv =
   | LVariable id -> SSet.add acc id.name
   | _ -> fold_lvalue used_vars_lval used_vars_expr acc lv.lval
 
-let used_vars_stmt stmt =
-  fold_statement_with
+let rec used_vars_stmt acc s =
+  fold_statement
     used_vars_expr
-    (fun acc _ -> acc)
+    used_vars_stmt
     used_vars_lval
     (fun acc _ -> acc)
-    SSet.empty stmt
+    acc s.stmt
 
 let is_variable_sampling x stmt =
   match stmt.stmt with
@@ -723,7 +735,7 @@ let rec push_prior_stmts (x, decl) stmts =
   | stmt :: stmts ->
       if is_variable_sampling x stmt then
         None, merge_decl_sample decl stmt :: stmts
-      else if SSet.mem (used_vars_stmt stmt) x then
+      else if SSet.mem (used_vars_stmt SSet.empty stmt) x then
         Some decl, stmt :: stmts
       else
         let prior, stmts = push_prior_stmts (x, decl) stmts in
@@ -741,7 +753,7 @@ let rec push_vardecl_stmts (x, decl) stmts =
   | stmt :: stmts ->
       if is_variable_initialization x stmt then
         merge_decl_stmt decl stmt :: stmts
-      else if SSet.mem (used_vars_stmt stmt) x then
+      else if SSet.mem (used_vars_stmt SSet.empty stmt) x then
         decl :: stmt :: stmts
       else stmt :: push_vardecl_stmts (x, decl) stmts
 
@@ -754,13 +766,16 @@ let rec push_vardecls_stmts stmts =
         | _ -> push_vardecls_stmt s :: stmts)
     ~init:[] stmts
 
-and push_vardecls_stmt (stmt: typed_statement) =
-  match stmt.stmt with
-  | Block stmts -> { stmt with stmt = Block (push_vardecls_stmts stmts) }
-  | _ -> stmt
-      (* map_statement_with *)
-      (*   (fun e -> e) (fun m -> m) (fun lv -> lv) (fun f -> f) *)
-      (*   stmt *)
+and push_vardecls_stmt (s: typed_statement) =
+  match s.stmt with
+  | Block stmts -> { s with stmt = Block (push_vardecls_stmts stmts) }
+  | stmt ->
+      let stmt =
+        map_statement
+          (fun e -> e) push_vardecls_stmt (fun lv -> lv) (fun f -> f)
+          stmt
+      in
+      { s with stmt }
 
 let push_priors priors stmts =
   List.fold_left
@@ -825,13 +840,13 @@ let get_stanlib_calls program =
     fold_lvalue get_stanlib_calls_in_lval get_stanlib_calls_in_expr
       acc lv.lval
   in
-  let get_stanlib_calls_in_stmt acc stmt =
-    fold_statement_with
+  let rec get_stanlib_calls_in_stmt acc stmt =
+    fold_statement
       get_stanlib_calls_in_expr
-      (fun acc _ -> acc)
+      get_stanlib_calls_in_stmt
       get_stanlib_calls_in_lval
       (fun acc _ -> acc)
-      acc stmt
+      acc stmt.stmt
   in
   fold_program get_stanlib_calls_in_stmt SSet.empty program
 
@@ -855,17 +870,17 @@ let get_networks_calls networks stmts =
       (get_networks_calls_in_expr networks)
       acc lv.lval
   in
+  let rec get_networks_calls_in_stmt nets acc s =
+    fold_statement
+      (get_networks_calls_in_expr nets)
+      (get_networks_calls_in_stmt nets)
+      (get_networks_calls_in_lval nets)
+      (fun acc _ -> acc)
+      acc s.stmt
+  in
   match networks with
   | Some nets ->
-      List.fold_left ~init:[]
-        ~f:(fun acc stmt ->
-            fold_statement_with
-              (get_networks_calls_in_expr nets)
-              (fun acc _ -> acc)
-              (get_networks_calls_in_lval nets)
-              (fun acc _ -> acc)
-              acc stmt)
-        stmts
+      List.fold_left ~init:[] ~f:(get_networks_calls_in_stmt nets) stmts
   | _ -> []
 
 let get_var_decl_type x prog =
@@ -881,6 +896,18 @@ let get_var_decl_type x prog =
   match o with
   | Some t -> t
   | None -> raise_s [%message "Unexpected unbounded variable" (x: string)]
+
+
+let rec get_updated_arrays_stmt acc s =
+  match s.stmt with
+  | Assignment { assign_lhs = { lval = LIndexed (lhs, _); _ }; _ } ->
+      SSet.add acc (var_of_lval lhs)
+  | stmt ->
+      let k = (fun acc _ -> acc) in
+      fold_statement k get_updated_arrays_stmt k k acc stmt
+
+let get_updated_arrays p =
+  fold_program get_updated_arrays_stmt SSet.empty p
 
 let rec trans_expr ctx ff ({expr; emeta }: typed_expression) : unit =
   match expr with
@@ -909,14 +936,26 @@ let rec trans_expr ctx ff ({expr; emeta }: typed_expression) : unit =
         (trans_exprs ctx) eles
         dtype_of_unsized_type emeta.type_
   | Indexed (lhs, indices) ->
-      begin match ctx.ctx_backend with
-      | Pyro ->
-          fprintf ff "%a[%a].clone()" (trans_expr ctx) lhs
-            (print_list_comma (trans_idx ctx)) indices
-      | Numpyro ->
-          fprintf ff "%a[%a]" (trans_expr ctx) lhs
-            (print_list_comma (trans_idx ctx)) indices
-      end
+      if to_clone ctx lhs then
+        fprintf ff "%a[%a].clone()" (trans_expr ctx) lhs
+          (print_list_comma (trans_idx ctx)) indices
+      else
+        fprintf ff "%a[%a]" (trans_expr ctx) lhs
+          (print_list_comma (trans_idx ctx)) indices
+
+and to_clone ctx e =
+  let rec can_be_modified e =
+    match e.expr with
+    | Variable x -> SSet.mem ctx.ctx_ext.ext_to_clone x.name
+    | Indexed _ -> true
+    | TernaryIf (_, ifb, elseb) -> can_be_modified ifb || can_be_modified elseb
+    | Paren e -> can_be_modified e
+    | FunApp _ -> true
+    | _ -> false
+  in
+  match ctx.ctx_backend with
+  | Pyro -> ctx.ctx_ext.ext_in_assign && can_be_modified e
+  | Numpyro -> false
 
 and trans_numeral type_ ff x =
   begin match type_ with
@@ -1419,6 +1458,9 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
         {expr = Indexed (expr_of_lval lhs, indices); emeta = lmeta; }
     in
     let trans_rhs lhs ff rhs =
+      let ctx =
+        { ctx with ctx_ext = { ctx.ctx_ext with ext_in_assign = true } }
+      in
       match assign_op with
       | Assign | ArrowAssign -> trans_expr ctx ff rhs
       | OperatorAssign op -> trans_binop ctx lhs rhs ff op
@@ -1978,7 +2020,9 @@ let trans_prog backend mode ff (p : typed_program) =
     ; ctx_backend = backend
     ; ctx_mode = mode
     ; ctx_ext = { ext_loops = []
-                ; ext_params = Hashtbl.create (module String) } }
+                ; ext_params = Hashtbl.create (module String)
+                ; ext_in_assign = false
+                ; ext_to_clone = get_updated_arrays p } }
   in
   let runtime =
     match backend with
