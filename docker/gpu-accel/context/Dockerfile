@@ -171,12 +171,12 @@ RUN set -eux ; \
   cd $InstallPath ; \
   . miniconda3/bin/activate ; \
   conda activate pytorch ; \
-  git clone --single-branch -b v1.5.0 --recursive https://github.com/pytorch/pytorch pytorch-v1.5.0 ; \
+  git clone --single-branch -b v1.6.0 --recursive https://github.com/pytorch/pytorch pytorch-v1.6.0 ; \
   cd pytorch*/ ; \
-  git apply < $InstallPath/pytorch-v1.5.0.patch ; \
+#  git apply < $InstallPath/pytorch-v1.5.0.patch ; \
   git submodule sync ; \
   git submodule update --init --recursive ; \
-  conda install numpy ninja pyyaml setuptools cffi ; \
+  conda install numpy ninja pyyaml setuptools cffi openblas ; \
   if [ $(uname -m) = x86_64 ] ; then \
     conda install mkl mkl-include ; \
   fi ; \
@@ -193,7 +193,7 @@ RUN set -eux ; \
   cd $InstallPath ; \
   . miniconda3/bin/activate ; \
   conda activate pytorch ; \
-  git clone --single-branch -b v0.6.0 --recursive https://github.com/pytorch/vision pytorch-vision-v0.6.0 ; \
+  git clone --single-branch -b v0.7.0 --recursive https://github.com/pytorch/vision pytorch-vision-v0.7.0 ; \
   cd pytorch-vision*/ ; \
   export FORCE_CUDA=1 ; \
   export TORCH_CUDA_ARCH_LIST="3.7;6.0;7.0" ; \
@@ -380,7 +380,7 @@ COPY --chown=user:user --from=dev $InstallPath/miniconda3 $InstallPath/miniconda
 # Install notebook in miniconda
 RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; \
-  conda install jupyter
+  conda install jupyter 
 
 # Install OCaml dependencies.
 RUN set -eux ; \
@@ -423,6 +423,15 @@ RUN set -eux ; \
 ENV PATH $InstallPath/stanc3/_build/install/default/bin:$PATH  
 RUN stanc --help
 
+# Add the relevant folders in stanc3 to the conda environment. This provide the runtime modules
+# used by the generated numpyro files.
+RUN set -eux ; \
+  echo "/opt/user/stanc3" > $InstallPath/miniconda3/envs/deepppl/lib/python3.7/site-packages/zzz-stanc3.pth
+
+RUN set -eux ; \
+  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; \
+  pip install torchdiffeq 
+
 # Copy example notebook
 COPY --chown=user:user notebook $InstallPath/notebook
 
@@ -430,8 +439,15 @@ EXPOSE 8888
 
 WORKDIR $InstallPath/notebook
 CMD set -eux ; \
+  eval $(opam config env) ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; \
   nvidia-smi ; \
   jupyter-notebook --ip=0.0.0.0 --port=8888
   
   
+# RUN set -eux ; \
+#   . /venvs/flow/bin/activate; \
+#   python -c "import sys; [print(x) for x in sys.path if '/venvs/' in x]" \
+#     > /opt/conda/lib/python3.7/site-packages/zzz-foc-mvp2.pth ; \
+#   deactivate
+
