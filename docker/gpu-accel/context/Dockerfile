@@ -357,22 +357,22 @@ WORKDIR $InstallPath
 
 # Copy the relevant bits - pytorch is installed in miniconda so not need to copy it over 
 # separately.
-COPY --chown=user:user --from=dev $InstallPath/antlr4 $InstallPath/antlr4
+COPY --chown=user:user --from=dev /opt/user/antlr4 /opt/user/antlr4
 
-COPY --chown=user:user --from=dev $InstallPath/deepppl $InstallPath/deepppl
+COPY --chown=user:user --from=dev /opt/user/deepppl /opt/user/deepppl
 
-COPY --chown=user:user --from=dev $InstallPath/fxdiv $InstallPath/fxdiv
+COPY --chown=user:user --from=dev /opt/user/fxdiv /opt/user/fxdiv
 
 RUN set -eux ; \
   mkdir $InstallPath/jax
-COPY --chown=user:user --from=dev $InstallPath/jax/build $InstallPath/jax/build
-COPY --chown=user:user --from=dev $InstallPath/jax/jaxlib $InstallPath/jax/jaxlib
-COPY --chown=user:user --from=dev $InstallPath/jax/jax $InstallPath/jax/jax
-COPY --chown=user:user --from=dev $InstallPath/jax/jax.egg-info $InstallPath/jax/jax.egg-info
+COPY --chown=user:user --from=dev /opt/user/jax/build /opt/user/jax/build
+COPY --chown=user:user --from=dev /opt/user/jax/jaxlib /opt/user/jax/jaxlib
+COPY --chown=user:user --from=dev /opt/user/jax/jax /opt/user/jax/jax
+COPY --chown=user:user --from=dev /opt/user/jax/jax.egg-info /opt/user/jax/jax.egg-info
 
-COPY --chown=user:user --from=dev $InstallPath/magma $InstallPath/magma
+COPY --chown=user:user --from=dev /opt/user/magma /opt/user/magma
 
-COPY --chown=user:user --from=dev $InstallPath/miniconda3 $InstallPath/miniconda3
+COPY --chown=user:user --from=dev /opt/user/miniconda3 /opt/user/miniconda3
 
 
 # Install notebook in miniconda
