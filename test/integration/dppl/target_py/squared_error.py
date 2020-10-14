@@ -1,28 +1,31 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
+from runtimes.pyro.stanlib import dot_self_vector
 
 def convert_inputs(inputs):
     N = inputs['N']
-    K = inputs['K']
     y = array(inputs['y'], dtype=dtype_float)
+    K = inputs['K']
     x = array(inputs['x'], dtype=dtype_float)
-    return { 'N': N, 'K': K, 'y': y, 'x': x }
+    return { 'N': N, 'y': y, 'K': K, 'x': x }
 
-def model(*, N, K, y, x):
+def model(*, N, y, K, x):
     # Parameters
-    beta = sample('beta', improper_uniform(shape=[K]))
+    beta__ = sample('beta', improper_uniform(shape=[K]))
     # Transformed parameters
-    squared_error = None
-    squared_error = dot_self_vector(y - matmul(x, beta))
+    squared_error = dot_self_vector(y - matmul(x, beta__))
     # Model
     factor('expr__1', - squared_error)
 
 
-def generated_quantities(*, N, K, y, x, beta):
+def generated_quantities(__inputs__):
+    N = __inputs__['N']
+    y = __inputs__['y']
+    K = __inputs__['K']
+    x = __inputs__['x']
+    beta__ = __inputs__['beta']
     # Transformed parameters
-    squared_error = None
-    squared_error = dot_self_vector(y - matmul(x, beta))
+    squared_error = dot_self_vector(y - matmul(x, beta__))
     # Generated quantities
-    sigma_squared = None
     sigma_squared = true_divide(squared_error, N)
     return { 'squared_error': squared_error, 'sigma_squared': sigma_squared }

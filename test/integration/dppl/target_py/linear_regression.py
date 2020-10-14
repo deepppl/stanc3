@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
 
 def convert_inputs(inputs):
     N = inputs['N']
@@ -9,9 +9,9 @@ def convert_inputs(inputs):
 
 def model(*, N, x, y):
     # Parameters
-    alpha = sample('alpha', improper_uniform(shape=None))
-    beta = sample('beta', improper_uniform(shape=None))
-    sigma = sample('sigma', lower_constrained_improper_uniform(0, shape=None))
+    alpha = sample('alpha', improper_uniform(shape=[]))
+    beta__ = sample('beta', improper_uniform(shape=[]))
+    sigma = sample('sigma', lower_constrained_improper_uniform(0, shape=[]))
     # Model
-    observe('y__1', normal(alpha + beta * x, sigma), y)
+    observe('y__1', normal(alpha + beta__ * x, sigma), y)
 

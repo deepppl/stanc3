@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
 from runtimes.pyro.stanlib import pow_real_int, pow_real_real
 
 def convert_inputs(inputs):
@@ -16,10 +16,9 @@ def convert_inputs(inputs):
 def model(*, N, y, s, mu_loc, mu_scale, tau_scale, tau_df):
     # Parameters
     theta_raw = sample('theta_raw', improper_uniform(shape=[N]))
-    mu = sample('mu', improper_uniform(shape=None))
-    tau = sample('tau', improper_uniform(shape=None))
+    mu = sample('mu', improper_uniform(shape=[]))
+    tau = sample('tau', improper_uniform(shape=[]))
     # Transformed parameters
-    theta = zeros([N])
     theta = tau * theta_raw + mu
     # Model
     observe('mu__1', normal(mu_loc, mu_scale), mu)
@@ -30,17 +29,23 @@ def model(*, N, y, s, mu_loc, mu_scale, tau_scale, tau_df):
     observe('y__4', normal(theta, s), y)
 
 
-def generated_quantities(*, N, y, s, mu_loc, mu_scale, tau_scale, tau_df,
-                            theta_raw, mu, tau):
+def generated_quantities(__inputs__):
+    N = __inputs__['N']
+    y = __inputs__['y']
+    s = __inputs__['s']
+    mu_loc = __inputs__['mu_loc']
+    mu_scale = __inputs__['mu_scale']
+    tau_scale = __inputs__['tau_scale']
+    tau_df = __inputs__['tau_df']
+    theta_raw = __inputs__['theta_raw']
+    mu = __inputs__['mu']
+    tau = __inputs__['tau']
     # Transformed parameters
-    theta = zeros([N])
     theta = tau * theta_raw + mu
     # Generated quantities
-    shrinkage = zeros([N])
-    tau2 = None
     tau2 = pow_real_real(tau, array(2., dtype=dtype_float))
+    shrinkage = empty([N])
     for i in range(1,N + 1):
-        v = None
         v = pow_real_int(s[i - 1], 2)
         shrinkage[i - 1] = true_divide(v, (v + tau2))
-    return { 'theta': theta, 'shrinkage': shrinkage, 'tau2': tau2 }
+    return { 'theta': theta, 'tau2': tau2, 'shrinkage': shrinkage }

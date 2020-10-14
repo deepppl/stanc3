@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
 from runtimes.pyro.stanlib import log_vector, sqrt_vector
 
 def convert_inputs(inputs):
@@ -14,18 +14,16 @@ def convert_inputs(inputs):
 
 def transformed_data(*, N, exposure2, roach1, senior, treatment, y):
     # Transformed data
-    log_expo = zeros([N])
-    sqrt_roach = zeros([N])
     log_expo = log_vector(exposure2)
     sqrt_roach = sqrt_vector(roach1)
     return { 'log_expo': log_expo, 'sqrt_roach': sqrt_roach }
 
 def model(*, N, exposure2, roach1, senior, treatment, y, log_expo, sqrt_roach):
     # Parameters
-    beta_1 = sample('beta_1', improper_uniform(shape=None))
-    beta_2 = sample('beta_2', improper_uniform(shape=None))
-    beta_3 = sample('beta_3', improper_uniform(shape=None))
-    beta_4 = sample('beta_4', improper_uniform(shape=None))
+    beta_1 = sample('beta_1', improper_uniform(shape=[]))
+    beta_2 = sample('beta_2', improper_uniform(shape=[]))
+    beta_3 = sample('beta_3', improper_uniform(shape=[]))
+    beta_4 = sample('beta_4', improper_uniform(shape=[]))
     # Model
     observe('beta_1__1', normal(0, 5), beta_1)
     observe('beta_2__2', normal(0, array(2.5, dtype=dtype_float)), beta_2)

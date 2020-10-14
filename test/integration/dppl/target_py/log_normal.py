@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
 from runtimes.pyro.stanlib import log_real
 
 def convert_inputs(inputs):
@@ -8,7 +8,7 @@ def convert_inputs(inputs):
 
 def model():
     # Parameters
-    theta = sample('theta', lower_constrained_improper_uniform(0, shape=None))
+    theta = sample('theta', lower_constrained_improper_uniform(0, shape=[]))
     # Model
     observe('expr__1', normal(log_real(array(10.0, dtype=dtype_float)),
                               array(1.0, dtype=dtype_float)), log_real(

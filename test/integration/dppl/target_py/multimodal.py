@@ -1,16 +1,16 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
 
 def convert_inputs(inputs):
     return { }
 
 def model():
     # Parameters
-    cluster = sample('cluster', improper_uniform(shape=None))
-    theta = sample('theta', improper_uniform(shape=None))
+    cluster = sample('cluster', improper_uniform(shape=[]))
+    theta = sample('theta', improper_uniform(shape=[]))
     # Model
-    mu = None
     observe('cluster__1', normal(0, 1), cluster)
+    mu = None
     if cluster > 0:
         mu = 2
     else:
