@@ -18,7 +18,7 @@ def model(*, K, N, D, y, neg_log_K):
     # Parameters
     mu = sample('mu', improper_uniform(shape=[K, D]))
     # Transformed parameters
-    soft_z = empty([N, K])
+    soft_z = empty([N, K], dtype=dtype_float)
     for n in range(1,N + 1):
         for k in range(1,K + 1):
             soft_z[n - 1, k - 1] = neg_log_K - array(0.5, dtype=dtype_float) * dot_self_vector(
@@ -38,7 +38,7 @@ def generated_quantities(__inputs__):
     neg_log_K = __inputs__['neg_log_K']
     mu = __inputs__['mu']
     # Transformed parameters
-    soft_z = empty([N, K])
+    soft_z = empty([N, K], dtype=dtype_float)
     for n in range(1,N + 1):
         for k in range(1,K + 1):
             soft_z[n - 1, k - 1] = neg_log_K - array(0.5, dtype=dtype_float) * dot_self_vector(

@@ -25,9 +25,9 @@ def model(*, N, V, w, M, doc, K, alpha, beta__):
     for k in range(1,K + 1):
         observe(f'phi__{k}__2', dirichlet(beta__), phi[k - 1])
     for n in range(1,N + 1):
-        gamma__ = empty([K])
+        gamma__ = empty([K], dtype=dtype_float)
         for k in range(1,K + 1):
             gamma__[k - 1] = log_real(theta[doc[n - 1] - 1, k - 1]) + log_real(
             phi[k - 1, w[n - 1] - 1])
-        factor(f'expr__{n}__3', log_sum_exp_array(gamma__))
+        factor(f'expr__{n}__3', log_sum_exp_array(gamma__.clone()))
 

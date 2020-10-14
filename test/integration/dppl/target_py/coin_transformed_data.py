@@ -7,7 +7,7 @@ def convert_inputs(inputs):
 
 def transformed_data(*, x):
     # Transformed data
-    y = empty([10])
+    y = empty([10], dtype=dtype_long)
     for i in range(1,10 + 1):
         y[i - 1] = 1 - x[i - 1]
     return { 'y': y }

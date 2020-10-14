@@ -44,7 +44,7 @@ def generated_quantities(__inputs__):
     theta = tau * theta_raw + mu
     # Generated quantities
     tau2 = pow_real_real(tau, array(2., dtype=dtype_float))
-    shrinkage = empty([N])
+    shrinkage = empty([N], dtype=dtype_float)
     for i in range(1,N + 1):
         v = pow_real_int(s[i - 1], 2)
         shrinkage[i - 1] = true_divide(v, (v + tau2))

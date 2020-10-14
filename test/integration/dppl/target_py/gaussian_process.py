@@ -10,7 +10,7 @@ def convert_inputs(inputs):
 def transformed_data(*, N, x):
     # Transformed data
     mu = rep_vector_int_int(0, N)
-    K = empty([N, N])
+    K = empty([N, N], dtype=dtype_float)
     for i in range(1,(N - 1) + 1):
         K[i - 1, i - 1] = 1 + array(0.1, dtype=dtype_float)
         for j in range((i + 1),N + 1):
