@@ -23,8 +23,14 @@ type 'a context =
 type stmt_ext =
   { ext_loops: string list
   ; ext_params: (string, unit) Hashtbl.t
-  ; ext_in_assign: bool
-  ; ext_to_clone: SSet.t }
+  ; ext_to_clone: bool
+  ; ext_to_clone_vars: SSet.t }
+
+let set_to_clone ctx =
+  { ctx with ctx_ext = { ctx.ctx_ext with ext_to_clone = true } }
+
+let unset_to_clone ctx =
+  { ctx with ctx_ext = { ctx.ctx_ext with ext_to_clone = false } }
 
 let print_warning loc message =
   Fmt.pf Fmt.stderr
@@ -670,6 +676,11 @@ let is_real t =
   | Unsized (UnsizedType.UReal) -> true
   | _ -> false
 
+let is_unsized_tensor (type_ : UnsizedType.t) =
+  match type_ with
+  | UInt | UReal -> false
+  | _ -> true
+
 let is_tensor (type_ : typed_expression Type.t) =
   match type_ with
   | Sized (SInt | SReal)
@@ -934,8 +945,8 @@ let rec get_updated_arrays_stmt acc s =
 let get_updated_arrays p =
   fold_program get_updated_arrays_stmt SSet.empty p
 
-let rec trans_expr ctx ff ({expr; emeta }: typed_expression) : unit =
-  match expr with
+let rec trans_expr ctx ff (e: typed_expression) : unit =
+  match e.expr with
   | Paren x -> fprintf ff "(%a)" (trans_expr ctx) x
   | BinOp (lhs, op, rhs) ->
       fprintf ff "%a" (trans_binop ctx lhs rhs) op
@@ -944,9 +955,12 @@ let rec trans_expr ctx ff ({expr; emeta }: typed_expression) : unit =
   | TernaryIf (cond, ifb, elseb) ->
       fprintf ff "%a if %a else %a"
         (trans_expr ctx) ifb (trans_expr ctx) cond (trans_expr ctx) elseb
-  | Variable id -> trans_id ff id
-  | IntNumeral x -> trans_numeral emeta.type_ ff x
-  | RealNumeral x -> trans_numeral emeta.type_ ff x
+  | Variable id ->
+      fprintf ff "%a%s"
+        trans_id id
+        (if to_clone ctx e then ".clone()" else "")
+  | IntNumeral x -> trans_numeral e.emeta.type_ ff x
+  | RealNumeral x -> trans_numeral e.emeta.type_ ff x
   | FunApp (fn_kind, id, args) ->
       trans_fun_app ctx fn_kind id ff args
   | CondDistApp (fn_kind, id, args) ->
@@ -955,32 +969,19 @@ let rec trans_expr ctx ff ({expr; emeta }: typed_expression) : unit =
   | ArrayExpr eles ->
       fprintf ff "array([%a], dtype=%a)"
         (trans_exprs ctx) eles
-        dtype_of_unsized_type emeta.type_
+        dtype_of_unsized_type e.emeta.type_
   | RowVectorExpr eles ->
       fprintf ff "array([%a], dtype=%a)"
         (trans_exprs ctx) eles
-        dtype_of_unsized_type emeta.type_
+        dtype_of_unsized_type e.emeta.type_
   | Indexed (lhs, indices) ->
-      if to_clone ctx lhs then
-        fprintf ff "%a[%a].clone()" (trans_expr ctx) lhs
+      if to_clone ctx e then
+        let ctx' = unset_to_clone ctx in
+        fprintf ff "%a[%a].clone()" (trans_expr ctx') lhs
           (print_list_comma (trans_idx ctx)) indices
       else
         fprintf ff "%a[%a]" (trans_expr ctx) lhs
           (print_list_comma (trans_idx ctx)) indices
-
-and to_clone ctx e =
-  let rec can_be_modified e =
-    match e.expr with
-    | Variable x -> SSet.mem ctx.ctx_ext.ext_to_clone x.name
-    | Indexed _ -> true
-    | TernaryIf (_, ifb, elseb) -> can_be_modified ifb || can_be_modified elseb
-    | Paren e -> can_be_modified e
-    | FunApp _ -> true
-    | _ -> false
-  in
-  match ctx.ctx_backend with
-  | Pyro -> ctx.ctx_ext.ext_in_assign && can_be_modified e
-  | Numpyro -> false
 
 and trans_numeral type_ ff x =
   begin match type_ with
@@ -1132,10 +1133,29 @@ and trans_dims ctx ff (t : typed_expression Type.t) =
   | [] -> fprintf ff "[]"
   | l -> fprintf ff "[%a]" (trans_exprs ctx) l
 
+and to_clone ctx e =
+  let rec can_be_modified e =
+    match e.expr with
+    | Variable x -> SSet.mem ctx.ctx_ext.ext_to_clone_vars x.name
+    | Indexed (lhs, _) ->
+      not (SSet.is_empty ctx.ctx_ext.ext_to_clone_vars) &&
+      (is_unsized_tensor e.emeta.type_ || can_be_modified lhs)
+    | TernaryIf (_, ifb, elseb) -> can_be_modified ifb || can_be_modified elseb
+    | Paren e -> can_be_modified e
+    | FunApp (_, _, args) -> List.exists ~f:(to_clone ctx) args
+    | _ -> false
+  in
+  match ctx.ctx_backend with
+  | Pyro -> ctx.ctx_ext.ext_to_clone && can_be_modified e
+  | Numpyro -> false
+
 let trans_expr_opt ctx (type_ : typed_expression Type.t) ff = function
   | Some e -> trans_expr ctx ff e
   | None ->
-      if is_tensor type_ then fprintf ff "ones(%a)" (trans_dims ctx) type_
+      if is_tensor type_ then
+        fprintf ff "empty(%a, dtype=%a)"
+          (trans_dims ctx) type_
+          dtype_of_type type_
       else fprintf ff "None"
 
 let trans_arg ff (_, _, ident) =
@@ -1483,9 +1503,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
         {expr = Indexed (expr_of_lval lhs, indices); emeta = lmeta; }
     in
     let trans_rhs lhs ff rhs =
-      let ctx =
-        { ctx with ctx_ext = { ctx.ctx_ext with ext_in_assign = true } }
-      in
+      let ctx = set_to_clone ctx in
       match assign_op with
       | Assign | ArrowAssign -> trans_expr ctx ff rhs
       | OperatorAssign op -> trans_binop ctx lhs rhs ff op
@@ -1527,8 +1545,10 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           end
     end
   | NRFunApp (fn_kind, id, args) ->
+      let ctx = set_to_clone ctx in
       trans_fun_app ctx fn_kind id ff args
   | IncrementLogProb e | TargetPE e ->
+      let ctx = set_to_clone ctx in
       fprintf ff "factor(%a, %a)"
         (gen_id ctx.ctx_ext.ext_loops) e
         (trans_expr ctx) e
@@ -1571,10 +1591,11 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           trans_distribution (distribution, args)
           trans_truncation truncation
       else
+        let ctx' = set_to_clone ctx in
         fprintf ff "observe(%a, %a, %a)%a"
           (gen_id ~fresh:true ctx.ctx_ext.ext_loops) arg
           trans_distribution (distribution, args)
-          (trans_expr ctx) arg
+          (trans_expr ctx') arg
           trans_truncation truncation
   | Print ps -> fprintf ff "print(%a)" (trans_printables ctx) ps
   | Reject ps -> fprintf ff "stanlib.reject(%a)" (trans_printables ctx) ps
@@ -1589,7 +1610,8 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
         (trans_stmt ctx) elseb
   | While (cond, body) ->
       let ctx_ext' =
-        { ctx.ctx_ext with ext_loops = "genid()"::ctx.ctx_ext. ext_loops }
+        { ctx.ctx_ext with ext_loops = "genid()"::ctx.ctx_ext. ext_loops;
+          ext_to_clone_vars = get_updated_arrays_stmt ctx.ctx_ext.ext_to_clone_vars body }
       in
       let ctx' = { ctx with ctx_ext = ctx_ext' } in
       fprintf ff "@[<v4>while %a:@,%a@]"
@@ -1598,7 +1620,8 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
   | For {loop_variable; lower_bound; upper_bound; loop_body} ->
       let ctx_ext' =
         { ctx.ctx_ext with
-          ext_loops = loop_variable.name::ctx.ctx_ext. ext_loops }
+          ext_loops = loop_variable.name::ctx.ctx_ext.ext_loops;
+          ext_to_clone_vars = get_updated_arrays_stmt ctx.ctx_ext.ext_to_clone_vars loop_body }
       in
       let ctx' = { ctx with ctx_ext = ctx_ext' } in
       fprintf ff "@[<v 4>for %a in range(%a,%a + 1):@,%a@]"
@@ -1609,7 +1632,8 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
   | ForEach (loop_variable, iteratee, body) ->
       let ctx_ext' =
         { ctx.ctx_ext with
-          ext_loops = loop_variable.name::ctx.ctx_ext. ext_loops }
+          ext_loops = loop_variable.name::ctx.ctx_ext. ext_loops;
+          ext_to_clone_vars = get_updated_arrays_stmt ctx.ctx_ext.ext_to_clone_vars body }
       in
       let ctx' = { ctx with ctx_ext = ctx_ext' } in
       fprintf ff "@[<v4>for %a in %a:@,%a@]"
@@ -1621,6 +1645,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
         [%message
           "Found function definition statement outside of function block"]
   | VarDecl {identifier; initial_value; decl_type; _ } ->
+      let ctx = set_to_clone ctx in
       fprintf ff "%a = %a"
         trans_id identifier
         (trans_expr_opt ctx decl_type) initial_value
@@ -2066,8 +2091,8 @@ let trans_prog backend mode ff (p : typed_program) =
     ; ctx_mode = mode
     ; ctx_ext = { ext_loops = []
                 ; ext_params = Hashtbl.create (module String)
-                ; ext_in_assign = false
-                ; ext_to_clone = get_updated_arrays p } }
+                ; ext_to_clone = false
+                ; ext_to_clone_vars = SSet.empty } }
   in
   let runtime =
     match backend with
