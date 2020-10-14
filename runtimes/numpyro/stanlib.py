@@ -630,6 +630,23 @@ num_elements_array = lambda x: tprod(array(x.shape))
 # x is of type real[4,3] then size(x) is 4.
 size_array = lambda x: x.shape[0]
 
+## 4.3 Array Broadcasting
+
+# T[] rep_array(T x, int n)
+# Return the n array with every entry assigned to x.
+rep_array_int_int = lambda x, n: x * ones(n, dtype=dtype_long)
+rep_array_real_int = lambda x, n: x * ones(n, dtype=dtype_float)
+
+# T[,] rep_array(T x, int m, int n)
+# Return the m by n array with every entry assigned to x.
+rep_array_int_int_int = lambda x, n, m: x * ones([n, m], dtype=dtype_long)
+rep_array_real_int_int = lambda x, n, m: x * ones([n, m], dtype=dtype_float)
+
+# T[,,] rep_array(T x, int k, int m, int n)
+# Return the k by m by n array with every entry assigned to x.
+rep_array_int_int_int_int = lambda x, k, n, m: x * ones([k, n, m], dtype=dtype_long)
+rep_array_real_int_int_int = lambda x, k, n, m: x * ones([k, n, m], dtype=dtype_float)
+
 ## 5 Matrix Operations
 
 # 5.1 Integer-Valued Matrix Size Functions

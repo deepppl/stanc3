@@ -2,6 +2,8 @@ import math
 import torch
 import torch.nn
 from torch import ones, tensor
+from torch import long as dtype_long
+from torch import float as dtype_float
 
 def _XXX_TODO_XXX_(f):
     def todo(*args):
@@ -631,6 +633,23 @@ num_elements_array = lambda x: x.shape.numel()
 # array, not the total number of elements contained. For example, if
 # x is of type real[4,3] then size(x) is 4.
 size_array = lambda x: x.shape[0]
+
+## 4.3 Array Broadcasting
+
+# T[] rep_array(T x, int n)
+# Return the n array with every entry assigned to x.
+rep_array_int_int = lambda x, n: x * ones(n, dtype=dtype_long)
+rep_array_real_int = lambda x, n: x * ones(n, dtype=dtype_float)
+
+# T[,] rep_array(T x, int m, int n)
+# Return the m by n array with every entry assigned to x.
+rep_array_int_int_int = lambda x, n, m: x * ones([n, m], dtype=dtype_long)
+rep_array_real_int_int = lambda x, n, m: x * ones([n, m], dtype=dtype_float)
+
+# T[,,] rep_array(T x, int k, int m, int n)
+# Return the k by m by n array with every entry assigned to x.
+rep_array_int_int_int_int = lambda x, k, n, m: x * ones([k, n, m], dtype=dtype_long)
+rep_array_real_int_int_int = lambda x, k, n, m: x * ones([k, n, m], dtype=dtype_float)
 
 ## 5 Matrix Operations
 
@@ -1311,7 +1330,7 @@ from torchdiffeq import odeint
 
 def integrate_ode_rk45_array_real_array_array_array_array(ode, initial_state, initial_time, times, theta, x_r, x_i):
     f = lambda t, y: ode(t, y, theta, x_r, x_i)
-    odeint(f, initial_state, times)
+    return odeint(f, initial_state, times)
 integrate_ode_rk45_array_int_array_array_array_array = integrate_ode_rk45_array_real_array_array_array_array
 
 # real[ , ] integrate_ode_rk45(function ode, real[] initial_state, real initial_time, real[] times, real[] theta, real[] x_r, int[] x_i, real rel_tol, real abs_tol, int max_num_steps)
@@ -1319,6 +1338,6 @@ integrate_ode_rk45_array_int_array_array_array_array = integrate_ode_rk45_array_
 
 def integrate_ode_rk45_array_real_array_array_array_array_real_real_int(ode, initial_state, times, theta, x_r, x_i, rtol, atol, mxstep):
     f = lambda t, y: ode(t, y, theta, x_r, x_i)
-    odeint(f, initial_state, times, rtol=rtol, atol=atol, options={"max_num_steps": mxstep})
+    return odeint(f, initial_state, times, rtol=rtol, atol=atol, options={"max_num_steps": mxstep})
 
 integrate_ode_rk45_array_int_array_array_array_array_real_real_real = integrate_ode_rk45_array_real_array_array_array_array_real_real_int

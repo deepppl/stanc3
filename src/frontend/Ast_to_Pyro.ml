@@ -430,10 +430,34 @@ let stanlib =
     "log1m_inv_logit_matrix";
     "log1m_inv_logit_array";
     (* 4.1 Reductions *)
+    "min_array";
+    "max_array";
+    "sum_array";
+    "prod_array";
+    "log_sum_exp_array";
+    "mean_array";
+    "variance_array";
+    "sd_array";
+    "distance_vector_vector";
+    "distance_vector_rowvector";
+    "distance_rowvector_vector";
+    "distance_rowvector_rowvector";
+    "squared_distance_vector_vector";
+    "squared_distance_vector_rowvector";
+    "squared_distance_rowvector_vector";
+    "squared_distance_rowvector_rowvector";
+    (* 4.2 Array Size and Dimension Function *)
     "dims_int"; "dims_real"; "dims_vector"; "dims_rowvector";
     "dims_matrix"; "dims_array";
     "num_elements_array";
     "size_array";
+    (* 4.3 Array Broadcasting *)
+    "rep_array_int_int";
+    "rep_array_real_int";
+    "rep_array_int_int_int";
+    "rep_array_real_int_int";
+    "rep_array_int_int_int_int";
+    "rep_array_real_int_int_int";
     (* 5.1 Integer-Valued Matrix Size Functions *)
     "num_elements_vector";
     "num_elements_rowvector";
@@ -812,6 +836,7 @@ let rewrite_program f p =
 
 let simplify_program (p: typed_program) =
   let p = rewrite_program flatten_stmts p in
+  let p = rewrite_program push_vardecls_stmts p in
   let p = rewrite_program push_vardecls_stmts p in
   p
 
