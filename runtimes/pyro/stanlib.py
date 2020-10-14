@@ -10,8 +10,6 @@ def _XXX_TODO_XXX_(f):
         assert False, f'{f}: not yet implemented'
     return todo
 
-machine_precision = lambda: tensor(10 ** (-15.95), dtype=torch.float)
-
 # 3.2 Mathematical Constants
 
 # real pi()
@@ -35,6 +33,25 @@ log2 = lambda: tensor(mlog(2), dtype=torch.float)
 # real log10()
 # The natural logarithm of 10
 log10 = lambda: tensor(mlog(10), dtype=torch.float)
+
+## 3.3 Special Values
+
+# real not_a_number()
+# Not-a-number, a special non-finite real value returned to signal an error
+not_a_number = lambda : tensor(math.nan, dtype=torch.float)
+
+# real positive_infinity()
+# Positive infinity, a special non-finite real value larger than all finite numbers
+positive_infinity = lambda : tensor(float("inf"), dtype=torch.float)
+
+# real negative_infinity()
+# Negative infinity, a special non-finite real value smaller than all finite numbers
+negative_infinity = lambda : tensor(float("-inf"), dtype=torch.float)
+
+# real machine_precision()
+# The smallest number x
+# such that (x+1)≠1 in floating-point arithmetic on the current hardware platform
+machine_precision = lambda: tensor(10 ** (-15.95), dtype=torch.float)
 
 ## 3.7 Step-like Functions
 

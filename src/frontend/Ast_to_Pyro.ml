@@ -212,13 +212,17 @@ let distribution =
   ]
 
 let stanlib =
-  [ "machine_precision";
-    (* 3.2 Mathematical Constants *)
+  [ (* 3.2 Mathematical Constants *)
     "pi";
     "e";
     "sqrt2";
     "log2";
     "log10";
+    (* 3.3 Special Values *)
+    "not_a_number";
+    "positive_infinity";
+    "negative_infinity";
+    "machine_precision";
     (* 3.7 Step-like Functions *)
     "abs_int";
     "abs_real";
