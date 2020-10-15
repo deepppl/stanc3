@@ -863,6 +863,9 @@ let get_var_decl_names stmts =
           | _ -> acc)
     ~init:[] stmts
 
+let get_var_decl_names_block block =
+  Option.value_map ~default:[] ~f:get_var_decl_names block
+
 let get_stanlib_calls program =
   let rec get_stanlib_calls_in_expr acc e =
     let acc =
@@ -1143,7 +1146,7 @@ and to_clone ctx e =
     | Variable x -> SSet.mem ctx.ctx_ext.ext_to_clone_vars x.name
     | Indexed (lhs, _) ->
       not (SSet.is_empty ctx.ctx_ext.ext_to_clone_vars) &&
-      (is_unsized_tensor e.emeta.type_ || can_be_modified lhs)
+      ((* is_unsized_tensor e.emeta.type_ || *) can_be_modified lhs)
     | TernaryIf (_, ifb, elseb) -> can_be_modified ifb || can_be_modified elseb
     | Paren e -> can_be_modified e
     | FunApp (_, _, args) -> List.exists ~f:(to_clone ctx) args
@@ -1574,11 +1577,8 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           begin match arg.expr with
             | Variable {name; _} ->
                 let is_parameter =
-                  match ctx.ctx_prog.parametersblock with
-                  | None -> false
-                  | Some params ->
-                    List.exists ~f:(fun x -> x.name = name)
-                      (get_var_decl_names params)
+                  List.exists ~f:(fun x -> x.name = name)
+                    (get_var_decl_names_block ctx.ctx_prog.parametersblock)
                 in
                 if is_parameter &&
                    not (Hashtbl.mem ctx.ctx_ext.ext_params name) then
@@ -1842,25 +1842,27 @@ let migrate_checks_to_end_of_block stmts =
   not_checks @ checks *)
 
 let trans_block_as_args ff block =
-  Option.iter
-    ~f:(fun stmts ->
-          match get_var_decl_names stmts with
-          | [] -> ()
-          | args ->
-              fprintf ff "*, %a"
-                (print_list_comma trans_id) args)
-    block
+  match get_var_decl_names_block block with
+  | [] -> ()
+  | args -> fprintf ff "*, %a" (print_list_comma trans_id) args
+
+let trans_block_as_return ?(with_rename=false) ff block =
+  fprintf ff "return { %a }"
+    (print_list_comma
+       (fun ff x ->
+          if with_rename then
+            fprintf ff "'%a': %a" trans_id x trans_id x
+          else
+            fprintf ff "'%s': %a" x.name trans_id x))
+    (get_var_decl_names_block block)
 
 let trans_block_as_unpack name ff block =
   let unpack ff x =
     fprintf ff "%a = %s['%s']" trans_id x name x.name
   in
-  Option.iter
-    ~f:(fun stmts ->
-          match get_var_decl_names stmts with
-          | [] -> ()
-          | args -> fprintf ff "%a@," (print_list_newline unpack) args)
-    block
+  match get_var_decl_names_block block with
+  | [] -> ()
+  | args -> fprintf ff "%a@," (print_list_newline unpack) args
 
 let convert_input ff stmt =
   match stmt.stmt with
@@ -1882,20 +1884,16 @@ let convert_input ff stmt =
       end
   | _ -> ()
 
+let convert_inputs ff odata =
+  Option.iter
+    ~f:(fun data -> print_list_newline convert_input ff data)
+    odata
 
-let trans_datablock ff odata =
-  match odata with
-  | Some data ->
-      fprintf ff
-        "@[<v 0>@[<v 4>def convert_inputs(inputs):@,%a@,return { %a }@]@,@,@]"
-        (print_list_newline convert_input) data
-        (print_list_comma
-           (fun ff x -> fprintf ff "'%a': %a" trans_id x trans_id x))
-        (get_var_decl_names data)
-  | None ->
-      fprintf ff
-        "@[<v 0>@[<v 4>def convert_inputs(inputs):@,return { }@]@,@,@]"
-
+let trans_datablock ff data =
+  fprintf ff
+    "@[<v 0>@[<v 4>def convert_inputs(inputs):@,%a@,%a@]@,@,@]"
+    convert_inputs data
+    (trans_block_as_return ~with_rename:true) data
 
 let trans_networks_as_arg ff networks =
   match networks with
@@ -1906,15 +1904,6 @@ let trans_networks_as_arg ff networks =
         ~pp_sep:(fun ff () -> fprintf ff ", ")
         (fun ff net -> fprintf ff "%s" net.net_id.name)
         ff nets
-
-let trans_block_as_return ff block =
-  Option.iter
-    ~f:(fun stmts ->
-          fprintf ff "return { %a }"
-            (print_list_comma
-               (fun ff x -> fprintf ff "'%s': %a" x.name trans_id x))
-            (get_var_decl_names stmts))
-    block
 
 let trans_prior ctx (decl_type: typed_expression Type.t) ff transformation =
   match transformation with
@@ -1976,7 +1965,7 @@ let trans_transformeddatablock ctx data ff transformeddata =
       "@[<v 0>@[<v 4>def transformed_data(%a):@,%a%a@]@,@,@]"
       trans_block_as_args data
       (trans_block "Transformed data" ctx) transformeddata
-      trans_block_as_return transformeddata
+      (trans_block_as_return ~with_rename:true) transformeddata
   end
 
 let trans_parameter ctx ff p =
@@ -2043,11 +2032,15 @@ let trans_generatedquantitiesblock ctx data tdata params tparams ff
       Option.(merge ~f:(@) data (merge ~f:(@) tdata params))
       (trans_block "Transformed parameters" ctx) tparams
       (trans_block "Generated quantities" ctx) genquantities
-      trans_block_as_return (Option.merge ~f:(@) tparams genquantities);
+      (trans_block_as_return ~with_rename:false)
+      (Option.merge ~f:(@) tparams genquantities);
     fprintf ff "@]@,@]"
   end
 
 let trans_guide_parameter ctx ff p =
+  let ctx =
+    { ctx with ctx_mode = Generative }
+  in
   match p.stmt with
   | VarDecl {identifier; initial_value = None; decl_type; transformation; _} ->
     fprintf ff "%a = param('%s', %a.sample())"
