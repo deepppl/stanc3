@@ -711,7 +711,7 @@ let var_of_lval lv =
   let rec var_of_lval acc lv =
     match lv.lval with
     | LVariable id -> id.name
-    | _ -> fold_lvalue var_of_lval (fun _ _ -> "") acc lv.lval
+    | _ -> fold_lvalue var_of_lval (fun acc _ -> acc) acc lv.lval
   in
   let x = var_of_lval "" lv in
   assert (x <> "");

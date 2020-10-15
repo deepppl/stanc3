@@ -345,9 +345,9 @@ normal_rng = _rng(normal)
 # std_normal = lambda : d.Normal(0,1)
 def std_normal(*args):
     if len(args) > 0:
-        return d.Normal(0,ones(args[0]))
+        return d.Normal(0, tones(args[0]))
     else:
-        return d.Normal(0,1)
+        return d.Normal(0, 1)
 std_normal_lpdf = _lpdf(std_normal)
 std_normal_cdf = _cdf(std_normal)
 std_normal_lcdf = _lcdf(std_normal)
