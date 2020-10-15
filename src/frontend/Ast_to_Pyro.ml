@@ -780,6 +780,54 @@ let rec push_prior_stmts (x, decl) stmts =
         let prior, stmts = push_prior_stmts (x, decl) stmts in
         prior, stmt ::  stmts
 
+let push_priors priors stmts =
+  List.fold_left
+    ~f:(fun (priors, stmts) decl ->
+        match decl.stmt with
+        | VarDecl { identifier = id; initial_value = None; _ } ->
+          begin match push_prior_stmts (id.name, decl) stmts with
+          | Some prior, stmts -> priors @ [prior], stmts
+          | None, stmts -> priors, stmts
+          end
+        | _ -> assert false)
+    ~init:([], stmts) priors
+
+let rec updated_vars_stmt acc s =
+  let acc =
+    match s.stmt with
+    | VarDecl { identifier = x; _ } -> SSet.add acc x.name
+    | Assignment { assign_lhs = lhs; _ } -> SSet.add acc (var_of_lval lhs)
+    | Tilde { arg = { expr = Variable x; _ }; _ } -> SSet.add acc x.name
+    | For { loop_variable; _} -> SSet.add acc loop_variable.name
+    | ForEach (loop_variable, _, _) -> SSet.add acc loop_variable.name
+    | _ -> acc
+  in
+  fold_statement
+    (fun acc _ -> acc) updated_vars_stmt (fun acc _ -> acc) (fun acc _ -> acc)
+    acc s.stmt
+
+let moveup_stmt stmt stmts =
+  let rec moveup (deps, stmt) rev_stmts acc =
+    match rev_stmts with
+    | [] -> stmt :: acc
+    | stmt' :: rev_stmts ->
+      let updated_vars = updated_vars_stmt SSet.empty stmt' in
+      if SSet.is_empty (SSet.inter deps updated_vars) then
+        moveup (deps, stmt) rev_stmts (stmt'::acc)
+      else
+        List.rev_append rev_stmts (stmt' :: stmt :: acc)
+  in
+  let used_vars = used_vars_stmt SSet.empty stmt in
+  moveup (used_vars, stmt) (List.rev stmts) []
+
+let moveup_observes stmts =
+  List.fold_left
+    ~f:(fun acc s ->
+         match s.stmt with
+         | Tilde { arg = { expr = Variable _; _ }; _ } -> moveup_stmt s acc
+         | _ -> acc @ [ s ])
+    ~init:[] stmts
+
 let merge_decl_stmt decl stmt =
   match decl.stmt, stmt.stmt with
   | VarDecl d, Assignment { assign_rhs = e; _ } ->
@@ -815,18 +863,6 @@ and push_vardecls_stmt (s: typed_statement) =
           stmt
       in
       { s with stmt }
-
-let push_priors priors stmts =
-  List.fold_left
-    ~f:(fun (priors, stmts) decl ->
-        match decl.stmt with
-        | VarDecl { identifier = id; initial_value = None; _ } ->
-          begin match push_prior_stmts (id.name, decl) stmts with
-          | Some prior, stmts -> priors @ [prior], stmts
-          | None, stmts -> priors, stmts
-          end
-        | _ -> assert false)
-    ~init:([], stmts) priors
 
 let flatten_stmts stmts =
   List.fold_right
@@ -2013,6 +2049,9 @@ let trans_modelblock ctx networks data tdata parameters tparameters ff model =
         | Some parameters, None -> Some parameters, None
         | None, Some model -> None, Some model
         | Some parameters, Some model ->
+          let model = moveup_observes model in
+          let parameters, model = push_priors parameters model in
+          let model = moveup_observes model in
           let parameters, model = push_priors parameters model in
           Some parameters, Some model
       in
