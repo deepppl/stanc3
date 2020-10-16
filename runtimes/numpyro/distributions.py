@@ -269,7 +269,7 @@ bernoulli_logit_lpmf = _lpmf(bernoulli_logit)
 # real binomial_logit_lpmf(ints n | ints N, reals alpha)
 # The log binomial probability mass of n successes in N trials given logit-scaled chance of success alpha
 
-binomial_logit = _distrib(lambda n, logits: d.Binomial(logits, n), 2, dtype_long)
+binomial_logit = _distrib(lambda n, logits: d.BinomialLogits(logits, n), 2, dtype_long)
 binomial_logit_lpmf = _lpmf(binomial_logit)
 
 ## 13.5 Categorical Distribution
@@ -434,7 +434,7 @@ exponential_rng = _rng(exponential)
 # real gamma_lpdf(reals y | reals alpha, reals beta)
 # The log of the gamma density of y given shape alpha and inverse scale beta
 
-gamma = _distrib(d.Gamma, 1, dtype_float)
+gamma = _distrib(d.Gamma, 2, dtype_float)
 gamma_lpdf = _lpdf(gamma)
 gamma_cdf = _cdf(gamma)
 gamma_lcdf = _lcdf(gamma)
