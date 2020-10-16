@@ -1,7 +1,8 @@
 import math
 import torch
 import torch.nn
-from torch import ones, tensor
+from torch import ones
+from torch import tensor as array
 from torch import long as dtype_long
 from torch import float as dtype_float
 
@@ -14,44 +15,44 @@ def _XXX_TODO_XXX_(f):
 
 # real pi()
 # π, the ratio of a circle’s circumference to its diameter
-pi = lambda: tensor(math.pi, dtype=torch.float)
+pi = lambda: array(math.pi, dtype=dtype_float)
 
 # real e()
 # e, the base of the natural logarithm
-e = lambda: tensor(math.e, dtype=torch.float)
+e = lambda: array(math.e, dtype=dtype_float)
 
 # real sqrt2()
 # The square root of 2
 from math import sqrt as msqrt
-sqrt2 = lambda: tensor(msqrt(2), dtype=torch.float)
+sqrt2 = lambda: array(msqrt(2), dtype=dtype_float)
 
 # real log2()
 # The natural logarithm of 2
 from math import log as mlog
-log2 = lambda: tensor(mlog(2), dtype=torch.float)
+log2 = lambda: array(mlog(2), dtype=dtype_float)
 
 # real log10()
 # The natural logarithm of 10
-log10 = lambda: tensor(mlog(10), dtype=torch.float)
+log10 = lambda: array(mlog(10), dtype=dtype_float)
 
 ## 3.3 Special Values
 
 # real not_a_number()
 # Not-a-number, a special non-finite real value returned to signal an error
-not_a_number = lambda : tensor(math.nan, dtype=torch.float)
+not_a_number = lambda : array(math.nan, dtype=dtype_float)
 
 # real positive_infinity()
 # Positive infinity, a special non-finite real value larger than all finite numbers
-positive_infinity = lambda : tensor(float("inf"), dtype=torch.float)
+positive_infinity = lambda : array(float("inf"), dtype=dtype_float)
 
 # real negative_infinity()
 # Negative infinity, a special non-finite real value smaller than all finite numbers
-negative_infinity = lambda : tensor(float("-inf"), dtype=torch.float)
+negative_infinity = lambda : array(float("-inf"), dtype=dtype_float)
 
 # real machine_precision()
 # The smallest number x
 # such that (x+1)≠1 in floating-point arithmetic on the current hardware platform
-machine_precision = lambda: tensor(10 ** (-15.95), dtype=torch.float)
+machine_precision = lambda: array(10 ** (-15.95), dtype=dtype_float)
 
 ## 3.7 Step-like Functions
 
@@ -422,7 +423,7 @@ logit_array = _XXX_TODO_XXX_('logit')
 # R inv_logit(T x)
 # logistic sigmoid function applied to x
 from torch import sigmoid
-inv_logit_int = lambda x: sigmoid(tensor(x, dtype=torch.float))
+inv_logit_int = lambda x: sigmoid(array(x, dtype=dtype_float))
 inv_logit_real = sigmoid
 inv_logit_vector = sigmoid
 inv_logit_rowvector = sigmoid
@@ -521,7 +522,7 @@ def log_sum_exp_real_real(x, y):
 # R log_inv_logit(T x)
 # natural logarithm of the inverse logit function of x
 from torch.nn import LogSigmoid
-log_inv_logit_int = lambda x: LogSigmoid()(tensor(x, dtype=torch.float))
+log_inv_logit_int = lambda x: LogSigmoid()(array(x, dtype=dtype_float))
 log_inv_logit_real = LogSigmoid()
 log_inv_logit_vector = LogSigmoid()
 log_inv_logit_rowvector = LogSigmoid()
@@ -629,12 +630,12 @@ squared_distance_rowvector_rowvector = _XXX_TODO_XXX_('squared_distance')
 # Return an integer array containing the dimensions of x; the type
 # of the argument T can be any Stan type with up to 8 array
 # dimensions.
-dims_int = lambda x: tensor([], dtype=torch.long)
-dims_real = lambda x: tensor(x.shape)
-dims_vector = lambda x: tensor(x.shape)
-dims_rowvector = lambda x: tensor(x.shape)
-dims_matrix = lambda x: tensor(x.shape)
-dims_array = lambda x: tensor(x.shape)
+dims_int = lambda x: array([], dtype=dtype_long)
+dims_real = lambda x: array(x.shape)
+dims_vector = lambda x: array(x.shape)
+dims_rowvector = lambda x: array(x.shape)
+dims_matrix = lambda x: array(x.shape)
+dims_array = lambda x: array(x.shape)
 
 # int num_elements(T[] x)
 # Return the total number of elements in the array x including all
@@ -1101,13 +1102,13 @@ append_col_rowvector_rowvector = lambda x, y: cat(x, y)
 
 # row_vector append_col(real x, row_vector y)
 # Append x to the front of y, returning another row vector.
-append_col_real_rowvector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
-append_col_int_rowvector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
+append_col_real_rowvector = lambda x, y: cat([array([x], dtype=dtype_float), y])
+append_col_int_rowvector = lambda x, y: cat([array([x], dtype=dtype_float), y])
 
 # row_vector append_col(row_vector x, real y)
 # Append y to the end of x, returning another row vector.
-append_col_rowvector_real = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
-append_col_rowvector_int = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
+append_col_rowvector_real = lambda x, y: cat([x, array([y], dtype=dtype_float)])
+append_col_rowvector_int = lambda x, y: cat([x, array([y], dtype=dtype_float)])
 
 ## 5.10.0.2 Vertical concatenation
 
@@ -1133,13 +1134,13 @@ append_row_vector_vector = lambda x, y: cat([x, y])
 
 # vector append_row(real x, vector y)
 # Append x to the top of y, returning another vector.
-append_row_real_vector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
-append_row_int_vector = lambda x, y: cat([tensor([x], dtype=torch.float), y])
+append_row_real_vector = lambda x, y: cat([array([x], dtype=dtype_float), y])
+append_row_int_vector = lambda x, y: cat([array([x], dtype=dtype_float), y])
 
 # vector append_row(vector x, real y)
 # Append y to the bottom of x, returning another vector.
-append_row_vector_real = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
-append_row_vector_int = lambda x, y: cat([x, tensor([y], dtype=torch.float)])
+append_row_vector_real = lambda x, y: cat([x, array([y], dtype=dtype_float)])
+append_row_vector_int = lambda x, y: cat([x, array([y], dtype=dtype_float)])
 
 ## 5.11 Special Matrix Functions
 ## 5.11.1 Softmax
