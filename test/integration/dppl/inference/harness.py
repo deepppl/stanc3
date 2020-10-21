@@ -94,7 +94,7 @@ class MCMCTest:
         assert self.with_pyro or self.with_numpyro, "Should run either Pyro or Numpyro"
         if self.with_pyro:
             with TimeIt("Pyro_Compilation", self.timers):
-                model = PyroModel(self.model_file)
+                model = PyroModel(self.model_file, mode='mixed')
             with TimeIt("Pyro_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,
@@ -107,7 +107,7 @@ class MCMCTest:
                 self.pyro_samples = mcmc.get_samples()
         if self.with_numpyro:
             with TimeIt("Numpyro_Compilation", self.timers):
-                model = NumpyroModel(self.model_file)
+                model = NumpyroModel(self.model_file, mode='mixed')
             with TimeIt("Numpyro_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,
@@ -122,7 +122,7 @@ class MCMCTest:
     def run_naive_pyro(self):
         assert self.with_pyro or self.with_numpyro, "Should run either Pyro or Numpyro"
         if self.with_pyro:
-            model = PyroModel(self.pyro_file)
+            model = PyroModel(self.model_file, mode='comprehensive')
             with TimeIt("Pyro_naive_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,
@@ -134,7 +134,7 @@ class MCMCTest:
                 mcmc.run(**data)
                 self.pyro_naive_samples = mcmc.get_samples()
         if self.with_numpyro:
-            model = NumpyroModel(self.pyro_file)
+            model = NumpyroModel(self.model_file, mode='comprehensive')
             with TimeIt("Numpyro_naive_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,
@@ -173,13 +173,12 @@ class MCMCTest:
                 self.compare_params,
                 _ks
             )
-            if self.pyro_file:
-                self.divergences["pyro_naive"]["ks"] = _compare(
-                    _convert_to_np(self.pyro_naive_samples),
-                    self.stan_samples,
-                    self.compare_params,
-                    _ks
-                )
+            self.divergences["pyro_naive"]["ks"] = _compare(
+                _convert_to_np(self.pyro_naive_samples),
+                self.stan_samples,
+                self.compare_params,
+                _ks
+            )
         if self.with_numpyro:
             self.divergences["numpyro"]["ks"] = _compare(
                 _convert_to_np(self.numpyro_samples),
@@ -187,18 +186,16 @@ class MCMCTest:
                 self.compare_params,
                 _ks
             )
-            if self.pyro_file:
-                self.divergences["numpyro_naive"]["ks"] = _compare(
-                    _convert_to_np(self.numpyro_naive_samples),
-                    self.stan_samples,
-                    self.compare_params,
-                    _ks,
-                )
+            self.divergences["numpyro_naive"]["ks"] = _compare(
+                _convert_to_np(self.numpyro_naive_samples),
+                self.stan_samples,
+                self.compare_params,
+                _ks,
+            )
 
     def run(self) -> Dict[str, Dict[str, Any]]:
         self.run_pyro()
         self.run_stan()
-        if self.pyro_file:
-            self.run_naive_pyro()
+        self.run_naive_pyro()
         self.compare()
         return {"divergences": self.divergences, "timers": self.timers}
