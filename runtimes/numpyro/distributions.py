@@ -278,16 +278,16 @@ binomial_logit_lpmf = _lpmf(binomial_logit)
 # The log categorical probability mass function with outcome(s) y in 1:N given N-vector of outcome probabilities theta. The parameter theta must have non-negative entries that sum to one, but it need not be a variable declared as a simplex.
 
 categorical = _distrib(d.Categorical, 1, dtype_float)
-categorical_lpmf = _lpmf(categorical)
-categorical_rng = _rng(categorical)
+categorical_lpmf = lambda y, theta: _lpmf(categorical)(y - 1, theta)
+categorical_rng = lambda theta: _rng(categorical)(theta) + 1
 
 # real categorical_logit_lpmf(ints y | vector beta)
 # The log categorical probability mass function with outcome(s) y in 1:N
 # given log-odds of outcomes beta.
 
 categorical_logit = _distrib(lambda logits: d.Categorical(logits=logits), 1, dtype_float)
-categorical_logit_lpmf = _lpmf(categorical_logit)
-categorical_logit_rng = _rng(categorical_logit)
+categorical_logit_lpmf = lambda y, beta: _lpmf(categorical_logit)(y - 1, beta)
+categorical_logit_rng = lambda beta: _rng(categorical_logit)(beta) + 1
 
 ## 14 Unbounded Discrete Distributions
 

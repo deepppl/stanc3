@@ -1634,10 +1634,17 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           trans_truncation truncation
       else
         let ctx' = set_to_clone ctx in
-        fprintf ff "observe(%a, %a, %a)%a"
+        let adustment =
+          match distribution.name with
+          | "categorical"
+          | "categorical_logit" -> " - 1"
+          | _ -> ""
+        in
+        fprintf ff "observe(%a, %a, %a%s)%a"
           (gen_id ~fresh:true ctx.ctx_ext.ext_loops) arg
           trans_distribution (distribution, args)
           (trans_expr ctx') arg
+          adustment
           trans_truncation truncation
   | Print ps -> fprintf ff "print(%a)" (trans_printables ctx) ps
   | Reject ps -> fprintf ff "stanlib.reject(%a)" (trans_printables ctx) ps
