@@ -1231,11 +1231,11 @@ to_matrix_matrix_int_int = lambda mat, m, n: mat.t().reshape(m,n)
 
 # matrix to_matrix(vector v, int m, int n)
 # Convert a vector v to a matrix with m rows and n columns filled in column-major order.
-to_matrix_vector_int_int = _XXX_TODO_XXX_('to_matrix_vector_int_int')
+to_matrix_vector_int_int = lambda v, m, n: v.reshape(n, m).t()
 
 # matrix to_matrix(row_vector v, int m, int n)
 # Convert a row_vector a to a matrix with m rows and n columns filled in column-major order.
-to_matrix_rowvector_int_int = _XXX_TODO_XXX_('to_matrix')
+to_matrix_rowvector_int_int = lambda v, m, n: v.reshape(n, m).t()
 
 # matrix to_matrix(matrix m, int m, int n, int col_major)
 # Convert a matrix m to a matrix with m rows and n columns filled in row-major order if col_major equals 0 (otherwise, they get filled in column-major order).
