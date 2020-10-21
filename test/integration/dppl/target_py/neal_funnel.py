@@ -3,7 +3,8 @@ from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, 
 from runtimes.pyro.stanlib import exp_real
 
 def convert_inputs(inputs):
-    return { }
+    
+    return {  }
 
 def model():
     # Parameters

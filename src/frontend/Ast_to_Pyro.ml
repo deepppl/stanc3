@@ -1610,19 +1610,21 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
         match ctx.ctx_mode with
         | Comprehensive -> false
         | Generative | Mixed ->
-          begin match arg.expr with
+            begin match arg.expr with
             | Variable {name; _} ->
                 let is_parameter =
                   List.exists ~f:(fun x -> x.name = name)
                     (get_var_decl_names_block ctx.ctx_prog.parametersblock)
                 in
                 if is_parameter &&
-                   not (Hashtbl.mem ctx.ctx_ext.ext_params name) then
-                  (Hashtbl.add_exn ctx.ctx_ext.ext_params ~key:name ~data:();
+                   (ctx.ctx_mode = Generative ||
+                    not (Hashtbl.mem ctx.ctx_ext.ext_params name)) then
+                  (ignore (Hashtbl.add ctx.ctx_ext.ext_params
+                             ~key:name ~data:());
                    true)
                 else false
             | _ -> false
-          end
+            end
       in
       if is_sample then
         fprintf ff "%a = sample(%a, %a)%a"
@@ -2103,6 +2105,12 @@ let trans_guideparametersblock ctx ff guide_parameters =
     guide_parameters
 
 let trans_guideblock ctx networks data tdata guide_parameters ff guide =
+  let ctx =
+    { ctx with
+      ctx_mode = Generative;
+      ctx_ext = { ctx.ctx_ext with ext_params = Hashtbl.create (module String) }
+    }
+  in
   if guide_parameters <> None || guide <> None then begin
     fprintf ff "@[<v 4>def guide(%a%a):@,%a%a%a@]@."
       trans_block_as_args (Option.merge ~f:(@) data tdata)
