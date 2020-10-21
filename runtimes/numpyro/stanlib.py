@@ -526,12 +526,12 @@ log_inv_logit_array = log_sigmoid
 
 # R log1m_inv_logit(T x)
 # natural logarithm of 1 minus the inverse logit function of x
-log1m_inv_logit_int = _XXX_TODO_XXX_('log_inv_logit')
-log1m_inv_logit_real = _XXX_TODO_XXX_('log_inv_logit')
-log1m_inv_logit_vector = _XXX_TODO_XXX_('log_inv_logit')
-log1m_inv_logit_rowvector = _XXX_TODO_XXX_('log_inv_logit')
-log1m_inv_logit_matrix = _XXX_TODO_XXX_('log_inv_logit')
-log1m_inv_logit_array = _XXX_TODO_XXX_('log_inv_logit')
+log1m_inv_logit_int = lambda x: tlog(1 - inv_logit_int(x))
+log1m_inv_logit_real = lambda x: tlog(1 - inv_logit_real(x))
+log1m_inv_logit_vector = lambda x: tlog(1 - inv_logit_vector(x))
+log1m_inv_logit_rowvector = lambda x: tlog(1 - inv_logit_rowvector(x))
+log1m_inv_logit_matrix = lambda x: tlog(1 - inv_logit_matrix(x))
+log1m_inv_logit_array = lambda x: tlog(1 - inv_logit_array(x))
 
 
 ## 4.1 Reductions

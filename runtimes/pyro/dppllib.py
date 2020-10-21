@@ -16,7 +16,7 @@ def param(site_name, init):
 
 def observe(site_name, dist, obs):
     if isinstance(dist, (Bernoulli, Binomial, Poisson, GammaPoisson)):
-        obs = obs.type(dtype_float) if isinstance(obs, LongTensor) else array(obs, dtype=dtype_long)
+        obs = obs.type(dtype_float) if isinstance(obs, LongTensor) else array(obs, dtype=dtype_float)
     pyro.sample(site_name, dist, obs = obs)
 
 def factor(site_name, x):

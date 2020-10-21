@@ -180,10 +180,10 @@ beta_rng = _rng(beta)
 # The log Bernoulli probability mass of y given chance of success theta
 
 bernoulli = _distrib(d.Bernoulli, 1, dtype_float)
-bernoulli_lpmf = _lpmf(bernoulli)
-bernoulli_cdf = _cdf(bernoulli)
-bernoulli_lcdf = _lcdf(bernoulli)
-bernoulli_lccdf = _lccdf(bernoulli)
+bernoulli_lpmf = _cast1(_lpmf(bernoulli))
+bernoulli_cdf = _cast1(_cdf(bernoulli))
+bernoulli_lcdf = _cast1(_lcdf(bernoulli))
+bernoulli_lccdf = _cast1(_lccdf(bernoulli))
 bernoulli_rng = _rng(bernoulli)
 
 ## 12.2 Bernoulli Distribution, Logit Parameterization
@@ -203,7 +203,7 @@ bernoulli_logit_lpmf = _lpmf(bernoulli_logit)
 # The log binomial probability mass of n successes in N trials given logit-scaled chance of success alpha
 
 binomial_logit = _distrib(lambda n, logits: d.Binomial(n, logits=logits), 2, dtype_long)
-binomial_logit_lpmf = _lpmf(binomial_logit)
+binomial_logit_lpmf = _cast1(_lpmf(binomial_logit))
 
 ## 13.5 Categorical Distribution
 
