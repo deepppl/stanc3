@@ -7,7 +7,7 @@ from pandas import DataFrame, Series
 from posteriordb import PosteriorDatabase
 from os.path import splitext, basename
 
-pdb_root = "/Users/gbdrt/Projects/deepstan/posteriordb-mandel"
+pdb_root = "/Users/lmandel/stan/posteriordb"
 pdb_path = os.path.join(pdb_root, "posterior_database")
 
 
@@ -85,12 +85,12 @@ def parse_gold_summary(gold, gold_path):
         return DataFrame({"mean": Series(d_mean), "std": Series(d_std)})
 
 
-def run_model(posterior, config: Config):
+def run_model(posterior, mode, config: Config):
     model = posterior.model
     data = posterior.data
     stanfile = model.code_file_path("stan")
     pythonfile = os.path.join(os.getcwd(), splitext(basename(stanfile))[0] + ".py")
-    pyro_model = PyroModel(stanfile, pyfile=pythonfile)
+    pyro_model = PyroModel(stanfile, mode=mode, pyfile=pythonfile)
     mcmc = pyro_model.mcmc(
         config.iterations,
         warmups=config.warmups,
@@ -102,10 +102,10 @@ def run_model(posterior, config: Config):
     return mcmc.summary()
 
 
-def compare(posterior, acc=1):
+def compare(posterior, mode="mixed", acc=1):
     config = parse_config(posterior, acc)
     sg = gold_summary(posterior)
-    sm = run_model(posterior, config=config)
+    sm = run_model(posterior, mode, config=config)
     sm["err"] = abs(sm["mean"] - sg["mean"])
     sm = sm.dropna()
     # perf_cmdstan condition: err > 0.0001 and (err / stdev) > 0.3
@@ -136,13 +136,13 @@ if __name__ == "__main__":
 
     my_pdb = PosteriorDatabase(pdb_path)
 
-    # # Launch only the eight_school model
+    # Launch only the eight_school model
     # posterior = my_pdb.posterior("eight_schools-eight_schools_centered")
     # compare(posterior)
 
     for name in my_pdb.posterior_names():
         if name.startswith(tuple(golds)):
             try:
-                compare(my_pdb.posterior(name), acc=100)
+                compare(my_pdb.posterior(name), mode="mixed", acc=1)
             except Exception as e:
                 print(f"Failed {name} with {e}")
