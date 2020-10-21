@@ -14,23 +14,20 @@ type mode =
   | Generative
   | Mixed
 
-type 'a context =
+type context =
   { ctx_prog: typed_program
   ; ctx_backend: backend
   ; ctx_mode: mode
-  ; ctx_ext: 'a }
-
-type stmt_ext =
-  { ext_loops: string list
-  ; ext_params: (string, unit) Hashtbl.t
-  ; ext_to_clone: bool
-  ; ext_to_clone_vars: SSet.t }
+  ; ctx_loops: string list
+  ; ctx_params: (string, unit) Hashtbl.t
+  ; ctx_to_clone: bool
+  ; ctx_to_clone_vars: SSet.t }
 
 let set_to_clone ctx =
-  { ctx with ctx_ext = { ctx.ctx_ext with ext_to_clone = true } }
+  { ctx with ctx_to_clone = true }
 
 let unset_to_clone ctx =
-  { ctx with ctx_ext = { ctx.ctx_ext with ext_to_clone = false } }
+  { ctx with ctx_to_clone = false }
 
 let print_warning loc message =
   Fmt.pf Fmt.stderr
@@ -1179,9 +1176,9 @@ and trans_dims ctx ff (t : typed_expression Type.t) =
 and to_clone ctx e =
   let rec can_be_modified e =
     match e.expr with
-    | Variable x -> SSet.mem ctx.ctx_ext.ext_to_clone_vars x.name
+    | Variable x -> SSet.mem ctx.ctx_to_clone_vars x.name
     | Indexed (lhs, _) ->
-      not (SSet.is_empty ctx.ctx_ext.ext_to_clone_vars) &&
+      not (SSet.is_empty ctx.ctx_to_clone_vars) &&
       ((* is_unsized_tensor e.emeta.type_ || *) can_be_modified lhs)
     | TernaryIf (_, ifb, elseb) -> can_be_modified ifb || can_be_modified elseb
     | Paren e -> can_be_modified e
@@ -1189,7 +1186,7 @@ and to_clone ctx e =
     | _ -> false
   in
   match ctx.ctx_backend with
-  | Pyro -> ctx.ctx_ext.ext_to_clone && can_be_modified e
+  | Pyro -> ctx.ctx_to_clone && can_be_modified e
   | Numpyro -> false
 
 let trans_expr_opt ctx (type_ : typed_expression Type.t) ff = function
@@ -1273,7 +1270,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
   | IncrementLogProb e | TargetPE e ->
       let ctx = set_to_clone ctx in
       fprintf ff "factor(%a, %a)"
-        (gen_id ctx.ctx_ext.ext_loops) e
+        (gen_id ctx.ctx_loops) e
         (trans_expr ctx) e
   | Tilde {arg; distribution; args; truncation} ->
       let trans_distribution ff (dist, args) =
@@ -1298,8 +1295,8 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
                 in
                 if is_parameter &&
                    (ctx.ctx_mode = Generative ||
-                    not (Hashtbl.mem ctx.ctx_ext.ext_params name)) then
-                  (ignore (Hashtbl.add ctx.ctx_ext.ext_params
+                    not (Hashtbl.mem ctx.ctx_params name)) then
+                  (ignore (Hashtbl.add ctx.ctx_params
                              ~key:name ~data:());
                    true)
                 else false
@@ -1309,7 +1306,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       if is_sample then
         fprintf ff "%a = sample(%a, %a)%a"
           (trans_expr ctx) arg
-          (gen_id ~fresh:false ctx.ctx_ext.ext_loops) arg
+          (gen_id ~fresh:false ctx.ctx_loops) arg
           trans_distribution (distribution, args)
           trans_truncation truncation
       else
@@ -1321,7 +1318,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           | _ -> ""
         in
         fprintf ff "observe(%a, %a, %a%s)%a"
-          (gen_id ~fresh:true ctx.ctx_ext.ext_loops) arg
+          (gen_id ~fresh:true ctx.ctx_loops) arg
           trans_distribution (distribution, args)
           (trans_expr ctx') arg
           adustment
@@ -1338,33 +1335,34 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
         (trans_stmt ctx) ifb
         (trans_stmt ctx) elseb
   | While (cond, body) ->
-      let ctx_ext' =
-        { ctx.ctx_ext with ext_loops = "genid()"::ctx.ctx_ext. ext_loops;
-          ext_to_clone_vars = get_updated_arrays_stmt ctx.ctx_ext.ext_to_clone_vars body }
+      let ctx' =
+        { ctx with
+          ctx_loops = "genid()"::ctx.ctx_loops;
+          ctx_to_clone_vars =
+            get_updated_arrays_stmt ctx.ctx_to_clone_vars body }
       in
-      let ctx' = { ctx with ctx_ext = ctx_ext' } in
       fprintf ff "@[<v4>while %a:@,%a@]"
         (trans_expr ctx) cond
         (trans_stmt ctx') body
   | For {loop_variable; lower_bound; upper_bound; loop_body} ->
-      let ctx_ext' =
-        { ctx.ctx_ext with
-          ext_loops = loop_variable.name::ctx.ctx_ext.ext_loops;
-          ext_to_clone_vars = get_updated_arrays_stmt ctx.ctx_ext.ext_to_clone_vars loop_body }
+      let ctx' =
+        { ctx with
+          ctx_loops = loop_variable.name::ctx.ctx_loops;
+          ctx_to_clone_vars =
+            get_updated_arrays_stmt ctx.ctx_to_clone_vars loop_body }
       in
-      let ctx' = { ctx with ctx_ext = ctx_ext' } in
       fprintf ff "@[<v 4>for %a in range(%a,%a + 1):@,%a@]"
         trans_id loop_variable
         (trans_expr ctx) lower_bound
         (trans_expr ctx) upper_bound
         (trans_stmt ctx') loop_body
   | ForEach (loop_variable, iteratee, body) ->
-      let ctx_ext' =
-        { ctx.ctx_ext with
-          ext_loops = loop_variable.name::ctx.ctx_ext. ext_loops;
-          ext_to_clone_vars = get_updated_arrays_stmt ctx.ctx_ext.ext_to_clone_vars body }
+      let ctx' =
+        { ctx with
+          ctx_loops = loop_variable.name::ctx.ctx_loops;
+          ctx_to_clone_vars =
+            get_updated_arrays_stmt ctx.ctx_to_clone_vars body }
       in
-      let ctx' = { ctx with ctx_ext = ctx_ext' } in
       fprintf ff "@[<v4>for %a in %a:@,%a@]"
         trans_id loop_variable
         (trans_expr ctx) iteratee
@@ -1537,7 +1535,7 @@ let trans_transformeddatablock ctx data ff transformeddata =
 let trans_parameter ctx ff p =
   match p.stmt with
   | VarDecl {identifier; initial_value = None; decl_type; transformation; _} ->
-    Hashtbl.add_exn ctx.ctx_ext.ext_params ~key:identifier.name ~data:();
+    Hashtbl.add_exn ctx.ctx_params ~key:identifier.name ~data:();
     fprintf ff "%a = sample('%s', %a)" trans_id identifier identifier.name
       (trans_prior ctx decl_type) transformation
   | _ -> assert false
@@ -1636,8 +1634,7 @@ let trans_guideblock ctx networks data tdata guide_parameters ff guide =
   let ctx =
     { ctx with
       ctx_mode = Generative;
-      ctx_ext = { ctx.ctx_ext with ext_params = Hashtbl.create (module String) }
-    }
+      ctx_params = Hashtbl.create (module String) }
   in
   if guide_parameters <> None || guide <> None then begin
     fprintf ff "@[<v 4>def guide(%a%a):@,%a%a%a@]@."
@@ -1661,10 +1658,10 @@ let trans_prog backend mode ff (p : typed_program) =
     { ctx_prog = p
     ; ctx_backend = backend
     ; ctx_mode = mode
-    ; ctx_ext = { ext_loops = []
-                ; ext_params = Hashtbl.create (module String)
-                ; ext_to_clone = false
-                ; ext_to_clone_vars = SSet.empty } }
+    ; ctx_loops = []
+    ; ctx_params = Hashtbl.create (module String)
+    ; ctx_to_clone = false
+    ; ctx_to_clone_vars = SSet.empty }
   in
   let runtime =
     match backend with
