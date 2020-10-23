@@ -43,7 +43,7 @@ class PyroModel:
                     stanfile,
                 ]
             )
-        module = importlib.import_module(splitext(self.pyfile)[0])
+        module = importlib.import_module(splitext(basename(self.pyfile))[0])
         self.convert_inputs = module.convert_inputs
         self._model = module.model
         self._transformed_data = None

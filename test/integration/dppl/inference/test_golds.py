@@ -7,7 +7,7 @@ from pandas import DataFrame, Series
 from posteriordb import PosteriorDatabase
 from os.path import splitext, basename
 
-pdb_root = "/Users/lmandel/stan/posteriordb"
+pdb_root = "/Users/gbdrt/Projects/deepstan/posteriordb-mandel"
 pdb_path = os.path.join(pdb_root, "posterior_database")
 
 
@@ -24,7 +24,7 @@ def parse_config(posterior, acc):
     return Config(
         iterations=args["iter"]//acc,
         warmups=args["warmup"]//acc,
-        chains=1, #args["chains"],
+        chains=3, #args["chains"],
         thin=args["thin"],
     )
 
