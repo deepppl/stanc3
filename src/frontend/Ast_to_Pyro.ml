@@ -1402,6 +1402,7 @@ let trans_fun_def ctx ff (ts : typed_statement) =
         [%message "Found non-function definition statement in function block"]
 
 let trans_functionblock ctx ff functionblock =
+  let ctx = { ctx with ctx_mode = Generative } in
   fprintf ff "@[<v 0>%a@,@]"
     (print_list_newline (trans_fun_def ctx)) functionblock
 
