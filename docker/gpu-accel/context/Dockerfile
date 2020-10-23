@@ -432,6 +432,9 @@ RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; \
   pip install torchdiffeq 
 
+# In x86_64 we need LD_LIBRARY_PATH to point to MKL.
+ENV LD_LIBRARY_PATH $InstallPath/miniconda3/envs/deepppl/lib
+
 # Copy example notebook
 COPY --chown=user:user notebook $InstallPath/notebook
 
