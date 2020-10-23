@@ -1,6 +1,7 @@
 from os.path import splitext, basename, dirname
 import importlib.util
 import numpyro
+from numpyro.infer.util import init_to_uniform
 import jax
 from pandas import DataFrame, Series
 from collections import defaultdict
@@ -52,9 +53,9 @@ class NumpyroModel:
         if hasattr(module, "generated_quantities"):
             self._generated_quantities = module.generated_quantities
 
-    def mcmc(self, samples, warmups=0, chains=1, thin=1, kernel=None):
+    def mcmc(self, samples, warmups=0, chains=1, thin=1, kernel=None, init_strategy=init_to_uniform):
         if kernel is None:
-            kernel = numpyro.infer.NUTS(self._model, adapt_step_size=True)
+            kernel = numpyro.infer.NUTS(self._model, adapt_step_size=True, init_strategy=init_strategy)
         mcmc = numpyro.infer.MCMC(
             kernel,
             warmups,

@@ -6,6 +6,7 @@ from pandas import DataFrame, Series
 from collections import defaultdict
 import subprocess
 import inspect
+from pyro.infer.autoguide.initialization import init_to_sample
 
 
 def _flatten_dict(d):
@@ -55,9 +56,9 @@ class PyroModel:
         if hasattr(module, "guide"):
             self._guide = module.guide
 
-    def mcmc(self, samples, warmups=0, chains=1, thin=1, kernel=None):
+    def mcmc(self, samples, warmups=0, chains=1, thin=1, kernel=None, init_strategy=init_to_sample):
         if kernel is None:
-            kernel = pyro.infer.NUTS(self._model, adapt_step_size=True)
+            kernel = pyro.infer.NUTS(self._model, adapt_step_size=True, init_strategy=init_strategy)
         mcmc = pyro.infer.MCMC(
             kernel,
             samples - warmups,
