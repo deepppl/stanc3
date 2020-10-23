@@ -742,7 +742,6 @@ and semantic_check_expression cf ({emeta; expr} : Ast.untyped_expression) :
       if
         not
           ( cf.in_lp_fun_def || cf.current_block = Model
-          || cf.current_block = Guide
           || cf.current_block = TParam )
       then
         Semantic_error.target_plusequals_outisde_model_or_logprob emeta.loc
@@ -757,7 +756,6 @@ and semantic_check_expression cf ({emeta; expr} : Ast.untyped_expression) :
       if
         not
           ( cf.in_lp_fun_def || cf.current_block = Model
-          || cf.current_block = Guide
           || cf.current_block = TParam )
       then
         Semantic_error.target_plusequals_outisde_model_or_logprob emeta.loc
@@ -927,7 +925,7 @@ let semantic_check_nrfn_target ~loc ~cf id =
   Validate.(
     if
       String.is_suffix id.name ~suffix:"_lp"
-      && not (cf.in_lp_fun_def || cf.current_block = Model || cf.current_block = Guide)
+      && not (cf.in_lp_fun_def || cf.current_block = Model)
     then Semantic_error.target_plusequals_outisde_model_or_logprob loc |> error
     else ok ())
 
@@ -1071,7 +1069,7 @@ let semantic_check_target_pe_expr_type ~loc e =
   | _ -> Validate.ok ()
 
 let semantic_check_target_pe_usage ~loc ~cf =
-  if cf.in_lp_fun_def || cf.current_block = Model || cf.current_block = Guide then Validate.ok ()
+  if cf.in_lp_fun_def || cf.current_block = Model then Validate.ok ()
   else
     Semantic_error.target_plusequals_outisde_model_or_logprob loc
     |> Validate.error
@@ -1117,7 +1115,7 @@ let semantic_check_sampling_cdf_ccdf ~loc id =
 (* Target+= can only be used in model and functions with right suffix (same for tilde etc) *)
 let semantic_check_valid_sampling_pos ~loc ~cf =
   Validate.(
-    if not (cf.in_lp_fun_def || cf.current_block = Model || cf.current_block = Guide) then
+    if not (cf.in_lp_fun_def || cf.current_block = Model) then
       error @@ Semantic_error.target_plusequals_outisde_model_or_logprob loc
     else ok ())
 
