@@ -42,17 +42,15 @@ class NumpyroModel:
                     stanfile,
                 ]
             )
-        spec = importlib.util.spec_from_file_location(self.name, self.pyfile)
-        Module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(Module)
-        self.convert_inputs = Module.convert_inputs
-        self._model = Module.model
+        module = importlib.import_module(splitext(self.pyfile)[0])
+        self.convert_inputs = module.convert_inputs
+        self._model = module.model
         self._transformed_data = None
         self._generated_quantities = None
-        if hasattr(Module, "transformed_data"):
-            self._transformed_data = Module.transformed_data
-        if hasattr(Module, "generated_quantities"):
-            self._generated_quantities = Module.generated_quantities
+        if hasattr(module, "transformed_data"):
+            self._transformed_data = module.transformed_data
+        if hasattr(module, "generated_quantities"):
+            self._generated_quantities = module.generated_quantities
 
     def mcmc(self, samples, warmups=0, chains=1, thin=1, kernel=None):
         if kernel is None:

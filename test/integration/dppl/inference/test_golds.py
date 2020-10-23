@@ -24,7 +24,7 @@ def parse_config(posterior, acc):
     return Config(
         iterations=args["iter"]//acc,
         warmups=args["warmup"]//acc,
-        chains=args["chains"],
+        chains=1, #args["chains"],
         thin=args["thin"],
     )
 
@@ -136,13 +136,14 @@ if __name__ == "__main__":
 
     my_pdb = PosteriorDatabase(pdb_path)
 
-    # Launch only the eight_school model
-    # posterior = my_pdb.posterior("eight_schools-eight_schools_centered")
-    # compare(posterior)
+    # # Launch only the eight_school model
+    posterior = my_pdb.posterior("eight_schools-eight_schools_centered")
+    compare(posterior, acc=100)
 
-    for name in my_pdb.posterior_names():
-        if name.startswith(tuple(golds)):
-            try:
-                compare(my_pdb.posterior(name), mode="mixed", acc=1)
-            except Exception as e:
-                print(f"Failed {name} with {e}")
+    # for name in my_pdb.posterior_names():
+    #     if name.startswith(tuple(golds)):
+    #         try:
+    #             compare(my_pdb.posterior(name), acc=100)
+    #             break
+    #         except Exception as e:
+    #             print(f"Failed {name} with {e}")
