@@ -38,20 +38,20 @@ log10 = lambda: array(mlog(10), dtype=dtype_float)
 
 # real not_a_number()
 # Not-a-number, a special non-finite real value returned to signal an error
-not_a_number = lambda : array(math.nan, dtype=torch.float)
+not_a_number = lambda : array(math.nan, dtype=dtype_float)
 
 # real positive_infinity()
 # Positive infinity, a special non-finite real value larger than all finite numbers
-positive_infinity = lambda : array(float("inf"), dtype=torch.float)
+positive_infinity = lambda : array(float("inf"), dtype=dtype_float)
 
 # real negative_infinity()
 # Negative infinity, a special non-finite real value smaller than all finite numbers
-negative_infinity = lambda : array(float("-inf"), dtype=torch.float)
+negative_infinity = lambda : array(float("-inf"), dtype=dtype_float)
 
 # real machine_precision()
 # The smallest number x
 # such that (x+1)≠1 in floating-point arithmetic on the current hardware platform
-machine_precision = lambda: arithmetic(10 ** (-15.95), dtype=torch.float)
+machine_precision = lambda: array(10 ** (-15.95), dtype=dtype_float)
 
 
 ## 3.7 Step-like Functions
@@ -517,7 +517,7 @@ log_sum_exp_real_real = logaddexp
 # R log_inv_logit(T x)
 # natural logarithm of the inverse logit function of x
 from jax.nn import log_sigmoid
-log_inv_logit_int = lambda x: log_sigmoid(array(x, dtype=torch.float))
+log_inv_logit_int = lambda x: log_sigmoid(array(x, dtype=dtype_float))
 log_inv_logit_real = log_sigmoid
 log_inv_logit_vector = log_sigmoid
 log_inv_logit_rowvector = log_sigmoid
