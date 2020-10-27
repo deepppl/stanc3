@@ -23,25 +23,25 @@ def _flatten_dict(d):
         fk: fv for f in (_flatten(k, v) for k, v in d.items()) for fk, fv in f.items()
     }
 
-def _compile(backend, mode, stanfile, pyfile):
-    if not os.path.exists('_build'):
-        os.makedirs('_build')
-        pathlib.Path('_build/__init__.py').touch()
 
-    subprocess.check_call(
-                [
-                    "dune",
-                    "exec",
-                    "stanc",
-                    "--",
-                    f"--{backend}",
-                    "--mode",
-                    mode,
-                    "--o",
-                    pyfile,
-                    stanfile,
-                ]
-            )
+def _compile(backend, mode, stanfile, pyfile):
+    try:
+        subprocess.check_call(
+            [
+                "dune",
+                "exec",
+                "stanc",
+                "--",
+                f"--{backend}",
+                "--mode",
+                mode,
+                "--o",
+                pyfile,
+                stanfile,
+            ]
+        )
+    except subprocess.CalledProcessError as e:
+        exit(1)
 
 
 class Model:
@@ -55,20 +55,24 @@ class Model:
         self.pyro = pyro
         self.tensor = tensor
 
+        if not os.path.exists("_tmp"):
+            os.makedirs("_tmp")
+            pathlib.Path("_tmp/__init__.py").touch()
+
         self.name = splitext(basename(stanfile))[0]
-        self.pyfile = f"_build/{self.name}.py"
+        self.pyfile = f"_tmp/{self.name}.py"
         if compile:
             _compile(backend, mode, stanfile, self.pyfile)
-        self.module = importlib.import_module(f"_build.{self.name}")
-
+        self.module = importlib.import_module(f"_tmp.{self.name}")
 
     def mcmc(self, samples, warmups=0, chains=1, thin=1, kernel=None):
         if kernel is None:
             kernel = self.pyro.infer.NUTS(self.module.model, adapt_step_size=True)
 
-        # HACK pyro an numpyro MCMC do not have the same parameters... 
+        # HACK pyro an numpyro MCMC do not have the same parameters...
         if self.pyro.__name__ == "numpyro":
             import jax
+
             rng_key = jax.random.split(jax.random.PRNGKey(0))
             mcmc = self.pyro.infer.MCMC(
                 kernel,
@@ -96,7 +100,7 @@ class Model:
         loss = loss if loss is not None else pyro.infer.Trace_ELBO()
         svi = pyro.infer.SVI(self.module.model, self.module.guide, optimizer, loss)
         return SVIProxy(svi, self.module)
-        
+
 
 class MCMCProxy:
     def __init__(
