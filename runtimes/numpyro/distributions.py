@@ -4,93 +4,27 @@ def _XXX_TODO_XXX_(f):
     return todo
 
 
-# import numpyro.distributions as d
-# from numpyro.distributions import constraints
-# import jax.numpy as jnp
-
-
-# class improper_uniform(d.Normal):
-#     def __init__(self, shape=None):
-#         zeros = jnp.zeros(shape) if shape else 0
-#         ones = jnp.ones(shape) if shape else 1
-#         super(improper_uniform, self).__init__(zeros, ones)
-
-#     def log_prob(self, x):
-#         return jnp.zeros_like(x)
-
-
-# class lower_constrained_improper_uniform(improper_uniform):
-#     def __init__(self, lower_bound=0, shape=None):
-#         self.lower_bound = lower_bound
-#         super(lower_constrained_improper_uniform, self).__init__(shape)
-#         self.support = constraints.greater_than(lower_bound)
-
-#     def sample(self, *args, **kwargs):
-#         s = d.Uniform(self.lower_bound, self.lower_bound + 2).sample(*args, **kwargs)
-#         return s
-
-
-# class upper_constrained_improper_uniform(improper_uniform):
-#     def __init__(self, upper_bound=0.0, shape=None):
-#         self.upper_bound = upper_bound
-#         super(upper_constrained_improper_uniform, self).__init__(shape)
-#         self.support = constraints.less_than(upper_bound)
-
-#     def sample(self, *args, **kwargs):
-#         s = d.Uniform(self.upper_bound - 2.0, self.upper_bound).sample(*args, **kwargs)
-#         return s
-
-# uniform = d.Uniform
-# beta = d.Beta
-# bernoulli = d.Bernoulli
-# normal = d.Normal
-# def normal_lpdf(y, mu, sigma):
-#     return d.Normal(mu, sigma).log_prob(y)
-# normal_lpdf_real_real_real = normal_lpdf
-# normal_lpdf_real_int_int = normal_lpdf
-# normal_lpdf_vector_int_int = normal_lpdf
-# normal_lpdf_vector_real_real = normal_lpdf
-# normal_lpdf_vector_vector_real = normal_lpdf
-# student_t = d.StudentT
-# inv_gamma = d.InverseGamma
-# gamma = d.Gamma
-# dirichlet = d.Dirichlet
-# multi_normal = d.MultivariateNormal
-# # logistic = d.LogisticNormal
-# cauchy = d.Cauchy
-
-# def categorical_logit(logits):
-#     return d.Categorical(logits=logits)
-
-# def bernoulli_logit(logits):
-#     return d.Bernoulli(logits=logits)
-
-# def binomial_logit(n, logits):
-#     return d.Binomial(n, logits=logits)
-
-# def poisson_log(alpha):
-#     return d.Poisson(jnp.exp(alpha))
-
-######################################################
-
 import numpyro.distributions as d
 from numpyro.distributions import constraints, transforms
+from numpyro.distributions.transforms import biject_to as transform
 from numpyro.distributions.constraints import Constraint
-from numpyro.distributions.transforms import  CorrCholeskyTransform
+from numpyro.distributions.transforms import  CorrCholeskyTransform, biject_to as transform
 from jax.numpy import sort
+from jax.numpy.linalg import norm
 from jax.numpy import log as tlog
 from jax.numpy import exp as texp
 from jax.numpy import ones as tones
-import jax.numpy as jnp
+import jax.numpy as tensor
 from numbers import Number
+from jax.numpy import array
 
-dtype_float=jnp.dtype('float32')
-dtype_long=jnp.dtype('int32')
+dtype_float=tensor.dtype('float32')
+dtype_long=tensor.dtype('int32')
 
 ## Utility functions
 def _cast1(f):
     def f_casted(y, *args):
-        y = y.astype(dtype_float) if isinstance(y, Number) else jnp.array(y, dtype=dtype_float)
+        y = y.astype(dtype_float) if isinstance(y, Number) else array(y, dtype=dtype_float)
         return f(y, *args)
     return f_casted
 
@@ -140,46 +74,40 @@ def _rng(d):
 
 class improper_uniform(d.Normal):
     def __init__(self, shape=[]):
-        zeros = jnp.zeros(shape) if shape != [] else 0
-        ones = tones(shape) if shape != [] else 1
+        zeros = tensor.zeros(shape) if shape != [] else 0
+        ones = tensor.ones(shape) if shape != [] else 1
         super(improper_uniform, self).__init__(zeros, ones)
 
     def log_prob(self, x):
-        return jnp.zeros_like(x)
+        return tensor.zeros_like(x)
 
-# XXX TODO? XXX
 class lower_constrained_improper_uniform(improper_uniform):
     def __init__(self, lower_bound=0, shape=[]):
-        self.lower_bound = lower_bound * tones(shape) if shape != [] else 1
-        super(lower_constrained_improper_uniform, self).__init__(shape)
+        super().__init__(shape)
         self.support = constraints.greater_than(lower_bound)
 
     def sample(self, *args, **kwargs):
-        s = d.Uniform(self.lower_bound, self.lower_bound + 2).sample(*args, **kwargs)
-        return s
+        s = super().sample(*args, **kwargs)
+        return transform(self.support)(s)
 
-# XXX TODO? XXX
 class upper_constrained_improper_uniform(improper_uniform):
-    def __init__(self, upper_bound=0.0, shape=[]):
-        self.upper_bound = upper_bound * jnp.ones(shape) if shape != [] else 1
-        super(upper_constrained_improper_uniform, self).__init__(shape)
+    def __init__(self, upper_bound=0, shape=[]):
+        super().__init__(shape)
         self.support = constraints.less_than(upper_bound)
 
     def sample(self, *args, **kwargs):
-        s = d.Uniform(self.upper_bound - 2.0, self.upper_bound).sample(*args, **kwargs)
-        return s
+        s = super().sample(*args, **kwargs)
+        return transform(self.support)(s)
 
 class simplex_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
-        # super().__init__(shape)
-        super().__init__([shape[0] - 1]) # XXX TODO: DANGER HACK !!!!! XXX
+        shape = (*shape[:-1], shape[-1] - 1) # HACK to get correct output dimensions
+        super().__init__(shape)
         self.support = constraints.simplex
-
-    _transform = d.transforms.StickBreakingTransform()
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return self._transform(s)
+        return transform(self.support)(s)
 
 class unit_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
@@ -187,7 +115,7 @@ class unit_constrained_improper_uniform(improper_uniform):
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return s / torch.norm(s)
+        return s / norm(s)
 
 class ordered_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
@@ -202,12 +130,10 @@ class positive_ordered_constrained_improper_uniform(improper_uniform):
         super().__init__(shape)
         self.support = constraints.positive
 
-    def _transform(x):
-        sort(abs(x))
-
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return self._transform(s)
+        s = transform(self.support)(s)
+        return sort(s)
 
 
 class cholesky_factor_corr_constrained_improper_uniform(improper_uniform):
@@ -215,11 +141,10 @@ class cholesky_factor_corr_constrained_improper_uniform(improper_uniform):
         super().__init__(shape[0])
         self.support = constraints.lower_cholesky
 
-    _transform =  CorrCholeskyTransform()
-
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return self._transform(s)
+        return transform(self.support)(s)
+
 
 ## Stan distributions
 
