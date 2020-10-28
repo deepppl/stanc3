@@ -5,6 +5,11 @@ from jax.numpy import array
 from jax.numpy import zeros, ones, matmul, true_divide, floor_divide, transpose, empty
 from jax.ops import index as ops_index
 from jax.ops import index_update as ops_index_update
+from jax.lax import cond as lax_cond
+from jax.lax import while_loop as lax_while_loop
+from jax.lax import fori_loop as lax_fori_loop
+from jax.lax import map as lax_map
+
 
 dtype_float=jnp.dtype('float32')
 dtype_long=jnp.dtype('int32')

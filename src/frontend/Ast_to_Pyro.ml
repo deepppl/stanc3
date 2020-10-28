@@ -34,6 +34,8 @@ let print_warning loc message =
     "@[<v>@,Warning: %s:@,%s@]@."
     (Location.to_string loc.Location_span.begin_loc) message
 
+let pp_print_nothing _ () = ()
+
 let print_list_comma printer ff l =
   fprintf ff "@[<hov 0>%a@]"
     (pp_print_list ~pp_sep:(fun ff () -> fprintf ff ",@ ") printer)
@@ -49,7 +51,11 @@ let pyro_dppllib =
     "matmul"; "true_divide"; "floor_divide"; "transpose";
     "dtype_long"; "dtype_float"; "register_network"; ]
 let numpyro_dppllib =
-  "ops_index" :: "ops_index_update" :: pyro_dppllib
+  [ "ops_index"; "ops_index_update";
+    "lax_cond";
+    "lax_while_loop";
+    "lax_fori_loop";
+    "lax_map"; ] @ pyro_dppllib
 
 let distribution =
   [ "improper_uniform";
@@ -601,12 +607,15 @@ let keywords =
 let avoid =
   keywords @ pyro_dppllib @ numpyro_dppllib @ distribution @ stanlib
 
-let trans_id ff id =
+let trans_name ff name =
   let x =
-    if List.mem ~equal:(=) avoid id.name then id.name ^ "__"
-    else id.name
+    if List.mem ~equal:(=) avoid name then name ^ "__"
+    else name
   in
   fprintf ff "%s" x
+
+let trans_id ff id =
+  trans_name ff id.name
 
 let stanlib_id id args =
   let arg_type arg =
@@ -631,9 +640,9 @@ let stanlib_id id args =
      args
 
 
-let gen_id =
+let gen_id, gen_name =
   let cpt = ref 0 in
-  fun ?(fresh=true) l ff e ->
+  let gen_id ?(fresh=true) l ff e =
     incr cpt;
     let s =
       match e.expr with
@@ -653,6 +662,12 @@ let gen_id =
                (fun ff x -> fprintf ff "__{%s}" x)) l !cpt
     else
       fprintf ff "'%s'" s
+  in
+  let gen_name s =
+    incr cpt;
+    s ^ "__" ^ (string_of_int !cpt)
+  in
+  (gen_id, gen_name)
 
 let without_underscores = String.filter ~f:(( <> ) '_')
 
@@ -714,26 +729,39 @@ let var_of_lval lv =
   assert (x <> "");
   x
 
-let rec used_vars_expr acc e =
-  let acc =
+let rec free_vars_expr (bv, fv) e =
+  let fv =
     match e.expr with
-    | Variable x -> SSet.add acc x.name
-    | _ -> acc
+    | Variable x -> if SSet.mem bv x.name then fv else SSet.add fv x.name
+    | _ -> fv
   in
-  fold_expression used_vars_expr (fun acc _ -> acc) acc e.expr
+  fold_expression free_vars_expr (fun (bv, fv) _ -> (bv, fv)) (bv, fv) e.expr
 
-let rec used_vars_lval acc lv =
+let rec free_vars_lval (bv, fv) lv =
   match lv.lval with
-  | LVariable id -> SSet.add acc id.name
-  | _ -> fold_lvalue used_vars_lval used_vars_expr acc lv.lval
+  | LVariable id ->
+      let fv = if SSet.mem bv id.name then fv else SSet.add fv id.name in
+      (bv, fv)
+  | _ -> fold_lvalue free_vars_lval free_vars_expr (bv, fv) lv.lval
 
-let rec used_vars_stmt acc s =
+let rec free_vars_stmt (bv, fv) s =
+  let bv =
+    match s.stmt with
+    | VarDecl { identifier = x; _ }
+    | For { loop_variable = x; _ }
+    | ForEach (x, _, _) -> SSet.add bv x.name
+    | _ -> bv
+  in
   fold_statement
-    used_vars_expr
-    used_vars_stmt
-    used_vars_lval
-    (fun acc _ -> acc)
-    acc s.stmt
+    free_vars_expr
+    free_vars_stmt
+    free_vars_lval
+    (fun (bv, fv) _ -> (bv, fv))
+    (bv, fv) s.stmt
+
+let free_vars bv stmt =
+  let _bv, fv = free_vars_stmt (bv, SSet.empty) stmt in
+  fv
 
 let is_variable_sampling x stmt =
   match stmt.stmt with
@@ -771,7 +799,7 @@ let rec push_prior_stmts (x, decl) stmts =
   | stmt :: stmts ->
       if is_variable_sampling x stmt then
         None, merge_decl_sample decl stmt :: stmts
-      else if SSet.mem (used_vars_stmt SSet.empty stmt) x then
+      else if SSet.mem (free_vars SSet.empty stmt) x then
         Some decl, stmt :: stmts
       else
         let prior, stmts = push_prior_stmts (x, decl) stmts in
@@ -814,8 +842,8 @@ let moveup_stmt stmt stmts =
       else
         List.rev_append rev_stmts (stmt' :: stmt :: acc)
   in
-  let used_vars = used_vars_stmt SSet.empty stmt in
-  moveup (used_vars, stmt) (List.rev stmts) []
+  let fvs = free_vars SSet.empty stmt in
+  moveup (fvs, stmt) (List.rev stmts) []
 
 let moveup_observes stmts =
   List.fold_left
@@ -837,7 +865,7 @@ let rec push_vardecl_stmts (x, decl) stmts =
   | stmt :: stmts ->
       if is_variable_initialization x stmt then
         merge_decl_stmt decl stmt :: stmts
-      else if SSet.mem (used_vars_stmt SSet.empty stmt) x then
+      else if SSet.mem (free_vars SSet.empty stmt) x then
         decl :: stmt :: stmts
       else stmt :: push_vardecl_stmts (x, decl) stmts
 
@@ -1326,14 +1354,69 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
   | Print ps -> fprintf ff "print(%a)" (trans_printables ctx) ps
   | Reject ps -> fprintf ff "stanlib.reject(%a)" (trans_printables ctx) ps
   | IfThenElse (cond, ifb, None) ->
-      fprintf ff "@[<v 0>@[<v 4>if %a:@,%a@]@]"
-        (trans_expr ctx) cond
-        (trans_stmt ctx) ifb
+      begin match ctx.ctx_backend with
+      | Pyro ->
+          fprintf ff "@[<v 0>@[<v 4>if %a:@,%a@]@]"
+            (trans_expr ctx) cond
+            (trans_stmt ctx) ifb
+      | Numpyro ->
+          let name_tt, _, pp_closure_tt, pp_pack, pp_unpack =
+            build_closure ctx "then"
+              (closure_vars SSet.empty ifb)
+              SSet.empty ifb
+          in
+          let name_ff = gen_name "else" in
+          let pp_closure_ff ff () =
+            fprintf ff "@[<v 4>def %a(acc):@,return acc@]"
+              trans_name name_ff
+          in
+          let res = gen_name "res" in
+          fprintf ff "@[<v 0>%a@,%a@,%a = lax_cond(@[%a,@ %a, %a,@ %a@])@,%a@]"
+            pp_closure_tt ()
+            pp_closure_ff ()
+            trans_name res
+            (trans_expr ctx) cond
+            trans_name name_tt
+            trans_name name_ff
+            pp_pack ()
+            (pp_unpack ~eol:false) ()
+      end
   | IfThenElse (cond, ifb, Some elseb) ->
-      fprintf ff "@[<v 0>@[<v 4>if %a:@,%a@]@,@[<v 4>else:@,%a@]@]"
-        (trans_expr ctx) cond
-        (trans_stmt ctx) ifb
-        (trans_stmt ctx) elseb
+      begin match ctx.ctx_backend with
+      | Pyro ->
+          fprintf ff "@[<v 0>@[<v 4>if %a:@,%a@]@,@[<v 4>else:@,%a@]@]"
+            (trans_expr ctx) cond
+            (trans_stmt ctx) ifb
+            (trans_stmt ctx) elseb
+      | Numpyro ->
+          let (updated_vars_tt, nonlocal_vars_tt) =
+            closure_vars SSet.empty ifb
+          in
+          let (updated_vars_ff, nonlocal_vars_ff) =
+            closure_vars SSet.empty elseb
+          in
+          let updated_vars =  SSet.union updated_vars_tt updated_vars_ff in
+          let name_tt, _, pp_closure_tt, pp_pack, pp_unpack =
+            build_closure ctx "then"
+              (updated_vars, nonlocal_vars_tt)
+              SSet.empty ifb
+          in
+          let name_ff, _, pp_closure_ff, _, _ =
+            build_closure ctx "else"
+              (updated_vars, nonlocal_vars_ff)
+              SSet.empty elseb
+          in
+          let res = gen_name "res" in
+          fprintf ff "@[<v 0>%a@,%a@,%a = lax_cond(@[%a,@ %a, %a,@ %a@])@,%a@]"
+            pp_closure_tt ()
+            pp_closure_ff ()
+            trans_name res
+            (trans_expr ctx) cond
+            trans_name name_tt
+            trans_name name_ff
+            pp_pack ()
+            (pp_unpack ~eol:false) ()
+      end
   | While (cond, body) ->
       let ctx' =
         { ctx with
@@ -1341,9 +1424,36 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           ctx_to_clone_vars =
             get_updated_arrays_stmt ctx.ctx_to_clone_vars body }
       in
-      fprintf ff "@[<v4>while %a:@,%a@]"
-        (trans_expr ctx) cond
-        (trans_stmt ctx') body
+      begin match ctx.ctx_backend with
+      | Pyro ->
+          fprintf ff "@[<v4>while %a:@,%a@]"
+            (trans_expr ctx) cond
+            (trans_stmt ctx') body
+      | Numpyro ->
+          let body_name, acc_name, pp_closure, pp_pack, pp_unpack =
+            build_closure ctx' "body"
+              (closure_vars SSet.empty body)
+              SSet.empty body
+          in
+          let cond_name = gen_name "cond" in
+          let pp_cond ff () =
+            fprintf ff "@[<v 4>def %a(%a):@,%areturn %a@]"
+              trans_name cond_name
+              trans_name acc_name
+              (pp_unpack ~eol:true) ()
+              (trans_expr ctx) cond
+          in
+          fprintf ff "@[<v 0>@[<v 4>def %a(_):@,%a@]@,"
+            trans_name body_name
+            (trans_stmt ctx') body;
+          fprintf ff
+            "@[<v 0>%a@,%a@,%a = lax_while_loop(@[%a,@ %a,@ %a@])@,%a@]"
+            pp_cond ()
+            pp_closure ()
+            trans_name acc_name
+            trans_name cond_name trans_name body_name pp_pack ()
+            (pp_unpack ~eol:false) ()
+      end
   | For {loop_variable; lower_bound; upper_bound; loop_body} ->
       let ctx' =
         { ctx with
@@ -1351,11 +1461,29 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           ctx_to_clone_vars =
             get_updated_arrays_stmt ctx.ctx_to_clone_vars loop_body }
       in
-      fprintf ff "@[<v 4>for %a in range(%a,%a + 1):@,%a@]"
-        trans_id loop_variable
-        (trans_expr ctx) lower_bound
-        (trans_expr ctx) upper_bound
-        (trans_stmt ctx') loop_body
+      begin match ctx.ctx_backend with
+      | Pyro ->
+          fprintf ff "@[<v 4>for %a in range(%a,%a + 1):@,%a@]"
+            trans_id loop_variable
+            (trans_expr ctx) lower_bound
+            (trans_expr ctx) upper_bound
+            (trans_stmt ctx') loop_body
+      | Numpyro ->
+          let body_name, acc_name, pp_closure, pp_pack, pp_unpack =
+            build_closure ctx' "body"
+              (closure_vars (SSet.singleton loop_variable.name) loop_body)
+              (SSet.singleton loop_variable.name) loop_body
+          in
+          fprintf ff
+            "@[<v 0>%a@,%a = lax_fori_loop(@[%a,@ %a,@ %a,@ %a@])@,%a@]"
+            pp_closure ()
+            trans_name acc_name
+            (trans_expr ctx) lower_bound
+            (trans_expr ctx) upper_bound
+            trans_name body_name
+            pp_pack ()
+            (pp_unpack ~eol:false) ()
+      end
   | ForEach (loop_variable, iteratee, body) ->
       let ctx' =
         { ctx with
@@ -1363,10 +1491,27 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           ctx_to_clone_vars =
             get_updated_arrays_stmt ctx.ctx_to_clone_vars body }
       in
-      fprintf ff "@[<v4>for %a in %a:@,%a@]"
-        trans_id loop_variable
-        (trans_expr ctx) iteratee
-        (trans_stmt ctx') body
+      begin match ctx.ctx_backend with
+      | Pyro ->
+        fprintf ff "@[<v4>for %a in %a:@,%a@]"
+          trans_id loop_variable
+          (trans_expr ctx) iteratee
+          (trans_stmt ctx') body
+      | Numpyro ->
+          let body_name, acc_name, pp_closure, pp_pack, pp_unpack =
+            build_closure ctx' "body"
+              (closure_vars (SSet.singleton loop_variable.name) body)
+              (SSet.singleton loop_variable.name) body
+          in
+          fprintf ff
+            "@[<v 0>%a@,%a = lax_map(@[%a,@ %a,@ %a@])@,%a@]"
+            pp_closure ()
+            trans_name acc_name
+            trans_name body_name
+            (trans_expr ctx) iteratee
+            pp_pack ()
+            (pp_unpack ~eol:false) ()
+      end
   | FunDef _ ->
       raise_s
         [%message
@@ -1388,6 +1533,59 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       fprintf ff "continue"
   | Skip ->
       fprintf ff "pass"
+
+and closure_vars args stmt =
+  let fvars = free_vars args stmt in
+  let updated_vars = SSet.inter (updated_vars_stmt args stmt) fvars in
+  let nonlocal_vars = SSet.diff fvars updated_vars in
+  (updated_vars, nonlocal_vars)
+
+and build_closure ctx fun_name (updated_vars, nonlocal_vars) args stmt =
+  let nonlocal ff vars =
+    fprintf ff "%a@,"
+      (print_list_newline (fun ff x -> fprintf ff "nonlocal %a" trans_name x))
+      vars
+  in
+  let fun_name = gen_name fun_name in
+  let acc_name =
+    match SSet.to_list updated_vars with
+    | [ x ] -> x
+    | _ -> gen_name "acc"
+  in
+  let pp_pack ff () =
+    match SSet.to_list updated_vars with
+    | [] -> fprintf ff "None"
+    | [ x ] -> fprintf ff "%a" trans_name x
+    | vars ->
+        fprintf ff "{ %a }"
+          (print_list_comma (fun ff x -> fprintf ff "'%s': %a" x trans_name x))
+          vars
+  in
+  let pp_unpack ~eol ff () =
+    match SSet.to_list updated_vars with
+    | [] | [ _ ] -> ()
+    | vars ->
+        fprintf ff "%a%a"
+          (print_list_newline
+             (fun ff x -> fprintf ff "%a = %a['%s']"
+                 trans_name x
+                 trans_name acc_name
+                 x))
+          vars
+          (if eol then pp_print_cut else pp_print_nothing) ()
+  in
+  let pp_closure ff () =
+    fprintf ff "@[<v 4>def %a(%a%s%a):@,%a%a%a@,return %a@]"
+      trans_name fun_name
+      (print_list_comma pp_print_string) (SSet.to_list args)
+      (if SSet.is_empty args then "" else ", ")
+      trans_name acc_name
+      (pp_unpack ~eol:true) ()
+      nonlocal (SSet.to_list nonlocal_vars)
+      (trans_stmt ctx) stmt
+      pp_pack ()
+  in
+  fun_name, acc_name, pp_closure, pp_pack, pp_unpack
 
 let trans_stmts ctx ff stmts =
   fprintf ff "%a" (print_list_newline (trans_stmt ctx)) stmts
@@ -1513,8 +1711,6 @@ let trans_prior ctx (decl_type: typed_expression Type.t) ff transformation =
   | Correlation
   | Covariance ->
       raise_s [%message "Unsupported type constraints"]
-
-let pp_print_nothing _ () = ()
 
 let trans_block ?(eol=true) comment ctx ff block =
   Option.iter
