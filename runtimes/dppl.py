@@ -49,11 +49,17 @@ class Model:
         if backend == "pyro":
             import pyro
             import torch as tensor
+            self.pyro = pyro
+            self.tensor = tensor
+            self.tensor.array = tensor.tensor
         elif backend == "numpyro":
             import numpyro as pyro
             import jax.numpy as tensor
-        self.pyro = pyro
-        self.tensor = tensor
+            self.pyro = pyro
+            self.tensor = tensor
+            self.tensor.long = tensor.dtype("int32")
+            self.tensor.float = tensor.dtype("float32") 
+
 
         if not os.path.exists("_tmp"):
             os.makedirs("_tmp")
@@ -145,10 +151,10 @@ class MCMCProxy:
 
     def summary(self):
         d_mean = _flatten_dict(
-            {k: self.tensor.mean(v, axis=0) for k, v in self.samples.items()}
+            {k: self.tensor.mean(self.tensor.array(v, dtype=self.tensor.float), axis=0) for k, v in self.samples.items()}
         )
         d_std = _flatten_dict(
-            {k: self.tensor.std(v, axis=0) for k, v in self.samples.items()}
+            {k: self.tensor.std(self.tensor.array(v, dtype=self.tensor.float), axis=0) for k, v in self.samples.items()}
         )
         return DataFrame({"mean": Series(d_mean), "std": Series(d_std)})
 
