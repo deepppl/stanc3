@@ -1115,7 +1115,8 @@ let semantic_check_sampling_cdf_ccdf ~loc id =
 (* Target+= can only be used in model and functions with right suffix (same for tilde etc) *)
 let semantic_check_valid_sampling_pos ~loc ~cf =
   Validate.(
-    if not (cf.in_lp_fun_def || cf.current_block = Model) then
+    if not (cf.in_lp_fun_def || cf.current_block = Model ||
+            cf.current_block = Guide) then
       error @@ Semantic_error.target_plusequals_outisde_model_or_logprob loc
     else ok ())
 

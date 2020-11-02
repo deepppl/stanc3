@@ -4,6 +4,7 @@ from os.path import splitext, basename
 import os
 from runtimes.pyro.dppl import PyroModel
 from runtimes.numpyro.dppl import NumpyroModel
+from pyro.infer.autoguide.initialization import init_to_uniform, init_to_sample
 
 import numpy as np
 from jax import numpy as jnp
@@ -32,7 +33,7 @@ def test(posterior, config):
     pythonfile = os.path.join(os.getcwd(), splitext(basename(stanfile))[0] + ".py")
     try:
         pyro_model = PyroModel(stanfile, mode='mixed', pyfile=pythonfile, compile=True)
-        # pyro_model = NumpyroModel(stanfile, pyfile=pythonfile)
+        # pyro_model = NumpyroModel(stanfile, mode='mixed', pyfile=pythonfile)
     except Exception as e:
     # except torch.Tensor as e:
         return { 'code': 1, 'msg': f'compilation error ({posterior.name}): {model.name}', 'exn': e }
@@ -40,7 +41,9 @@ def test(posterior, config):
         mcmc = pyro_model.mcmc(config.iterations,
                                warmups=config.warmups,
                                chains=config.chains,
-                               thin=config.thin)
+                               thin=config.thin,
+                               # init_strategy=init_to_sample
+                               )
         inputs = pyro_model.convert_inputs(data.values())
         mcmc.run(**inputs)
     except Exception as e:
@@ -108,23 +111,32 @@ constraints = [
 # posterior = my_pdb.posterior('sblri-blr')
 # posterior = my_pdb.posterior('rstan_downloads-prophet')
 # posterior = my_pdb.posterior('ecdc0401-covid19imperial_v2')
+posterior = my_pdb.posterior('ecdc0501-covid19imperial_v2')
 # posterior = my_pdb.posterior('dogs-dogs')
 # posterior = my_pdb.posterior('mcycle_gp-accel_gp')
-# posterior = my_pdb.posterior('mnist_100-nn_rbm1bJ10')
 # posterior = my_pdb.posterior('garch-garch11')
 # posterior = my_pdb.posterior('prostate-logistic_regression_rhs')
 # posterior = my_pdb.posterior('mcycle_gp-accel_gp')
-# posterior = my_pdb.posterior('diamonds-diamonds')
 # posterior = my_pdb.posterior('low_dim_gauss_mix_collapse')
-# posterior = my_pdb.posterior('hmm_example-hmm_example')
-# posterior = my_pdb.posterior('butterfly-multi_occupancy')
 # posterior = my_pdb.posterior('sat-hier_2pl')
 # posterior = my_pdb.posterior('nes1984-nes')
-# config = Config()
-# res = test(posterior, config)
-# print(res['code'])
-# print(res['msg'])
-# print(res['exn'])
+
+# posterior = my_pdb.posterior('diamonds-diamonds')
+# posterior = my_pdb.posterior('butterfly-multi_occupancy')
+# posterior = my_pdb.posterior('hmm_example-hmm_example')
+# posterior = my_pdb.posterior('sat-hier_2pl')
+# posterior = my_pdb.posterior('normal_5-normal_mixture_k')
+# posterior = my_pdb.posterior('mcycle_splines-accel_splines')
+# posterior = my_pdb.posterior('hudson_lynx_hare-lotka_volterra')
+# posterior = my_pdb.posterior('sir-sir')
+# posterior = my_pdb.posterior('mnist_100-nn_rbm1bJ10')
+# posterior = my_pdb.posterior('arma-arma11')
+
+config = Config()
+res = test(posterior, config)
+print(res['code'])
+print(res['msg'])
+print(res['exn'])
 
 success = 0
 compile_error = 0
