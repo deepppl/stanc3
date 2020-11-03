@@ -6,6 +6,7 @@ from pandas import DataFrame, Series
 from collections import defaultdict
 import subprocess
 from functools import partial
+from pyro.infer.autoguide.initialization import init_to_sample
 
 
 def _flatten_dict(d):
@@ -71,9 +72,9 @@ class Model:
             _compile(backend, mode, stanfile, self.pyfile)
         self.module = importlib.import_module(f"_tmp.{self.name}")
 
-    def mcmc(self, samples, warmups=0, chains=1, thin=1, kernel=None):
+    def mcmc(self, samples, warmups=0, chains=1, thin=1, kernel=None, **kwargs):
         if kernel is None:
-            kernel = self.pyro.infer.NUTS(self.module.model, adapt_step_size=True)
+            kernel = self.pyro.infer.NUTS(self.module.model, adapt_step_size=True) #, init_strategy=init_to_sample,)
 
         # HACK pyro an numpyro MCMC do not have the same parameters...
         if self.pyro.__name__ == "numpyro":
@@ -85,14 +86,17 @@ class Model:
                 warmups,
                 samples - warmups,
                 num_chains=chains,
+                **kwargs
             )
             mcmc.run = partial(mcmc.run, rng_key)
         elif self.pyro.__name__ == "pyro":
+            kwargs = {'mp_context': 'forkserver', **kwargs}
             mcmc = self.pyro.infer.MCMC(
                 kernel,
                 samples - warmups,
                 warmup_steps=warmups,
                 num_chains=chains,
+                **kwargs
             )
         else:
             assert False, "Invalid Pyro implementation"
@@ -102,9 +106,9 @@ class Model:
     def svi(
         self, optimizer=None, loss=None, params={"lr": 0.0005, "betas": (0.90, 0.999)}
     ):
-        optimizer = optimizer if optimizer else pyro.optim.Adam(params)
-        loss = loss if loss is not None else pyro.infer.Trace_ELBO()
-        svi = pyro.infer.SVI(self.module.model, self.module.guide, optimizer, loss)
+        optimizer = optimizer if optimizer else self.pyro.optim.Adam(params)
+        loss = loss if loss is not None else self.pyro.infer.Trace_ELBO()
+        svi = self.pyro.infer.SVI(self.module.model, self.module.guide, optimizer, loss)
         return SVIProxy(svi, self.module)
 
 
@@ -173,6 +177,6 @@ class SVIProxy(object):
 
     def step(self, *args, **kwargs):
         self.kwargs = kwargs
-        if self.module.transformed_data:
+        if hasattr(self.module, "transformed_data"):
             self.kwargs.update(self.module.transformed_data(**self.kwargs))
         return self.svi.step(**kwargs)
