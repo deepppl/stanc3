@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 import os
-from runtimes.pyro.dppl import PyroModel
-from runtimes.numpyro.dppl import NumpyroModel
+from runtimes.dppl import Model
 import numpy
 from pandas import DataFrame, Series
 from posteriordb import PosteriorDatabase
@@ -90,14 +89,14 @@ def run_model(posterior, mode, config: Config):
     data = posterior.data
     stanfile = model.code_file_path("stan")
     pythonfile = os.path.join(os.getcwd(), splitext(basename(stanfile))[0] + ".py")
-    pyro_model = PyroModel(stanfile, mode=mode, pyfile=pythonfile)
+    pyro_model = Model("pyro", stanfile, compile=True, mode=mode)
     mcmc = pyro_model.mcmc(
         config.iterations,
         warmups=config.warmups,
         chains=config.chains,
         thin=config.thin,
     )
-    inputs = pyro_model.convert_inputs(data.values())
+    inputs = pyro_model.module.convert_inputs(data.values())
     mcmc.run(**inputs)
     return mcmc.summary()
 
@@ -138,7 +137,7 @@ if __name__ == "__main__":
 
     # # Launch only the eight_school model
     posterior = my_pdb.posterior("eight_schools-eight_schools_centered")
-    compare(posterior, acc=100)
+    compare(posterior, acc=10)
 
     # for name in my_pdb.posterior_names():
     #     if name.startswith(tuple(golds)):
