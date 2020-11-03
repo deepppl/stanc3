@@ -1,14 +1,17 @@
 import math
-import jax.numpy as jnp
+import jax.numpy as tensor
 from jax.numpy import ones, array
 
-dtype_float=jnp.dtype('float32')
-dtype_long=jnp.dtype('int32')
+dtype_float = tensor.dtype("float32")
+dtype_long = tensor.dtype("int32")
+
 
 def _XXX_TODO_XXX_(f):
-    def todo(x):
-        assert false, f'{f}: not yet implemented'
+    def todo(*args):
+        assert False, f"{f}: not yet implemented"
+
     return todo
+
 
 # 3.2 Mathematical Constants
 
@@ -23,11 +26,13 @@ e = lambda: array(math.e, dtype=dtype_float)
 # real sqrt2()
 # The square root of 2
 from math import sqrt as msqrt
+
 sqrt2 = lambda: array(msqrt(2), dtype=dtype_float)
 
 # real log2()
 # The natural logarithm of 2
 from math import log as mlog
+
 log2 = lambda: array(mlog(2), dtype=dtype_float)
 
 # real log10()
@@ -38,21 +43,20 @@ log10 = lambda: array(mlog(10), dtype=dtype_float)
 
 # real not_a_number()
 # Not-a-number, a special non-finite real value returned to signal an error
-not_a_number = lambda : array(math.nan, dtype=dtype_float)
+not_a_number = lambda: array(math.nan, dtype=dtype_float)
 
 # real positive_infinity()
 # Positive infinity, a special non-finite real value larger than all finite numbers
-positive_infinity = lambda : array(float("inf"), dtype=dtype_float)
+positive_infinity = lambda: array(float("inf"), dtype=dtype_float)
 
 # real negative_infinity()
 # Negative infinity, a special non-finite real value smaller than all finite numbers
-negative_infinity = lambda : array(float("-inf"), dtype=dtype_float)
+negative_infinity = lambda: array(float("-inf"), dtype=dtype_float)
 
 # real machine_precision()
 # The smallest number x
 # such that (x+1)≠1 in floating-point arithmetic on the current hardware platform
 machine_precision = lambda: array(10 ** (-15.95), dtype=dtype_float)
-
 
 ## 3.7 Step-like Functions
 
@@ -61,6 +65,7 @@ machine_precision = lambda: array(10 ** (-15.95), dtype=dtype_float)
 # R fabs(T x)
 # absolute value of x
 from jax.numpy import abs as tabs
+
 mabs = abs
 abs_int = mabs
 abs_real = tabs
@@ -100,8 +105,9 @@ fmod_real_real = lambda x, y: x % y
 
 # R floor(T x)
 # floor of x, which is the largest integer less than or equal to x, converted to a real value; see warning at start of section step-like functions
-from jax.numpy import floor as tfloor
 from math import floor as mfloor
+from jax.numpy import floor as tfloor
+
 floor_int = mfloor
 floor_real = tfloor
 floor_vector = tfloor
@@ -111,8 +117,9 @@ floor_array = tfloor
 
 # R ceil(T x)
 # ceiling of x, which is the smallest integer greater than or equal to x, converted to a real value; see warning at start of section step-like functions
-from jax.numpy import ceil as tceil
 from math import ceil as mceil
+from jax.numpy import ceil as tceil
+
 ceil_int = mceil
 ceil_real = tceil
 ceil_vector = tceil
@@ -123,6 +130,7 @@ ceil_array = tceil
 # R round(T x)
 # nearest integer to x, converted to a real value; see warning at start of section step-like functions
 from jax.numpy import round as tround
+
 mround = round
 round_int = mround
 round_real = tround
@@ -133,8 +141,9 @@ round_array = tround
 
 # R trunc(T x)
 # integer nearest to but no larger in magnitude than x, converted to a double value; see warning at start of section step-like functions
-from jax.numpy import trunc as ttrunc
 from math import trunc as mtrunc
+from jax.numpy import trunc as ttrunc
+
 trunc_int = mtrunc
 trunc_real = ttrunc
 trunc_vector = ttrunc
@@ -147,6 +156,7 @@ trunc_array = ttrunc
 # R sqrt(T x)
 # square root of x
 from jax.numpy import sqrt as tsqrt
+
 sqrt_int = lambda x: array(msqrt(x), dtype=dtype_float)
 sqrt_real = tsqrt
 sqrt_vector = tsqrt
@@ -156,16 +166,17 @@ sqrt_array = tsqrt
 
 # R cbrt(T x)
 # cube root of x
-cbrt_int = _XXX_TODO_XXX_('cbrt')
-cbrt_real = _XXX_TODO_XXX_('cbrt')
-cbrt_vector = _XXX_TODO_XXX_('cbrt')
-cbrt_rowvector = _XXX_TODO_XXX_('cbrt')
-cbrt_matrix = _XXX_TODO_XXX_('cbrt')
-cbrt_array = _XXX_TODO_XXX_('cbrt')
+cbrt_int = _XXX_TODO_XXX_("cbrt")
+cbrt_real = _XXX_TODO_XXX_("cbrt")
+cbrt_vector = _XXX_TODO_XXX_("cbrt")
+cbrt_rowvector = _XXX_TODO_XXX_("cbrt")
+cbrt_matrix = _XXX_TODO_XXX_("cbrt")
+cbrt_array = _XXX_TODO_XXX_("cbrt")
 
 # R square(T x)
 # square of x
 from jax.numpy import square as tsquare
+
 square_int = lambda x: x * x
 square_real = tsquare
 square_vector = tsquare
@@ -176,8 +187,9 @@ square_array = tsquare
 
 # R exp(T x)
 # natural exponential of x
-from jax.numpy import exp as texp
 from math import exp as mexp
+from jax.numpy import exp as texp
+
 exp_int = lambda x: array(mexp(x), dtype=dtype_float)
 exp_real = texp
 exp_vector = texp
@@ -187,16 +199,17 @@ exp_array = texp
 
 # R exp2(T x)
 # base-2 exponential of x
-exp2_int = _XXX_TODO_XXX_('exp2')
-exp2_real = _XXX_TODO_XXX_('exp2')
-exp2_vector = _XXX_TODO_XXX_('exp2')
-exp2_rowvector = _XXX_TODO_XXX_('exp2')
-exp2_matrix = _XXX_TODO_XXX_('exp2')
-exp2_array = _XXX_TODO_XXX_('exp2')
+exp2_int = _XXX_TODO_XXX_("exp2")
+exp2_real = _XXX_TODO_XXX_("exp2")
+exp2_vector = _XXX_TODO_XXX_("exp2")
+exp2_rowvector = _XXX_TODO_XXX_("exp2")
+exp2_matrix = _XXX_TODO_XXX_("exp2")
+exp2_array = _XXX_TODO_XXX_("exp2")
 
 # R log(T x)
 # natural logarithm of x
 from jax.numpy import log as tlog
+
 log_int = lambda x: array(mlog(x), dtype=dtype_float)
 log_real = tlog
 log_vector = tlog
@@ -206,8 +219,9 @@ log_array = tlog
 
 # R log2(T x)
 # base-2 logarithm of x
-from jax.numpy import log2 as tlog2
 from math import log2 as mlog2
+from jax.numpy import log2 as tlog2
+
 log2_int = lambda x: array(mlog2(x), dtype=dtype_float)
 log2_real = tlog2
 log2_vector = tlog2
@@ -217,8 +231,9 @@ log2_array = tlog2
 
 # R log10(T x)
 # base-10 logarithm of x
-from jax.numpy import log10 as tlog10
 from math import log10 as mlog10
+from jax.numpy import log10 as tlog10
+
 log10_int = lambda x: array(mlog10(x), dtype=dtype_float)
 log10_real = tlog10
 log10_vector = tlog10
@@ -235,42 +250,44 @@ pow_real_real = lambda x, y: x ** y
 
 # R inv(T x)
 # inverse of x
-inv_int = _XXX_TODO_XXX_('inv')
-inv_real = _XXX_TODO_XXX_('inv')
-inv_vector = _XXX_TODO_XXX_('inv')
-inv_rowvector = _XXX_TODO_XXX_('inv')
-inv_matrix = _XXX_TODO_XXX_('inv')
-inv_array = _XXX_TODO_XXX_('inv')
+inv_int = _XXX_TODO_XXX_("inv")
+inv_real = _XXX_TODO_XXX_("inv")
+inv_vector = _XXX_TODO_XXX_("inv")
+inv_rowvector = _XXX_TODO_XXX_("inv")
+inv_matrix = _XXX_TODO_XXX_("inv")
+inv_array = _XXX_TODO_XXX_("inv")
 
 # R inv_sqrt(T x)
 # inverse of the square root of x
-inv_sqrt_int = _XXX_TODO_XXX_('inv_sqrt')
-inv_sqrt_real = _XXX_TODO_XXX_('inv_sqrt')
-inv_sqrt_vector = _XXX_TODO_XXX_('inv_sqrt')
-inv_sqrt_rowvector = _XXX_TODO_XXX_('inv_sqrt')
-inv_sqrt_matrix = _XXX_TODO_XXX_('inv_sqrt')
-inv_sqrt_array = _XXX_TODO_XXX_('inv_sqrt')
+inv_sqrt_int = _XXX_TODO_XXX_("inv_sqrt")
+inv_sqrt_real = _XXX_TODO_XXX_("inv_sqrt")
+inv_sqrt_vector = _XXX_TODO_XXX_("inv_sqrt")
+inv_sqrt_rowvector = _XXX_TODO_XXX_("inv_sqrt")
+inv_sqrt_matrix = _XXX_TODO_XXX_("inv_sqrt")
+inv_sqrt_array = _XXX_TODO_XXX_("inv_sqrt")
 
 # R inv_square(T x)
 # inverse of the square of x
-inv_square_int = _XXX_TODO_XXX_('inv_square')
-inv_square_real = _XXX_TODO_XXX_('inv_square')
-inv_square_vector = _XXX_TODO_XXX_('inv_square')
-inv_square_rowvector = _XXX_TODO_XXX_('inv_square')
-inv_square_matrix = _XXX_TODO_XXX_('inv_square')
-inv_square_array = _XXX_TODO_XXX_('inv_square')
+inv_square_int = _XXX_TODO_XXX_("inv_square")
+inv_square_real = _XXX_TODO_XXX_("inv_square")
+inv_square_vector = _XXX_TODO_XXX_("inv_square")
+inv_square_rowvector = _XXX_TODO_XXX_("inv_square")
+inv_square_matrix = _XXX_TODO_XXX_("inv_square")
+inv_square_array = _XXX_TODO_XXX_("inv_square")
 
 ## 3.9 Trigonometric Functions
 
 # real hypot(real x, real y)
 # Return the length of the hypotenuse of a right triangle with sides of length x and y.
 from math import hypot
+
 hypot_real_real = hypot
 
 # R cos(T x)
 # cosine of the angle x (in radians)
-from jax.numpy import cos as tcos
 from math import cos as mcos
+from jax.numpy import cos as tcos
+
 cos_int = lambda x: array(mcos(x), dtype=dtype_float)
 cos_real = tcos
 cos_vector = tcos
@@ -280,8 +297,8 @@ cos_array = tcos
 
 # R sin(T x)
 # sine of the angle x (in radians)
-from jax.numpy import sin as tsin
 from math import sin as msin
+from jax.numpy import sin as tsin
 sin_int = lambda x: array(msin(x), dtype=dtype_float)
 sin_real = tsin
 sin_vector = tsin
@@ -291,8 +308,9 @@ sin_array = tsin
 
 # R tan(T x)
 # tangent of the angle x (in radians)
-from jax.numpy import tan as ttan
 from math import tan as mtan
+from jax.numpy import tan as ttan
+
 tan_int = lambda x: array(mtan(x), dtype=dtype_float)
 tan_real = ttan
 tan_vector = ttan
@@ -302,8 +320,9 @@ tan_array = ttan
 
 # R acos(T x)
 # principal arc (inverse) cosine (in radians) of x
-from jax.numpy import arccos as tacos
 from math import acos as macos
+from jax.numpy import arccos as tacos
+
 acos_int = lambda x: array(macos(x), dtype=dtype_float)
 acos_real = tacos
 acos_vector = tacos
@@ -313,8 +332,9 @@ acos_array = tacos
 
 # R asin(T x)
 # principal arc (inverse) sine (in radians) of x
-from jax.numpy import arcsin as tasin
 from math import asin as masin
+from jax.numpy import arcsin as tasin
+
 asin_int = lambda x: array(masin(x), dtype=dtype_float)
 asin_real = tasin
 asin_vector = tasin
@@ -325,8 +345,9 @@ asin_array = tasin
 # R atan(T x)
 # principal arc (inverse) tangent (in radians) of x, with values from −π
 # to π
-from jax.numpy import arctan as tatan
 from math import atan as matan
+from jax.numpy import arctan as tatan
+
 atan_int = lambda x: array(matan(x), dtype=dtype_float)
 atan_real = tatan
 atan_vector = tatan
@@ -337,6 +358,7 @@ atan_array = tatan
 # real atan2(real y, real x)
 # Return the principal arc (inverse) tangent (in radians) of y divided by x
 from jax.numpy import arctan2 as tatan2
+
 atan2_real_real = tatan2
 
 
@@ -344,8 +366,9 @@ atan2_real_real = tatan2
 
 # R cosh(T x)
 # hyperbolic cosine of x (in radians)
-from jax.numpy import cosh as tcosh
 from math import cosh as mcosh
+from jax.numpy import cosh as tcosh
+
 cosh_int = lambda x: array(mcosh(x), dtype=dtype_float)
 cosh_real = tcosh
 cosh_vector = tcosh
@@ -355,8 +378,9 @@ cosh_array = tcosh
 
 # R sinh(T x)
 # hyperbolic sine of x (in radians)
-from jax.numpy import sinh as tsinh
 from math import sinh as msinh
+from jax.numpy import sinh as tsinh
+
 sinh_int = lambda x: array(msinh(x), dtype=dtype_float)
 sinh_real = tsinh
 sinh_vector = tsinh
@@ -366,8 +390,9 @@ sinh_array = tsinh
 
 # R tanh(T x)
 # hyperbolic tangent of x (in radians)
-from jax.numpy import tanh as ttanh
 from math import tanh as mtanh
+from jax.numpy import tanh as ttanh
+
 tanh_int = lambda x: array(mtanh(x), dtype=dtype_float)
 tanh_real = ttanh
 tanh_vector = ttanh
@@ -377,8 +402,9 @@ tanh_array = ttanh
 
 # R acosh(T x)
 # inverse hyperbolic cosine (in radians)
-from jax.numpy import arccosh as tacosh
 from math import acosh as macosh
+from jax.numpy import arccosh as tacosh
+
 acosh_int = lambda x: array(macosh(x), dtype=dtype_float)
 acosh_real = tacosh
 acosh_vector = tacosh
@@ -388,8 +414,9 @@ acosh_array = tacosh
 
 # R asinh(T x)
 # inverse hyperbolic cosine (in radians)
-from jax.numpy import arcsinh as tasinh
 from math import asinh as masinh
+from jax.numpy import arcsinh as tasinh
+
 asinh_int = lambda x: array(masinh(x), dtype=dtype_float)
 asinh_real = tasinh
 asinh_vector = tasinh
@@ -399,8 +426,9 @@ asinh_array = tasinh
 
 # R atanh(T x)
 # inverse hyperbolic tangent (in radians) of x
-from jax.numpy import arctanh as tatanh
 from math import atanh as matanh
+from jax.numpy import arctanh as tatanh
+
 atanh_int = lambda x: array(matanh(x), dtype=dtype_float)
 atanh_real = tatanh
 atanh_vector = tatanh
@@ -413,16 +441,17 @@ atanh_array = tatanh
 
 # R logit(T x)
 # log odds, or logit, function applied to x
-logit_int = _XXX_TODO_XXX_('logit')
-logit_real = _XXX_TODO_XXX_('logit')
-logit_vector = _XXX_TODO_XXX_('logit')
-logit_rowvector = _XXX_TODO_XXX_('logit')
-logit_matrix = _XXX_TODO_XXX_('logit')
-logit_array = _XXX_TODO_XXX_('logit')
+logit_int = _XXX_TODO_XXX_("logit")
+logit_real = _XXX_TODO_XXX_("logit")
+logit_vector = _XXX_TODO_XXX_("logit")
+logit_rowvector = _XXX_TODO_XXX_("logit")
+logit_matrix = _XXX_TODO_XXX_("logit")
+logit_array = _XXX_TODO_XXX_("logit")
 
 # R inv_logit(T x)
 # logistic sigmoid function applied to x
 from jax.nn import sigmoid
+
 inv_logit_int = lambda x: sigmoid(array(x, dtype=dtype_float))
 inv_logit_real = sigmoid
 inv_logit_vector = sigmoid
@@ -432,91 +461,94 @@ inv_logit_array = sigmoid
 
 # R inv_cloglog(T x)
 # inverse of the complementary log-log function applied to x
-inv_cloglog_int = _XXX_TODO_XXX_('inv_cloglog')
-inv_cloglog_real = _XXX_TODO_XXX_('inv_cloglog')
-inv_cloglog_vector = _XXX_TODO_XXX_('inv_cloglog')
-inv_cloglog_rowvector = _XXX_TODO_XXX_('inv_cloglog')
-inv_cloglog_matrix = _XXX_TODO_XXX_('inv_cloglog')
-inv_cloglog_array = _XXX_TODO_XXX_('inv_cloglog')
+inv_cloglog_int = _XXX_TODO_XXX_("inv_cloglog")
+inv_cloglog_real = _XXX_TODO_XXX_("inv_cloglog")
+inv_cloglog_vector = _XXX_TODO_XXX_("inv_cloglog")
+inv_cloglog_rowvector = _XXX_TODO_XXX_("inv_cloglog")
+inv_cloglog_matrix = _XXX_TODO_XXX_("inv_cloglog")
+inv_cloglog_array = _XXX_TODO_XXX_("inv_cloglog")
 
 
 ## 3.14 Composed Functions
 
 # R expm1(T x)
 # natural exponential of x minus 1
-expm1_int = _XXX_TODO_XXX_('expm1')
-expm1_real = _XXX_TODO_XXX_('expm1')
-expm1_vector = _XXX_TODO_XXX_('expm1')
-expm1_rowvector = _XXX_TODO_XXX_('expm1')
-expm1_matrix = _XXX_TODO_XXX_('expm1')
-expm1_array = _XXX_TODO_XXX_('expm1')
+expm1_int = _XXX_TODO_XXX_("expm1")
+expm1_real = _XXX_TODO_XXX_("expm1")
+expm1_vector = _XXX_TODO_XXX_("expm1")
+expm1_rowvector = _XXX_TODO_XXX_("expm1")
+expm1_matrix = _XXX_TODO_XXX_("expm1")
+expm1_array = _XXX_TODO_XXX_("expm1")
 
 
 # real fma(real x, real y, real z)
 # Return z plus the result of x multiplied by y. fma(x,y,z)=(x×y)+z
-fma_real_real_real = _XXX_TODO_XXX_('fma')
+fma_real_real_real = _XXX_TODO_XXX_("fma")
 
 # real multiply_log(real x, real y)
 # Warning: This function is deprecated and should be replaced with lmultiply. Return the product of x and the natural logarithm of y.
-multiply_log_real_real = _XXX_TODO_XXX_('multiply_log')
+multiply_log_real_real = _XXX_TODO_XXX_("multiply_log")
 
 # real lmultiply(real x, real y)
 # Return the product of x and the natural logarithm of y.
-lmultiply_real_real = _XXX_TODO_XXX_('lmultiply')
+lmultiply_real_real = _XXX_TODO_XXX_("lmultiply")
 
 # R log1p(T x)
 # natural logarithm of 1 plus x
-log1p_int = _XXX_TODO_XXX_('log1p')
-log1p_real = _XXX_TODO_XXX_('log1p')
-log1p_vector = _XXX_TODO_XXX_('log1p')
-log1p_rowvector = _XXX_TODO_XXX_('log1p')
-log1p_matrix = _XXX_TODO_XXX_('log1p')
-log1p_array = _XXX_TODO_XXX_('log1p')
+log1p_int = _XXX_TODO_XXX_("log1p")
+log1p_real = _XXX_TODO_XXX_("log1p")
+log1p_vector = _XXX_TODO_XXX_("log1p")
+log1p_rowvector = _XXX_TODO_XXX_("log1p")
+log1p_matrix = _XXX_TODO_XXX_("log1p")
+log1p_array = _XXX_TODO_XXX_("log1p")
 
 # R log1m(T x)
 # natural logarithm of 1 minus x
-log1m_int = _XXX_TODO_XXX_('log1m')
-log1m_real = _XXX_TODO_XXX_('log1m')
-log1m_vector = _XXX_TODO_XXX_('log1m')
-log1m_rowvector = _XXX_TODO_XXX_('log1m')
-log1m_matrix = _XXX_TODO_XXX_('log1m')
-log1m_array = _XXX_TODO_XXX_('log1m')
+log1m_int = _XXX_TODO_XXX_("log1m")
+log1m_real = _XXX_TODO_XXX_("log1m")
+log1m_vector = _XXX_TODO_XXX_("log1m")
+log1m_rowvector = _XXX_TODO_XXX_("log1m")
+log1m_matrix = _XXX_TODO_XXX_("log1m")
+log1m_array = _XXX_TODO_XXX_("log1m")
 
 # R log1p_exp(T x)
 # natural logarithm of one plus the natural exponentiation of x
-log1p_exp_int = _XXX_TODO_XXX_('log1p_exp')
-log1p_exp_real = _XXX_TODO_XXX_('log1p_exp')
-log1p_exp_vector = _XXX_TODO_XXX_('log1p_exp')
-log1p_exp_rowvector = _XXX_TODO_XXX_('log1p_exp')
-log1p_exp_matrix = _XXX_TODO_XXX_('log1p_exp')
-log1p_exp_array = _XXX_TODO_XXX_('log1p_exp')
+log1p_exp_int = _XXX_TODO_XXX_("log1p_exp")
+log1p_exp_real = _XXX_TODO_XXX_("log1p_exp")
+log1p_exp_vector = _XXX_TODO_XXX_("log1p_exp")
+log1p_exp_rowvector = _XXX_TODO_XXX_("log1p_exp")
+log1p_exp_matrix = _XXX_TODO_XXX_("log1p_exp")
+log1p_exp_array = _XXX_TODO_XXX_("log1p_exp")
 
 # R log1m_exp(T x)
 # logarithm of one minus the natural exponentiation of x
-log1m_exp_int = _XXX_TODO_XXX_('log1m_exp')
-log1m_exp_real = _XXX_TODO_XXX_('log1m_exp')
-log1m_exp_vector = _XXX_TODO_XXX_('log1m_exp')
-log1m_exp_rowvector = _XXX_TODO_XXX_('log1m_exp')
-log1m_exp_matrix = _XXX_TODO_XXX_('log1m_exp')
-log1m_exp_array = _XXX_TODO_XXX_('log1m_exp')
+log1m_exp_int = _XXX_TODO_XXX_("log1m_exp")
+log1m_exp_real = _XXX_TODO_XXX_("log1m_exp")
+log1m_exp_vector = _XXX_TODO_XXX_("log1m_exp")
+log1m_exp_rowvector = _XXX_TODO_XXX_("log1m_exp")
+log1m_exp_matrix = _XXX_TODO_XXX_("log1m_exp")
+log1m_exp_array = _XXX_TODO_XXX_("log1m_exp")
 
 # real log_diff_exp(real x, real y)
 # Return the natural logarithm of the difference of the natural exponentiation of x and the natural exponentiation of y.
-log_diff_exp_real_real = _XXX_TODO_XXX_('log_diff_exp')
+log_diff_exp_real_real = _XXX_TODO_XXX_("log_diff_exp")
 
 # real log_mix(real theta, real lp1, real lp2)
 # Return the log mixture of the log densities lp1 and lp2 with mixing proportion theta, defined by log_mix(θ,λ1,λ2)=log(θexp(λ1)+(1−θ)exp(λ2))=log_sum_exp(log(θ)+λ1, log(1−θ)+λ2).
 def log_mix_real_real_real(theta, lp1, lp2):
     return log_sum_exp_real_real(log_real(theta) + lp1, log_real(1 - theta) + lp2)
 
+
 # real log_sum_exp(real x, real y)
 # Return the natural logarithm of the sum of the natural exponentiation of x and the natural exponentiation of y. log_sum_exp(x,y)=log(exp(x)+exp(y))
 from jax.numpy import logaddexp
+
 log_sum_exp_real_real = logaddexp
 
 # R log_inv_logit(T x)
 # natural logarithm of the inverse logit function of x
 from jax.nn import log_sigmoid
+
 log_inv_logit_int = lambda x: log_sigmoid(array(x, dtype=dtype_float))
 log_inv_logit_real = log_sigmoid
 log_inv_logit_vector = log_sigmoid
@@ -543,6 +575,7 @@ log1m_inv_logit_array = lambda x: tlog(1 - inv_logit_array(x))
 # int min(int[] x)
 # The minimum value in x, or error if x is size 0.
 from jax.numpy import min as tmin
+
 min_array = tmin
 
 # real max(real[] x)
@@ -550,6 +583,7 @@ min_array = tmin
 # int max(int[] x)
 # The maximum value in x, or error if x is size 0.
 from jax.numpy import max as tmax
+
 max_array = max
 
 
@@ -561,6 +595,7 @@ max_array = max
 # real sum(real[] x)
 # The sum of the elements in x; see definition above.
 from jax.numpy import sum
+
 sum_array = sum
 
 # real prod(real[] x)
@@ -568,12 +603,14 @@ sum_array = sum
 # real prod(int[] x)
 # The product of the elements in x, product(x)={∏Nn=1xnifN>01ifN=0
 from jax.numpy import prod as tprod
+
 prod_array = tprod
 
 # real log_sum_exp(real[] x)
 # The natural logarithm of the sum of the exponentials of the elements in x, or −∞
 # if the array is empty.
 from jax.scipy.special import logsumexp
+
 log_sum_exp_array = lambda x: logsumexp(x, 0)
 
 ## 4.1.3 Sample Mean, Variance, and Standard Deviation
@@ -582,18 +619,21 @@ log_sum_exp_array = lambda x: logsumexp(x, 0)
 # The sample mean of the elements in x.
 # It is an error to the call the mean function with an array of size 0.
 from jax.numpy import mean
+
 mean_array = mean
 
 # real variance(real[] x)
 # The sample variance of the elements in x.
 # It is an error to call the variance function with an array of size 0.
 from jax.numpy import var
+
 variance_array = var
 
 # real sd(real[] x)
 # The sample standard deviation of elements in x.
 # It is an error to call the sd function with an array of size 0.
 from jax.numpy import std
+
 sd_array = std
 
 
@@ -604,20 +644,20 @@ sd_array = std
 # real distance(row_vector x, vector y)
 # real distance(row_vector x, row_vector y)
 # The Euclidean distance between x and y
-distance_vector_vector = _XXX_TODO_XXX_('distance')
-distance_vector_rowvector = _XXX_TODO_XXX_('distance')
-distance_rowvector_vector = _XXX_TODO_XXX_('distance')
-distance_rowvector_rowvector = _XXX_TODO_XXX_('distance')
+distance_vector_vector = _XXX_TODO_XXX_("distance")
+distance_vector_rowvector = _XXX_TODO_XXX_("distance")
+distance_rowvector_vector = _XXX_TODO_XXX_("distance")
+distance_rowvector_rowvector = _XXX_TODO_XXX_("distance")
 
 # real squared_distance(vector x, vector y)
 # real squared_distance(vector x, row_vector [] y)
 # real squared_distance(row_vector x, vector [] y)
 # real squared_distance(row_vector x, row_vector[] y)
 # The squared Euclidean distance between x and y
-squared_distance_vector_vector = _XXX_TODO_XXX_('squared_distance')
-squared_distance_vector_rowvector = _XXX_TODO_XXX_('squared_distance')
-squared_distance_rowvector_vector = _XXX_TODO_XXX_('squared_distance')
-squared_distance_rowvector_rowvector = _XXX_TODO_XXX_('squared_distance')
+squared_distance_vector_vector = _XXX_TODO_XXX_("squared_distance")
+squared_distance_vector_rowvector = _XXX_TODO_XXX_("squared_distance")
+squared_distance_rowvector_vector = _XXX_TODO_XXX_("squared_distance")
+squared_distance_rowvector_rowvector = _XXX_TODO_XXX_("squared_distance")
 
 
 ## 4.2 Array Size and Dimension Function
@@ -626,7 +666,7 @@ squared_distance_rowvector_rowvector = _XXX_TODO_XXX_('squared_distance')
 # Return an integer array containing the dimensions of x; the type
 # of the argument T can be any Stan type with up to 8 array
 # dimensions.
-dims_int = lambda x: array([], dtype=int)
+dims_int = lambda x: array([], dtype=dtype_long)
 dims_real = lambda x: array(x.shape)
 dims_vector = lambda x: array(x.shape)
 dims_rowvector = lambda x: array(x.shape)
@@ -711,6 +751,7 @@ cols_matrix = lambda x: x.shape[1]
 # real dot_product(vector x, vector y)
 # The dot product of x and y
 from jax.numpy import dot as tdot
+
 dot_product_vector_vector = tdot
 
 # real dot_product(vector x, row_vector y)
@@ -727,27 +768,27 @@ dot_product_rowvector_rowvector = tdot
 
 # row_vector columns_dot_product(vector x, vector y)
 # The dot product of the columns of x and y
-columns_dot_product_vector_vector = _XXX_TODO_XXX_('columns_dot_product')
+columns_dot_product_vector_vector = _XXX_TODO_XXX_("columns_dot_product")
 
 # row_vector columns_dot_product(row_vector x, row_vector y)
 # The dot product of the columns of x and y
-columns_dot_product_rowvector_rowvector = _XXX_TODO_XXX_('columns_dot_product')
+columns_dot_product_rowvector_rowvector = _XXX_TODO_XXX_("columns_dot_product")
 
 # row_vector columns_dot_product(matrix x, matrix y)
 # The dot product of the columns of x and y
-columns_dot_product_matrix_matrix = _XXX_TODO_XXX_('columns_dot_product')
+columns_dot_product_matrix_matrix = _XXX_TODO_XXX_("columns_dot_product")
 
 # vector rows_dot_product(vector x, vector y)
 # The dot product of the rows of x and y
-rows_dot_product_vector_vector = _XXX_TODO_XXX_('rows_dot_product')
+rows_dot_product_vector_vector = _XXX_TODO_XXX_("rows_dot_product")
 
 # vector rows_dot_product(row_vector x, row_vector y)
 # The dot product of the rows of x and y
-rows_dot_product_rowvector_rowvector = _XXX_TODO_XXX_('rows_dot_product')
+rows_dot_product_rowvector_rowvector = _XXX_TODO_XXX_("rows_dot_product")
 
 # vector rows_dot_product(matrix x, matrix y)
 # The dot product of the rows of x and y
-rows_dot_product_matrix_matrix = _XXX_TODO_XXX_('rows_dot_product')
+rows_dot_product_matrix_matrix = _XXX_TODO_XXX_("rows_dot_product")
 
 # real dot_self(vector x)
 # The dot product of the vector x with itself
@@ -785,64 +826,64 @@ rows_dot_self_matrix = lambda x: rows_dot_product_matrix_matrix(x, x)
 
 # matrix tcrossprod(matrix x)
 # The product of x postmultiplied by its own transpose, similar to the tcrossprod(x) function in R. The result is a symmetric matrix.
-tcrossprod_matrix = _XXX_TODO_XXX_('tcrossprod')
+tcrossprod_matrix = _XXX_TODO_XXX_("tcrossprod")
 
 # matrix crossprod(matrix x)
 # The product of x premultiplied by its own transpose, similar to the crossprod(x) function in R. The result is a symmetric matrix.
-crossprod_matrix = _XXX_TODO_XXX_('crossprod')
+crossprod_matrix = _XXX_TODO_XXX_("crossprod")
 
 # matrix quad_form(matrix A, matrix B)
 # The quadratic form, i.e., B' * A * B.
-quad_form_matrix_matrix = _XXX_TODO_XXX_('quad_form')
+quad_form_matrix_matrix = _XXX_TODO_XXX_("quad_form")
 
 # real quad_form(matrix A, vector B)
 # The quadratic form, i.e., B' * A * B.
-quad_form_matrix_vector = _XXX_TODO_XXX_('quad_form')
+quad_form_matrix_vector = _XXX_TODO_XXX_("quad_form")
 
 # matrix quad_form_diag(matrix m, vector v)
 # The quadratic form using the column vector v as a diagonal matrix, i.e., diag_matrix(v) * m * diag_matrix(v).
-quad_form_diag_matrix_vector = _XXX_TODO_XXX_('quad_form_diag')
+quad_form_diag_matrix_vector = _XXX_TODO_XXX_("quad_form_diag")
 
 # matrix quad_form_diag(matrix m, row_vector rv)
 # The quadratic form using the row vector rv as a diagonal matrix, i.e., diag_matrix(rv) * m * diag_matrix(rv).
-quad_form_diag_matrix_row_vector  = _XXX_TODO_XXX_('quad_form_diag')
+quad_form_diag_matrix_row_vector = _XXX_TODO_XXX_("quad_form_diag")
 
 # matrix quad_form_sym(matrix A, matrix B)
 # Similarly to quad_form, gives B' * A * B, but additionally checks if A is symmetric and ensures that the result is also symmetric.
-quad_form_sym_matrix_matrix = _XXX_TODO_XXX_('quad_form_sym')
+quad_form_sym_matrix_matrix = _XXX_TODO_XXX_("quad_form_sym")
 
 # real quad_form_sym(matrix A, vector B)
 # Similarly to quad_form, gives B' * A * B, but additionally checks if A is symmetric and ensures that the result is also symmetric.
-quad_form_sym_matrix_vector = _XXX_TODO_XXX_('quad_form_sym')
+quad_form_sym_matrix_vector = _XXX_TODO_XXX_("quad_form_sym")
 
 # real trace_quad_form(matrix A, matrix B)
 # The trace of the quadratic form, i.e., trace(B' * A * B).
-trace_quad_form_matrix_matrix = _XXX_TODO_XXX_('trace_quad_form')
+trace_quad_form_matrix_matrix = _XXX_TODO_XXX_("trace_quad_form")
 
 # real trace_gen_quad_form(matrix D, matrix A, matrix B)
 # The trace of a generalized quadratic form, i.e., trace(D * B' * A * B).
-trace_gen_quad_form_matrix_matrix_matrix = _XXX_TODO_XXX_('trace_gen_quad_form')
+trace_gen_quad_form_matrix_matrix_matrix = _XXX_TODO_XXX_("trace_gen_quad_form")
 
 # matrix multiply_lower_tri_self_transpose(matrix x)
 # The product of the lower triangular portion of x (including the diagonal) times its own transpose; that is, if L is a matrix of the same dimensions as x with L(m,n) equal to x(m,n) for n≤m
 # and L(m,n) equal to 0 if n>m, the result is the symmetric matrix LL⊤. This is a specialization of tcrossprod(x) for lower-triangular matrices. The input matrix does not need to be square.
-multiply_lower_tri_self_matrix = _XXX_TODO_XXX_('multiply_lower_tri_self')
+multiply_lower_tri_self_matrix = _XXX_TODO_XXX_("multiply_lower_tri_self")
 
 # matrix diag_pre_multiply(vector v, matrix m)
 # Return the product of the diagonal matrix formed from the vector v and the matrix m, i.e., diag_matrix(v) * m.
-diag_pre_multiply_vector_matrix = _XXX_TODO_XXX_('diag_pre_multiply')
+diag_pre_multiply_vector_matrix = _XXX_TODO_XXX_("diag_pre_multiply")
 
 # matrix diag_pre_multiply(row_vector rv, matrix m)
 # Return the product of the diagonal matrix formed from the vector rv and the matrix m, i.e., diag_matrix(rv) * m.
-diag_pre_multiply_rowvector_matrix = _XXX_TODO_XXX_('diag_pre_multiply')
+diag_pre_multiply_rowvector_matrix = _XXX_TODO_XXX_("diag_pre_multiply")
 
 # matrix diag_post_multiply(matrix m, vector v)
 # Return the product of the matrix m and the diagonal matrix formed from the vector v, i.e., m * diag_matrix(v).
-diag_post_multiply_matrix_vector = _XXX_TODO_XXX_('diag_post_multiply')
+diag_post_multiply_matrix_vector = _XXX_TODO_XXX_("diag_post_multiply")
 
 # matrix diag_post_multiply(matrix m, row_vector rv)
 # Return the product of the matrix m and the diagonal matrix formed from the the row vector rv, i.e., m * diag_matrix(rv).
-diag_post_multiply_matrix_rowvector = _XXX_TODO_XXX_('diag_post_multiply')
+diag_post_multiply_matrix_rowvector = _XXX_TODO_XXX_("diag_post_multiply")
 
 ## 5.6 Reductions
 
@@ -970,11 +1011,12 @@ rep_matrix_int_int_int = lambda x, m, n: x * ones([m, n])
 # matrix rep_matrix(vector v, int n)
 # Return the m by n matrix consisting of n copies of the (column) vector v of size m.
 from jax.numpy import transpose, tile
-rep_matrix_vector_int = lambda v, n: tile(transpose(array([v])), (1,n))
+
+rep_matrix_vector_int = lambda v, n: tile(transpose(array([v])), (1, n))
 
 # matrix rep_matrix(row_vector rv, int m)
 # Return the m by n matrix consisting of m copies of the row vector rv of size n.
-rep_matrix_rowvector_int = lambda v, n: tile(array([v]), (n,1))
+rep_matrix_rowvector_int = lambda v, n: tile(array([v]), (n, 1))
 
 ## 5.8 Diagonal Matrix Functions
 from jax.numpy import diag, eye
@@ -992,7 +1034,7 @@ add_diag_matrix_vector = lambda m, v: m + diag(v)
 # matrix add_diag(matrix m, real d)
 # Add scalar d to every diagonal element of matrix m.
 
-add_diag_matrix_real = lambda m, r: r*eye(m.shape[0]) + m
+add_diag_matrix_real = lambda m, r: r * eye(m.shape[0]) + m
 
 # vector diagonal(matrix x)
 # The diagonal of the matrix x
@@ -1022,15 +1064,21 @@ row_matrix_int = lambda x, m: x[m - 1]
 
 # matrix block(matrix x, int i, int j, int n_rows, int n_cols)
 # Return the submatrix of x that starts at row i and column j and extends n_rows rows and n_cols columns.
-block_matrix_int_int_int_int = lambda x, i, j, n_rows, n_cols: x[i - 1 : i - 1 + n_rows, j - 1 : j - 1 + n_cols]
+block_matrix_int_int_int_int = lambda x, i, j, n_rows, n_cols: x[
+    i - 1 : i - 1 + n_rows, j - 1 : j - 1 + n_cols
+]
 
 # vector sub_col(matrix x, int i, int j, int n_rows)
 # Return the sub-column of x that starts at row i and column j and extends n_rows rows and 1 column.
-sub_col_matrix_int_int_int = lambda x, i, j, n_rows: (x[i - 1 : i - 1 + n_rows, j - 1 : j])[:,0]
+sub_col_matrix_int_int_int = lambda x, i, j, n_rows: (
+    x[i - 1 : i - 1 + n_rows, j - 1 : j]
+)[:, 0]
 
 # row_vector sub_row(matrix x, int i, int j, int n_cols)
 # Return the sub-row of x that starts at row i and column j and extends 1 row and n_cols columns.
-sub_row_matrix_int_int_int = lambda x, i, y, n_cols: x[i - 1 : i, j - 1 : j - 1 + n_cols]
+sub_row_matrix_int_int_int = lambda x, i, y, n_cols: x[
+    i - 1 : i, j - 1 : j - 1 + n_cols
+]
 
 # 5.9.2.2 Vector and Array Slicing Operations
 
@@ -1090,7 +1138,9 @@ append_col_vector_matrix = lambda x, y: append(transpose(array([x])), y, axis=1)
 
 # matrix append_col(vector x, vector y)
 # Combine vectors x and y by columns. The vectors must have the same number of rows.
-append_col_vector_vector = lambda x, y: append(transpose(array([x])), transpose(array([y])), axis=1)
+append_col_vector_vector = lambda x, y: append(
+    transpose(array([x])), transpose(array([y])), axis=1
+)
 
 # row_vector append_col(row_vector x, row_vector y)
 # Combine row vectors x and y of any size into another row vector.
@@ -1144,11 +1194,13 @@ append_row_vector_int = lambda x, y: append(x, array([y], dtype=dtype_float))
 # vector softmax(vector x)
 # The softmax of x
 from jax.nn import softmax as tsoftmax
+
 softmax_vector = tsoftmax
 
 # vector log_softmax(vector x)
 # The natural logarithm of the softmax of x
 from jax.nn import log_softmax as tlogsoftmax
+
 softmax_vector = tlogsoftmax
 
 # 5.11.2 Cumulative Sums
@@ -1156,6 +1208,7 @@ softmax_vector = tlogsoftmax
 # real[] cumulative_sum(real[] x)
 # The cumulative sum of x
 from jax.numpy import cumsum as tcumsum
+
 cumulative_sum_array = tcumsum
 
 # vector cumulative_sum(vector v)
@@ -1169,8 +1222,12 @@ cumulative_sum_rowvector = tcumsum
 ## 5.12 Covariance Functions
 ## 5.12.1 Exponentiated quadratic covariance function
 
+from tensor import power as pow
+from tensor.linalg import norm
+
 def cov_exp_quad(x, alpha, rho):
-    return alpha * alpha * texp(-0.5 * jnp.power(jnp.linalg.norm(x) / rho, 2))
+    return alpha * alpha * texp(-0.5 * pow(norm(x) / rho, 2))
+
 
 # matrix cov_exp_quad(row_vectors x, real alpha, real rho)
 # The covariance matrix with an exponentiated quadratic kernel of x.
@@ -1223,7 +1280,7 @@ to_matrix_rowvector = lambda v: array([v])
 
 # matrix to_matrix(matrix m, int m, int n)
 # Convert a matrix m to a matrix with m rows and n columns filled in column-major order.
-to_matrix_matrix_int_int = lambda mat, m, n: transpose(mat).reshape(m,n)
+to_matrix_matrix_int_int = lambda mat, m, n: transpose(mat).reshape(m, n)
 
 # matrix to_matrix(vector v, int m, int n)
 # Convert a vector v to a matrix with m rows and n columns filled in column-major order.
@@ -1237,25 +1294,28 @@ to_matrix_rowvector_int_int = lambda v, m, n: transpose(v.reshape(n, m))
 # Convert a matrix m to a matrix with m rows and n columns filled in row-major order if col_major equals 0 (otherwise, they get filled in column-major order).
 def to_matrix_matrix_int_int_int(mat, m, n, col_major):
     if col_major == 0:
-        mat.reshape(m,n)
+        mat.reshape(m, n)
     else:
         to_matrix_matrix_int_int(mat, m, n)
+
 
 # matrix to_matrix(vector v, int m, int n, int col_major)
 # Convert a vector v to a matrix with m rows and n columns filled in row-major order if col_major equals 0 (otherwise, they get filled in column-major order).
 def to_matrix_vector_int_int_int(v, m, n, col_major):
     if col_major == 0:
-        v.reshape(m,n)
+        v.reshape(m, n)
     else:
         to_matrix_vector_int_int(v, m, n)
+
 
 # matrix to_matrix(row_vector v, int m, int n, int col_major)
 # Convert a row_vector a to a matrix with m rows and n columns filled in row-major order if col_major equals 0 (otherwise, they get filled in column-major order).
 def to_matrix_rowvector_int_int_int(v, m, n, col_major):
     if col_major == 0:
-        v.reshape(m,n)
+        v.reshape(m, n)
     else:
         to_matrix_rowvector_int_int(v, m, n)
+
 
 # matrix to_matrix(real[] a, int m, int n)
 # Convert a one-dimensional array a to a matrix with m rows and n columns filled in column-major order.
@@ -1342,11 +1402,23 @@ to_array_1d_array = lambda a: a.reshape(-1)
 
 from jax.experimental.ode import odeint
 
-integrate_ode_rk45_array_real_array_array_array_array = lambda ode, initial_state, initial_time, times, theta, x_r, x_i: odeint(ode, initial_state, times, theta, x_r, x_i)
-integrate_ode_rk45_array_int_array_array_array_array = integrate_ode_rk45_array_real_array_array_array_array
+integrate_ode_rk45_array_real_array_array_array_array = (
+    lambda ode, initial_state, initial_time, times, theta, x_r, x_i: odeint(
+        ode, initial_state, times, theta, x_r, x_i
+    )
+)
+integrate_ode_rk45_array_int_array_array_array_array = (
+    integrate_ode_rk45_array_real_array_array_array_array
+)
 
 # real[ , ] integrate_ode_rk45(function ode, real[] initial_state, real initial_time, real[] times, real[] theta, real[] x_r, int[] x_i, real rel_tol, real abs_tol, int max_num_steps)
 # Solves the ODE system for the times provided using the Runge Kutta Dopri algorithm with the implementation from Boost with additional control parameters for the solver.
 
-integrate_ode_rk45_array_real_array_array_array_array_real_real_int = lambda ode, initial_state, times, theta, x_r, x_i, rtol, atol, mxstep,: odeint(ode, initial_state, times, theta, x_r, x_i, rtol=rtol, atol=atol, mxstep=mxstep)
-integrate_ode_rk45_array_int_array_array_array_array_real_real_real = integrate_ode_rk45_array_real_array_array_array_array_real_real_int
+integrate_ode_rk45_array_real_array_array_array_array_real_real_int = (
+    lambda ode, initial_state, times, theta, x_r, x_i, rtol, atol, mxstep,: odeint(
+        ode, initial_state, times, theta, x_r, x_i, rtol=rtol, atol=atol, mxstep=mxstep
+    )
+)
+integrate_ode_rk45_array_int_array_array_array_array_real_real_real = (
+    integrate_ode_rk45_array_real_array_array_array_array_real_real_int
+)

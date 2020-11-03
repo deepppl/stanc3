@@ -9,11 +9,12 @@ from numpyro.distributions import constraints, transforms
 from numpyro.distributions.transforms import biject_to as transform
 from numpyro.distributions.constraints import Constraint
 from numpyro.distributions.transforms import  CorrCholeskyTransform, biject_to as transform
-from jax.numpy import sort
-from jax.numpy.linalg import norm
+from jax.numpy import sort as tsort
+from jax.numpy.linalg import norm as tnorm
 from jax.numpy import log as tlog
 from jax.numpy import exp as texp
 from jax.numpy import ones as tones
+from jax.numpy import zeros as tzeros
 import jax.numpy as tensor
 from numbers import Number
 from jax.numpy import array
@@ -21,11 +22,15 @@ from jax.numpy import array
 dtype_float=tensor.dtype('float32')
 dtype_long=tensor.dtype('int32')
 
+def _cast_float(x):
+    if isinstance(x, Number):
+        return x.astype(dtype_float)
+    return array(x, dtype=dtype_float)
+
 ## Utility functions
 def _cast1(f):
     def f_casted(y, *args):
-        y = y.astype(dtype_float) if isinstance(y, Number) else array(y, dtype=dtype_float)
-        return f(y, *args)
+        return f(_cast_float(y), *args)
     return f_casted
 
 def _distrib(d, nargs, typ):
@@ -74,12 +79,12 @@ def _rng(d):
 
 class improper_uniform(d.Normal):
     def __init__(self, shape=[]):
-        zeros = tensor.zeros(shape) if shape != [] else 0
-        ones = tensor.ones(shape) if shape != [] else 1
+        zeros = tzeros(shape) if shape != [] else 0
+        ones = tones(shape) if shape != [] else 1
         super(improper_uniform, self).__init__(zeros, ones)
 
     def log_prob(self, x):
-        return tensor.zeros_like(x)
+        return tzeros_like(x)
 
 class lower_constrained_improper_uniform(improper_uniform):
     def __init__(self, lower_bound=0, shape=[]):
@@ -115,7 +120,7 @@ class unit_constrained_improper_uniform(improper_uniform):
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return s / norm(s)
+        return s / tnorm(s)
 
 class ordered_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
@@ -123,7 +128,7 @@ class ordered_constrained_improper_uniform(improper_uniform):
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return sort(s)
+        return tsort(s)
 
 class positive_ordered_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
@@ -133,7 +138,7 @@ class positive_ordered_constrained_improper_uniform(improper_uniform):
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
         s = transform(self.support)(s)
-        return sort(s)
+        return tsort(s)
 
 
 class cholesky_factor_corr_constrained_improper_uniform(improper_uniform):
