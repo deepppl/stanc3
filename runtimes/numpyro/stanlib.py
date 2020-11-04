@@ -513,12 +513,13 @@ log1m_array = _XXX_TODO_XXX_("log1m")
 
 # R log1p_exp(T x)
 # natural logarithm of one plus the natural exponentiation of x
-log1p_exp_int = _XXX_TODO_XXX_("log1p_exp")
-log1p_exp_real = _XXX_TODO_XXX_("log1p_exp")
-log1p_exp_vector = _XXX_TODO_XXX_("log1p_exp")
-log1p_exp_rowvector = _XXX_TODO_XXX_("log1p_exp")
-log1p_exp_matrix = _XXX_TODO_XXX_("log1p_exp")
-log1p_exp_array = _XXX_TODO_XXX_("log1p_exp")
+from jax.nn import softplus
+log1p_exp_int = lambda x: softplus(array(x, dtype=dtype_float))
+log1p_exp_real = softplus
+log1p_exp_vector = softplus
+log1p_exp_rowvector = softplus
+log1p_exp_matrix = softplus
+log1p_exp_array = softplus
 
 # R log1m_exp(T x)
 # logarithm of one minus the natural exponentiation of x
