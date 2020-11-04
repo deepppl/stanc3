@@ -223,7 +223,7 @@ type 's program =
   ; transformedparametersblock: 's list option
   ; modelblock: 's list option
   ; generatedquantitiesblock: 's list option
-  ; networkblock: network list option
+  ; networksblock: network list option
   ; guideparametersblock: 's list option
   ; guideblock: 's list option }
 [@@deriving sexp, hash, compare, map, fold]

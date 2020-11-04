@@ -58,7 +58,7 @@ rule token = parse
                                 singleline_comment lexbuf; token lexbuf } (* deprecated *)
 (* Program blocks *)
   | "networks"                { lexer_logger "networks" ;
-                                Parser.NETWORKBLOCK }
+                                Parser.NETWORKSBLOCK }
   | "functions"               { lexer_logger "functions" ;
                                 Parser.FUNCTIONBLOCK }
   | "data"                    { lexer_logger "data" ; Parser.DATABLOCK }

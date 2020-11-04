@@ -41,10 +41,11 @@ let print_list_comma printer ff l =
     (pp_print_list ~pp_sep:(fun ff () -> fprintf ff ",@ ") printer)
     l
 
-let print_list_newline printer ff l =
-  fprintf ff "@[<v 0>%a@]"
+let print_list_newline ?(eol=false) printer ff l =
+  fprintf ff "@[<v 0>%a%a@]"
   (pp_print_list ~pp_sep:(fun ff () -> fprintf ff "@,") printer)
   l
+  (if eol && l <> [] then pp_print_cut else pp_print_nothing) ()
 
 let pyro_dppllib =
   [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones"; "empty";
@@ -905,7 +906,7 @@ let rewrite_program f p =
   ; transformedparametersblock = Option.map ~f p.transformedparametersblock
   ; modelblock = Option.map ~f p.modelblock
   ; generatedquantitiesblock = Option.map ~f p.generatedquantitiesblock
-  ; networkblock = p.networkblock
+  ; networksblock = p.networksblock
   ; guideparametersblock = Option.map ~f p.guideparametersblock
   ; guideblock = Option.map ~f p.guideblock
   }
@@ -1565,14 +1566,13 @@ and build_closure ctx fun_name (updated_vars, nonlocal_vars) args stmt =
     match SSet.to_list updated_vars with
     | [] | [ _ ] -> ()
     | vars ->
-        fprintf ff "%a%a"
-          (print_list_newline
+        fprintf ff "%a"
+          (print_list_newline ~eol
              (fun ff x -> fprintf ff "%a = %a['%s']"
                  trans_name x
                  trans_name acc_name
                  x))
           vars
-          (if eol then pp_print_cut else pp_print_nothing) ()
   in
   let pp_closure ff () =
     fprintf ff "@[<v 4>def %a(%a%s%a):@,%a%a%a@,return %a@]"
@@ -1881,7 +1881,7 @@ let trans_prog backend mode ff (p : typed_program) =
     (trans_transformeddatablock ctx p.datablock) p.transformeddatablock;
   fprintf ff "%a"
     (trans_modelblock ctx
-       p.networkblock p.datablock p.transformeddatablock
+       p.networksblock p.datablock p.transformeddatablock
        p.parametersblock p.transformedparametersblock)
     p.modelblock;
   fprintf ff "%a"
@@ -1891,6 +1891,6 @@ let trans_prog backend mode ff (p : typed_program) =
     p.generatedquantitiesblock;
   fprintf ff "%a"
     (trans_guideblock ctx
-       p.networkblock p.datablock p.transformeddatablock
+       p.networksblock p.datablock p.transformeddatablock p.parametersblock
        p.guideparametersblock)
     p.guideblock;

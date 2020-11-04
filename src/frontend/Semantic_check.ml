@@ -1811,7 +1811,7 @@ let semantic_check_functions_have_defn function_block_stmts_opt =
 
 (* The actual semantic checks for all AST nodes! *)
 let semantic_check_program
-    { networkblock= nb
+    { networksblock= nb
     ; functionblock= fb
     ; datablock= db
     ; transformeddatablock= tdb
@@ -1852,7 +1852,7 @@ let semantic_check_program
   let udgpb = semantic_check_ostatements_in_block ~cf GuideParam dgpb in
   let udgb = semantic_check_ostatements_in_block ~cf Guide dgb in
   let mk_typed_prog unb ufb udb utdb upb utpb umb ugb udgpb udgb : Ast.typed_program =
-    { networkblock= unb
+    { networksblock= unb
     ; functionblock= ufb
     ; datablock= udb
     ; transformeddatablock= utdb
@@ -1868,7 +1868,7 @@ let semantic_check_program
       typed_program =
     if
       compare_untyped_program
-        { networkblock= nb
+        { networksblock= nb
         ; functionblock= fb
         ; datablock= db
         ; transformeddatablock= tdb

@@ -12,7 +12,7 @@ let reducearray (sbt, l) =
   List.fold_right l ~f:(fun z y -> SizedType.SArray (y, z)) ~init:sbt
 %}
 
-%token NETWORKBLOCK FUNCTIONBLOCK DATABLOCK TRANSFORMEDDATABLOCK PARAMETERSBLOCK
+%token NETWORKSBLOCK FUNCTIONBLOCK DATABLOCK TRANSFORMEDDATABLOCK PARAMETERSBLOCK
        TRANSFORMEDPARAMETERSBLOCK MODELBLOCK GENERATEDQUANTITIESBLOCK
        GUIDEBLOCK GUIDEPARAMETERSBLOCK
 %token LBRACE RBRACE LPAREN RPAREN LBRACK RBRACK LABRACK RABRACK COMMA SEMICOLON
@@ -62,7 +62,7 @@ let reducearray (sbt, l) =
 
 (* program *)
 program:
-  | onb=option(network_block)
+  | onb=option(networks_block)
     ofb=option(function_block)
     odb=option(data_block)
     otdb=option(transformed_data_block)
@@ -75,7 +75,7 @@ program:
     EOF
     {
       grammar_logger "program" ;
-      { networkblock= onb
+      { networksblock= onb
       ; functionblock= ofb
       ; datablock= odb
       ; transformeddatablock= otdb
@@ -88,9 +88,9 @@ program:
     }
 
 (* blocks *)
-network_block:
-  | NETWORKBLOCK LBRACE nd=list(network_decl) RBRACE
-    { grammar_logger "network_block" ; nd }
+networks_block:
+  | NETWORKSBLOCK LBRACE nd=list(network_decl) RBRACE
+    { grammar_logger "networks_block" ; nd }
 
 function_block:
   | FUNCTIONBLOCK LBRACE fd=list(function_def) RBRACE
@@ -179,7 +179,7 @@ decl_identifier:
      that's distinct from the use of other non-identifiers, so we can assign
      it a different message in the .messages file.
    *)
-  | NETWORKBLOCK UNREACHABLE
+  | NETWORKSBLOCK UNREACHABLE
   | FUNCTIONBLOCK UNREACHABLE
   | DATABLOCK UNREACHABLE
   | PARAMETERSBLOCK UNREACHABLE

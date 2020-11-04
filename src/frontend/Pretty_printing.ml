@@ -408,7 +408,7 @@ let pp_opt_network_block ppf opt_networkblock =
   Fmt.option ~none:Fmt.nop pp_network_block ppf opt_networkblock
 
 let pp_program ppf
-    { networkblock= nb
+    { networksblock= nb
     ; functionblock= bf
     ; datablock= bd
     ; transformeddatablock= btd
