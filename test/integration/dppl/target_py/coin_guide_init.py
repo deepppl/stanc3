@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float
 
 def convert_inputs(inputs):
     N = inputs['N']
@@ -21,3 +21,4 @@ def guide(*, N, x):
     beta_q = param('beta_q', array(array(15.0, dtype=dtype_float)))
     # Guide
     theta = sample('theta', beta(alpha_q, beta_q))
+    return { theta }

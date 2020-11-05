@@ -4,9 +4,10 @@ from torch import nn
 from torch import tensor
 import pyro
 import numpy as np
-from runtimes.pyro.dppl import PyroModel
+# from runtimes.pyro.dppl import PyroModel
+from runtimes.dppl import Model
 
-from util import loadData
+from .util import loadData
 import os
 
 side = 28
@@ -60,7 +61,7 @@ class Classifier:
             classes[lbl].append(z)
         ## compute centroid for each classes
         self.classes = [torch.stack(cls).mean(dim=0) for cls in classes]
- 
+
     def classify(self, img):
         z = self.encoder(img)[0]
         ## pick classes according to the minimum euclidean distance
@@ -71,7 +72,7 @@ class Classifier:
 def test_vae_inference():
     encoder, decoder = build_vae()
     train_loader, test_loader = loadData(batch_size)
-    model = PyroModel('test/integration/dppl/good/vae.stan')
+    model = Model("pyro", "good/vae.stan", True, "mixed")
     svi = model.svi(params = {'lr' : 0.01})
 
     for epoch in range(4):  # loop over the dataset multiple times
@@ -82,8 +83,7 @@ def test_vae_inference():
     img, lbls = iter(test_loader).next()
     accuracy = (lbls.data.numpy() == classifier.classify(img)).mean()
     assert accuracy > 0.15
-  
-  
+
+
 if __name__ == "__main__":
-    print('coucou')  
     test_vae_inference()

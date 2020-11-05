@@ -8,8 +8,8 @@ from pyro import distributions as dist
 from pyro.infer import SVI, Trace_ELBO
 from pyro.optim import Adam
 from torch.autograd import Variable
+from runtimes.dppl import Model
 
-import deepppl
 import os
 
 from .util import loadData
@@ -42,19 +42,20 @@ def predict(data, posterior):
 def test_mlp_inference():
     mlp = build_mlp()
     train_loader, test_loader = loadData(batch_size)
-    model = deepppl.PyroModel(model_file = 'deepppl/tests/good/mlp.stan', mlp=mlp)
+    model = Model("pyro", "good/mlp.stan", True, "mixed")
     svi = model.svi(params = {'lr' : 0.01})
 
     for epoch in range(2):  # loop over the dataset multiple times
         for j, (imgs, lbls) in enumerate(train_loader, 0):
             # calculate the loss and take a gradient step
-            loss = svi.step(batch_size, imgs, lbls)
+            loss = svi.step(nx=nx, nh=nh, ny=ny, batch_size=batch_size,
+                            imgs=imgs, labels=lbls + 1, mlp=mlp)
             print('.', end="", flush=True)
     posterior = svi.posterior(30)
 
     for j, data in enumerate(test_loader):
         images, labels = data
-        accuracy = (predict(images, posterior) == labels).type(torch.float).mean()
+        accuracy = (predict(images, posterior["mlp"]) == labels + 1).type(torch.float).mean()
         assert accuracy > 0.6
 
     print('accuracy:', accuracy)

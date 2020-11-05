@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network, random_module
 
 def convert_inputs(inputs):
     nz = inputs['nz']
@@ -25,3 +25,4 @@ def guide(*, nz, x, decoder, encoder):
     mu_z = encoded[1 - 1]
     sigma_z = encoded[2 - 1]
     z = sample('z', normal(mu_z, sigma_z))
+    return { z }

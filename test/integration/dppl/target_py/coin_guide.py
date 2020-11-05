@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float
 
 def convert_inputs(inputs):
     N = inputs['N']
@@ -19,3 +19,4 @@ def guide(*, N, x):
     beta_q = param('beta_q', lower_constrained_improper_uniform(0, shape=[]).sample())
     # Guide
     z = sample('z', beta(alpha_q, beta_q))
+    return { z }

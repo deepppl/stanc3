@@ -87,11 +87,9 @@ compile_tests = [
     ('regression_matrix', None),
     ('squared_error', None),
     ('vectorized_probability', None),
-    ('mlp', 'XXX TODO: deep XXX'),
+    ('mlp', None),
     ('mlp_default_init', 'XXX TODO: deep XXX'),
-    ('vae_inferred_shape', 'XXX TODO: deep XXX'),
-    ('vae', 'XXX TODO: deep XXX'),
-    ('bayes_nn', 'XXX TODO: deep XXX'),
+    ('vae', None),
     ('lstm', 'Type inference + XXX TODO: deep XXX'),
 ]
 @pytest.mark.parametrize('test_name, fail', compile_tests)
