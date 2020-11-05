@@ -1,5 +1,10 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, matmul, dtype_long, dtype_double, register_network
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network
+
+def convert_inputs(inputs):
+    nz = inputs['nz']
+    x = array(inputs['x'], dtype=dtype_long)
+    return { 'nz': nz, 'x': x }
 
 def model(*, nz, x, decoder, encoder):
     # Networks
@@ -7,7 +12,6 @@ def model(*, nz, x, decoder, encoder):
     # Parameters
     z = sample('z', improper_uniform(shape=[nz]))
     # Model
-    mu = zeros([28, 28])
     observe('z__1', normal(0, 1), z)
     mu = decoder(z)
     for i in range(1,28 + 1):
