@@ -1,6 +1,8 @@
 import numpyro as pyro
 import jax.numpy as tensor
 from numpyro.distributions import Exponential
+from pyro import module as register_network
+from pyro import random_module
 from jax.numpy import array
 from jax.numpy import zeros, ones, matmul, true_divide, floor_divide, transpose, empty
 dtype_float=tensor.dtype('float32')
@@ -17,9 +19,6 @@ def observe(site_name, dist, obs):
 
 def factor(site_name, x):
     pyro.sample(site_name, Exponential(1), obs=-x)
-
-def register_network(name, x):
-    pyro.module(name, x)
 
 from jax.ops import index as ops_index
 from jax.ops import index_update as ops_index_update

@@ -1,5 +1,7 @@
 import pyro
 from pyro.distributions import Exponential, Bernoulli, Binomial, Poisson, GammaPoisson
+from pyro import module as register_network
+from pyro import random_module
 from torch import tensor as array
 from torch import zeros, ones, Tensor, matmul, true_divide, floor_divide, transpose, empty
 from torch import LongTensor
@@ -21,6 +23,3 @@ def observe(site_name, dist, obs):
 
 def factor(site_name, x):
     pyro.sample(site_name, Exponential(1), obs=-x)
-
-def register_network(name, x):
-    pyro.module(name, x)

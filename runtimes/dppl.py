@@ -7,7 +7,7 @@ from collections import defaultdict
 import subprocess
 from functools import partial
 from pyro.infer.autoguide.initialization import init_to_sample
-
+import inspect
 
 def _flatten_dict(d):
     def _flatten(name, a):
