@@ -50,7 +50,7 @@ let print_list_newline ?(eol=false) printer ff l =
 let pyro_dppllib =
   [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones"; "empty";
     "matmul"; "true_divide"; "floor_divide"; "transpose";
-    "dtype_long"; "dtype_float"; "register_network"; ]
+    "dtype_long"; "dtype_float"; "register_network"; "random_module"; ]
 let numpyro_dppllib =
   [ "ops_index"; "ops_index_update";
     "lax_cond";
@@ -1804,12 +1804,13 @@ let trans_nn_parameter ctx ff p =
 let trans_networks_priors ctx networks data tdata ff parameters =
   let trans_nn_prior ctx network_name args ff network_parameters =
     fprintf ff "@[<v 4>def prior_%s(%a%a):@,"
-      network_name trans_block_as_args args
+      network_name
+      trans_block_as_args args
       trans_networks_as_arg networks;
     fprintf ff "%a = {}@,%a" trans_nn_base network_name
       (print_list_newline ~eol:true (trans_nn_parameter ctx))
       network_parameters;
-    fprintf ff "return pyro.random_module('%s', %a, %a)()@]@,"
+    fprintf ff "return random_module('%s', %a, %a)()@]@,"
       network_name trans_name network_name
       trans_nn_base network_name
   in
@@ -1823,10 +1824,16 @@ let trans_networks_priors ctx networks data tdata ff parameters =
     nparameters
 
 let trans_networks_parameters networks data tdata ff (network_name, _) =
-  fprintf ff "%a = prior_%s(%a%a)@,"
+  let args = Option.merge ~f:(@) data tdata in
+  fprintf ff "%a = prior_%s(%a%s%a)@,"
     trans_name network_name network_name
-    trans_block_as_args (Option.merge ~f:(@) data tdata)
-    trans_networks_as_arg networks;
+    (print_list_comma (fun ff id -> fprintf ff "%a=%a" trans_id id trans_id id))
+    (get_var_decl_names_block args)
+    (if networks <> None && args <> None then ", " else "")
+    (print_list_comma
+       (fun ff nn -> fprintf ff "%a=%a"
+           trans_id nn.net_id trans_id nn.net_id))
+    (Option.value ~default:[] networks);
   fprintf ff "%a = dict(%a.named_parameters())"
     trans_nn_base network_name trans_name network_name
 
@@ -1952,7 +1959,8 @@ let trans_guideblock ctx networks data tdata parameters
       nparameters
       (trans_block "Guide" ~eol:true ctx) guide
       (print_list_comma
-         (fun ff (nn, _) -> fprintf ff "'%s': %a" nn trans_nn_base nn))
+         (fun ff (nn, _) -> fprintf ff "'%s': random_module('%s', %a, %a)()"
+             nn nn trans_name nn trans_nn_base nn))
       nparameters
       ((if nparameters <> [] then ", " else ""))
       (print_list_comma trans_id) parameters
