@@ -14,10 +14,16 @@ type mode =
   | Generative
   | Mixed
 
+type block =
+  | Model
+  | Guide
+  | GeneratedQuantities
+
 type context =
   { ctx_prog: typed_program
   ; ctx_backend: backend
   ; ctx_mode: mode
+  ; ctx_block: block option
   ; ctx_loops: string list
   ; ctx_params: (string, unit) Hashtbl.t
   ; ctx_to_clone: bool
@@ -50,13 +56,14 @@ let print_list_newline ?(eol=false) printer ff l =
 let pyro_dppllib =
   [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones"; "empty";
     "matmul"; "true_divide"; "floor_divide"; "transpose";
-    "dtype_long"; "dtype_float"; "register_network"; "random_module"; ]
+    "dtype_long"; "dtype_float"; ]
 let numpyro_dppllib =
   [ "ops_index"; "ops_index_update";
     "lax_cond";
     "lax_while_loop";
     "lax_fori_loop";
     "lax_map"; ] @ pyro_dppllib
+let dppllib_networks = [ "register_network"; "random_module"; ]
 
 let distribution =
   [ "improper_uniform";
@@ -606,7 +613,8 @@ let keywords =
   [ "lambda"; "def"; ]
 
 let avoid =
-  keywords @ pyro_dppllib @ numpyro_dppllib @ distribution @ stanlib
+  keywords @ pyro_dppllib @ numpyro_dppllib @ dppllib_networks @
+  distribution @ stanlib
 
 let trans_name ff name =
   let x =
@@ -712,6 +720,11 @@ let is_tensor (type_ : typed_expression Type.t) =
   | Sized (SInt | SReal)
   | Unsized (UInt | UReal) -> false
   | _ -> true
+
+let is_path_expr e =
+  match e.expr with
+  | Variable { path = Some _; _ } -> true
+  | _ -> false
 
 let rec dims_of_sizedtype t =
   match t with
@@ -953,9 +966,7 @@ let split_parameters parameters =
               (add base stmt net_params, params)
             | [] -> assert false
             end
-        | VarDecl {identifier = { path = None; _ }; _} ->
-            (net_params, params)
-        | _ -> (net_params, params))
+        | _ -> (net_params, stmt :: params))
     ~init:([],[])
     parameters
 
@@ -963,7 +974,7 @@ let split_networks networks parametersblock =
   let networks_params, parameters =
     split_parameters (Option.value ~default:[] parametersblock)
   in
-  let networks =
+  let register_networks =
     Option.map
       ~f:(List.filter
             ~f:(fun nn ->
@@ -971,7 +982,7 @@ let split_networks networks parametersblock =
                        networks_params)))
       networks
   in
-  (networks, networks_params, parameters)
+  (register_networks, networks_params, parameters)
 
 
 let get_stanlib_calls program =
@@ -1376,14 +1387,21 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
                    true)
                 else false
             | _ -> false
-            end
+            end || ctx.ctx_block = Some Guide
       in
       if is_sample then
-        fprintf ff "%a = sample(%a, %a)%a"
-          (trans_expr ctx) arg
-          (gen_id ~fresh:false ctx.ctx_loops) arg
-          trans_distribution (distribution, args)
-          trans_truncation truncation
+        match ctx.ctx_block with
+        | Some Guide when is_path_expr arg ->
+            fprintf ff "%a = %a%a"
+              (trans_expr ctx) arg
+              trans_distribution (distribution, args)
+              trans_truncation truncation
+        | _ ->
+            fprintf ff "%a = sample(%a, %a)%a"
+              (trans_expr ctx) arg
+              (gen_id ~fresh:false ctx.ctx_loops) arg
+              trans_distribution (distribution, args)
+              trans_truncation truncation
       else
         let ctx' = set_to_clone ctx in
         let adustment =
@@ -1866,6 +1884,7 @@ let register_network networks ff ostmts =
     ostmts
 
 let trans_modelblock ctx networks data tdata parameters tparameters ff model =
+  let ctx = { ctx with ctx_block = Some Model } in
   let rnetworks, nparameters, parameters =
     split_networks networks parameters
   in
@@ -1893,13 +1912,14 @@ let trans_modelblock ctx networks data tdata parameters tparameters ff model =
       fprintf ff "@[<v 4>def model(%a%a):@,%a%a%a@]@,@,@."
         trans_block_as_args (Option.merge ~f:(@) data tdata)
         trans_networks_as_arg networks
-        (register_network networks) model
+        (register_network rnetworks) model
         (trans_parametersblock ctx networks data tdata)
         (nparameters, rem_parameters)
         (trans_block ~eol:false "Model" ctx) model_ext
 
 let trans_generatedquantitiesblock ctx data tdata params tparams ff
     genquantities =
+  let ctx = { ctx with ctx_block = Some GeneratedQuantities } in
   if tparams <> None || genquantities <> None then begin
     fprintf ff
       "@[<v 0>@,@[<v 4>def generated_quantities(__inputs__):@,%a%a%a%a"
@@ -1946,6 +1966,7 @@ let trans_guideblock ctx networks data tdata parameters
   let ctx =
     { ctx with
       ctx_mode = Generative;
+      ctx_block = Some Guide;
       ctx_params = Hashtbl.create (module String) }
   in
   if guide_parameters <> None || guide <> None then begin
@@ -1963,7 +1984,7 @@ let trans_guideblock ctx networks data tdata parameters
              nn nn trans_name nn trans_nn_base nn))
       nparameters
       ((if nparameters <> [] then ", " else ""))
-      (print_list_comma trans_id) parameters
+      (print_list_comma trans_id) (get_var_decl_names parameters)
   end
 
 let pp_imports lib ff funs =
@@ -1979,6 +2000,7 @@ let trans_prog backend mode ff (p : typed_program) =
     { ctx_prog = p
     ; ctx_backend = backend
     ; ctx_mode = mode
+    ; ctx_block = None
     ; ctx_loops = []
     ; ctx_params = Hashtbl.create (module String)
     ; ctx_to_clone = false
@@ -1993,6 +2015,9 @@ let trans_prog backend mode ff (p : typed_program) =
     match backend with
     | Pyro -> pyro_dppllib
     | Numpyro -> numpyro_dppllib
+  in
+  let dppllib =
+    if p.networksblock <> None then dppllib @ dppllib_networks else dppllib
   in
   fprintf ff "@[<v 0>%a%a%a@,@]"
     (pp_imports ("runtimes."^runtime^".distributions")) ["*"]
@@ -2013,12 +2038,12 @@ let trans_prog backend mode ff (p : typed_program) =
        p.parametersblock p.transformedparametersblock)
     p.modelblock;
   fprintf ff "%a"
-    (trans_generatedquantitiesblock ctx
-       p.datablock p.transformeddatablock
-       p.parametersblock p.transformedparametersblock)
-    p.generatedquantitiesblock;
-  fprintf ff "%a"
     (trans_guideblock ctx
        p.networksblock p.datablock p.transformeddatablock p.parametersblock
        p.guideparametersblock)
     p.guideblock;
+  fprintf ff "%a"
+    (trans_generatedquantitiesblock ctx
+       p.datablock p.transformeddatablock
+       p.parametersblock p.transformedparametersblock)
+    p.generatedquantitiesblock
