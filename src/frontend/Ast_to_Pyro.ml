@@ -27,7 +27,8 @@ type context =
   ; ctx_loops: string list
   ; ctx_params: (string, unit) Hashtbl.t
   ; ctx_to_clone: bool
-  ; ctx_to_clone_vars: SSet.t }
+  ; ctx_to_clone_vars: SSet.t
+  ; ctx_closures: (formatter -> unit -> unit) list ref }
 
 let set_to_clone ctx =
   { ctx with ctx_to_clone = true }
@@ -1427,7 +1428,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       | Numpyro ->
           let name_tt, _, pp_closure_tt, pp_pack, pp_unpack =
             build_closure ctx "then"
-              (closure_vars SSet.empty ifb)
+              (free_vars SSet.empty ifb)
               SSet.empty ifb
           in
           let name_ff = gen_name "else" in
@@ -1435,10 +1436,10 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             fprintf ff "@[<v 4>def %a(acc):@,return acc@]"
               trans_name name_ff
           in
+          ctx.ctx_closures := pp_closure_ff :: pp_closure_tt
+                              :: !(ctx.ctx_closures);
           let res = gen_name "res" in
-          fprintf ff "@[<v 0>%a@,%a@,%a = lax_cond(@[%a,@ %a, %a,@ %a@])@,%a@]"
-            pp_closure_tt ()
-            pp_closure_ff ()
+          fprintf ff "@[<v 0>%a = lax_cond(@[%a,@ %a, %a,@ %a@])@,%a@]"
             trans_name res
             (trans_expr ctx) cond
             trans_name name_tt
@@ -1454,23 +1455,17 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             (trans_stmt ctx) ifb
             (trans_stmt ctx) elseb
       | Numpyro ->
-          let (updated_vars_tt, nonlocal_vars_tt) =
-            closure_vars SSet.empty ifb
-          in
-          let (updated_vars_ff, nonlocal_vars_ff) =
-            closure_vars SSet.empty elseb
-          in
-          let updated_vars =  SSet.union updated_vars_tt updated_vars_ff in
+          let fv_tt = free_vars SSet.empty ifb in
+          let fv_ff = free_vars SSet.empty elseb in
+          let fv_closure =  SSet.union fv_tt fv_ff in
           let name_tt, _, pp_closure_tt, pp_pack, pp_unpack =
-            build_closure ctx "then"
-              (updated_vars, nonlocal_vars_tt)
-              SSet.empty ifb
+            build_closure ctx "then" fv_closure SSet.empty ifb
           in
           let name_ff, _, pp_closure_ff, _, _ =
-            build_closure ctx "else"
-              (updated_vars, nonlocal_vars_ff)
-              SSet.empty elseb
+            build_closure ctx "else" fv_closure SSet.empty elseb
           in
+          ctx.ctx_closures := pp_closure_ff :: pp_closure_tt
+                              :: !(ctx.ctx_closures);
           let res = gen_name "res" in
           fprintf ff "@[<v 0>%a@,%a@,%a = lax_cond(@[%a,@ %a, %a,@ %a@])@,%a@]"
             pp_closure_tt ()
@@ -1495,9 +1490,11 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             (trans_expr ctx) cond
             (trans_stmt ctx') body
       | Numpyro ->
+          let _, fv_cond = free_vars_expr (SSet.empty, SSet.empty) cond in
+          let fv_body = free_vars SSet.empty body in
           let body_name, acc_name, pp_closure, pp_pack, pp_unpack =
-            build_closure ctx' "body"
-              (closure_vars SSet.empty body)
+            build_closure ctx' "while"
+              (SSet.union fv_cond fv_body)
               SSet.empty body
           in
           let cond_name = gen_name "cond" in
@@ -1508,13 +1505,10 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
               (pp_unpack ~eol:true) ()
               (trans_expr ctx) cond
           in
-          fprintf ff "@[<v 0>@[<v 4>def %a(_):@,%a@]@,"
-            trans_name body_name
-            (trans_stmt ctx') body;
+          ctx.ctx_closures := pp_closure :: pp_cond :: !(ctx.ctx_closures);
           fprintf ff
-            "@[<v 0>%a@,%a@,%a = lax_while_loop(@[%a,@ %a,@ %a@])@,%a@]"
+            "@[<v 0>%a@,%a = lax_while_loop(@[%a,@ %a,@ %a@])@,%a@]"
             pp_cond ()
-            pp_closure ()
             trans_name acc_name
             trans_name cond_name trans_name body_name pp_pack ()
             (pp_unpack ~eol:false) ()
@@ -1535,13 +1529,13 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             (trans_stmt ctx') loop_body
       | Numpyro ->
           let body_name, acc_name, pp_closure, pp_pack, pp_unpack =
-            build_closure ctx' "body"
-              (closure_vars (SSet.singleton loop_variable.name) loop_body)
+            build_closure ctx' "fori"
+              (free_vars (SSet.singleton loop_variable.name) loop_body)
               (SSet.singleton loop_variable.name) loop_body
           in
+          ctx.ctx_closures := pp_closure :: !(ctx.ctx_closures);
           fprintf ff
-            "@[<v 0>%a@,%a = lax_fori_loop(@[%a,@ %a,@ %a,@ %a@])@,%a@]"
-            pp_closure ()
+            "@[<v 0>%a = lax_fori_loop(@[%a,@ %a,@ %a,@ %a@])@,%a@]"
             trans_name acc_name
             (trans_expr ctx) lower_bound
             (trans_expr ctx) upper_bound
@@ -1564,10 +1558,11 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           (trans_stmt ctx') body
       | Numpyro ->
           let body_name, acc_name, pp_closure, pp_pack, pp_unpack =
-            build_closure ctx' "body"
-              (closure_vars (SSet.singleton loop_variable.name) body)
+            build_closure ctx' "for"
+              (free_vars (SSet.singleton loop_variable.name) body)
               (SSet.singleton loop_variable.name) body
           in
+          ctx.ctx_closures := pp_closure :: !(ctx.ctx_closures);
           fprintf ff
             "@[<v 0>%a@,%a = lax_map(@[%a,@ %a,@ %a@])@,%a@]"
             pp_closure ()
@@ -1599,26 +1594,12 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
   | Skip ->
       fprintf ff "pass"
 
-and closure_vars args stmt =
-  let fvars = free_vars args stmt in
-  let updated_vars = SSet.inter (updated_vars_stmt args stmt) fvars in
-  let nonlocal_vars = SSet.diff fvars updated_vars in
-  (updated_vars, nonlocal_vars)
-
-and build_closure ctx fun_name (updated_vars, nonlocal_vars) args stmt =
-  let nonlocal ff vars =
-    fprintf ff "%a@,"
-      (print_list_newline (fun ff x -> fprintf ff "nonlocal %a" trans_name x))
-      vars
-  in
+and build_closure ctx fun_name fv args stmt =
   let fun_name = gen_name fun_name in
-  let acc_name =
-    match SSet.to_list updated_vars with
-    | [ x ] -> x
-    | _ -> gen_name "acc"
-  in
+  let fv = SSet.to_list fv in
+  let acc_name = match fv with [ x ] -> x | _ -> gen_name "acc" in
   let pp_pack ff () =
-    match SSet.to_list updated_vars with
+    match fv with
     | [] -> fprintf ff "None"
     | [ x ] -> fprintf ff "%a" trans_name x
     | vars ->
@@ -1627,7 +1608,7 @@ and build_closure ctx fun_name (updated_vars, nonlocal_vars) args stmt =
           vars
   in
   let pp_unpack ~eol ff () =
-    match SSet.to_list updated_vars with
+    match fv with
     | [] | [ _ ] -> ()
     | vars ->
         fprintf ff "%a"
@@ -1639,13 +1620,12 @@ and build_closure ctx fun_name (updated_vars, nonlocal_vars) args stmt =
           vars
   in
   let pp_closure ff () =
-    fprintf ff "@[<v 4>def %a(%a%s%a):@,%a%a%a@,return %a@]"
+    fprintf ff "@[<v 4>def %a(%a%s%a):@,%a%a@,return %a@]"
       trans_name fun_name
       (print_list_comma pp_print_string) (SSet.to_list args)
       (if SSet.is_empty args then "" else ", ")
       trans_name acc_name
       (pp_unpack ~eol:true) ()
-      nonlocal (SSet.to_list nonlocal_vars)
       (trans_stmt ctx) stmt
       pp_pack ()
   in
@@ -2004,7 +1984,8 @@ let trans_prog backend mode ff (p : typed_program) =
     ; ctx_loops = []
     ; ctx_params = Hashtbl.create (module String)
     ; ctx_to_clone = false
-    ; ctx_to_clone_vars = SSet.empty }
+    ; ctx_to_clone_vars = SSet.empty
+    ; ctx_closures = ref [] }
   in
   let runtime =
     match backend with
@@ -2046,4 +2027,6 @@ let trans_prog backend mode ff (p : typed_program) =
     (trans_generatedquantitiesblock ctx
        p.datablock p.transformeddatablock
        p.parametersblock p.transformedparametersblock)
-    p.generatedquantitiesblock
+    p.generatedquantitiesblock;
+  fprintf ff "%a"
+    (print_list_newline (fun ff pp -> pp ff ())) !(ctx.ctx_closures)
