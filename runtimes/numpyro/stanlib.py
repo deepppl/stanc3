@@ -1,4 +1,5 @@
 import math
+import jax
 import jax.numpy as tensor
 from jax.numpy import ones, array
 
@@ -1223,8 +1224,8 @@ cumulative_sum_rowvector = tcumsum
 ## 5.12 Covariance Functions
 ## 5.12.1 Exponentiated quadratic covariance function
 
-from tensor import power as pow
-from tensor.linalg import norm
+from jax.numpy import power as pow
+from jax.numpy.linalg import norm
 
 def cov_exp_quad(x, alpha, rho):
     return alpha * alpha * texp(-0.5 * pow(norm(x) / rho, 2))

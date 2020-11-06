@@ -15,6 +15,7 @@ from jax.numpy import log as tlog
 from jax.numpy import exp as texp
 from jax.numpy import ones as tones
 from jax.numpy import zeros as tzeros
+from jax.numpy import zeros_like as tzeros_like
 import jax.numpy as tensor
 from numbers import Number
 from jax.numpy import array
