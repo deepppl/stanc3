@@ -1,10 +1,12 @@
-from os.path import splitext, basename, dirname
 import os
+import sys
+import inspect
 import pathlib
 import importlib
+import subprocess
+from os.path import splitext, basename, dirname
 from pandas import DataFrame, Series
 from collections import defaultdict
-import subprocess
 from functools import partial
 from pyro.infer.autoguide.initialization import init_to_sample
 import inspect
@@ -25,24 +27,32 @@ def _flatten_dict(d):
     }
 
 
-def _compile(backend, mode, stanfile, pyfile):
+def _exec(cmd):
     try:
-        subprocess.check_call(
-            [
-                "dune",
-                "exec",
-                "stanc",
-                "--",
-                f"--{backend}",
-                "--mode",
-                mode,
-                "--o",
-                pyfile,
-                stanfile,
-            ]
+        output = subprocess.check_output(
+            cmd, stderr=subprocess.PIPE, universal_newlines=True
         )
-    except subprocess.CalledProcessError as e:
-        exit(1)
+        if output:
+            print(output, file=sys.stdout)
+    except subprocess.CalledProcessError as exc:
+        print(f"Error {exc.returncode}: {exc.stderr}", file=sys.stderr)
+
+
+def _compile(backend, mode, stanfile, pyfile):
+    _exec(
+        [
+            "dune",
+            "exec",
+            "stanc",
+            "--",
+            f"--{backend}",
+            "--mode",
+            mode,
+            "--o",
+            pyfile,
+            stanfile,
+        ]
+    )
 
 
 class Model:
@@ -50,17 +60,18 @@ class Model:
         if backend == "pyro":
             import pyro
             import torch as tensor
+
             self.pyro = pyro
             self.tensor = tensor
             self.tensor.array = tensor.tensor
         elif backend == "numpyro":
             import numpyro as pyro
             import jax.numpy as tensor
+
             self.pyro = pyro
             self.tensor = tensor
             self.tensor.long = tensor.dtype("int32")
-            self.tensor.float = tensor.dtype("float32") 
-
+            self.tensor.float = tensor.dtype("float32")
 
         if not os.path.exists("_tmp"):
             os.makedirs("_tmp")
@@ -74,7 +85,9 @@ class Model:
 
     def mcmc(self, samples, warmups=0, chains=1, thin=1, kernel=None, **kwargs):
         if kernel is None:
-            kernel = self.pyro.infer.NUTS(self.module.model, adapt_step_size=True) #, init_strategy=init_to_sample,)
+            kernel = self.pyro.infer.NUTS(
+                self.module.model, adapt_step_size=True
+            )  # , init_strategy=init_to_sample,)
 
         # HACK pyro an numpyro MCMC do not have the same parameters...
         if self.pyro.__name__ == "numpyro":
@@ -82,21 +95,17 @@ class Model:
 
             rng_key = jax.random.split(jax.random.PRNGKey(0))
             mcmc = self.pyro.infer.MCMC(
-                kernel,
-                warmups,
-                samples - warmups,
-                num_chains=chains,
-                **kwargs
+                kernel, warmups, samples - warmups, num_chains=chains, **kwargs
             )
             mcmc.run = partial(mcmc.run, rng_key)
         elif self.pyro.__name__ == "pyro":
-            kwargs = {'mp_context': 'forkserver', **kwargs}
+            kwargs = {"mp_context": "forkserver", **kwargs}
             mcmc = self.pyro.infer.MCMC(
                 kernel,
                 samples - warmups,
                 warmup_steps=warmups,
                 num_chains=chains,
-                **kwargs
+                **kwargs,
             )
         else:
             assert False, "Invalid Pyro implementation"
@@ -155,10 +164,20 @@ class MCMCProxy:
 
     def summary(self):
         d_mean = _flatten_dict(
-            {k: self.tensor.mean(self.tensor.array(v, dtype=self.tensor.float), axis=0) for k, v in self.samples.items()}
+            {
+                k: self.tensor.mean(
+                    self.tensor.array(v, dtype=self.tensor.float), axis=0
+                )
+                for k, v in self.samples.items()
+            }
         )
         d_std = _flatten_dict(
-            {k: self.tensor.std(self.tensor.array(v, dtype=self.tensor.float), axis=0) for k, v in self.samples.items()}
+            {
+                k: self.tensor.std(
+                    self.tensor.array(v, dtype=self.tensor.float), axis=0
+                )
+                for k, v in self.samples.items()
+            }
         )
         return DataFrame({"mean": Series(d_mean), "std": Series(d_std)})
 
@@ -170,10 +189,10 @@ class SVIProxy(object):
         self.args = []
         self.kwargs = {}
 
-    def posterior(self, n):
-        signature = inspect.signature(self.svi.guide)
-        args = [None for i in range(len(signature.parameters))]
-        return [self.svi.guide(*args) for _ in range(n)]
+    def posterior(self, n, **kwargs):
+        # signature = inspect.signature(self.svi.guide)
+        # kwargs = {k : None for k in signature.parameters}
+        return [self.svi.guide(**kwargs) for _ in range(n)]
 
     def step(self, *args, **kwargs):
         self.kwargs = kwargs

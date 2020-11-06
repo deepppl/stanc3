@@ -35,7 +35,7 @@ def build_mlp():
 
 
 def predict(data, posterior):
-    predictions = [model(data) for model in posterior]
+    predictions = [s["mlp"](data) for s in posterior]
     prediction = torch.stack(predictions).mean(dim=0)
     return prediction.argmax(dim=-1)
 
@@ -45,17 +45,18 @@ def test_mlp_inference():
     model = Model("pyro", "good/mlp.stan", True, "mixed")
     svi = model.svi(params = {'lr' : 0.01})
 
-    for epoch in range(2):  # loop over the dataset multiple times
+    for epoch in range(5):  # loop over the dataset multiple times
         for j, (imgs, lbls) in enumerate(train_loader, 0):
             # calculate the loss and take a gradient step
             loss = svi.step(nx=nx, nh=nh, ny=ny, batch_size=batch_size,
                             imgs=imgs, labels=lbls + 1, mlp=mlp)
             print('.', end="", flush=True)
-    posterior = svi.posterior(30)
+    posterior = svi.posterior(30, nx=nx, nh=nh, ny=ny, batch_size=batch_size,
+                            imgs=None, labels=None, mlp=mlp)
 
     for j, data in enumerate(test_loader):
         images, labels = data
-        accuracy = (predict(images, posterior["mlp"]) == labels + 1).type(torch.float).mean()
+        accuracy = (predict(images, posterior) == labels + 1).type(torch.float).mean()
         assert accuracy > 0.6
 
     print('accuracy:', accuracy)
