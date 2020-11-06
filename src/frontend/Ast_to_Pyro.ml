@@ -1597,27 +1597,34 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
 and build_closure ctx fun_name fv args stmt =
   let fun_name = gen_name fun_name in
   let fv = SSet.to_list fv in
-  let acc_name = match fv with [ x ] -> x | _ -> gen_name "acc" in
+  let acc_name =
+    match fv with
+    | [ x ] -> x
+    | _ ->
+       let acc =
+         fprintf str_formatter "%a"
+           (pp_print_list ~pp_sep:(fun ff () -> fprintf ff "_")
+              pp_print_string)
+           fv;
+         flush_str_formatter()
+       in
+       gen_name acc
+  in
   let pp_pack ff () =
     match fv with
     | [] -> fprintf ff "None"
     | [ x ] -> fprintf ff "%a" trans_name x
     | vars ->
-        fprintf ff "{ %a }"
-          (print_list_comma (fun ff x -> fprintf ff "'%s': %a" x trans_name x))
-          vars
+        fprintf ff "(%a)" (print_list_comma trans_name) vars
   in
   let pp_unpack ~eol ff () =
     match fv with
     | [] | [ _ ] -> ()
     | vars ->
-        fprintf ff "%a"
-          (print_list_newline ~eol
-             (fun ff x -> fprintf ff "%a = %a['%s']"
-                 trans_name x
-                 trans_name acc_name
-                 x))
-          vars
+        fprintf ff "(%a) = %a%a"
+          (print_list_comma trans_name) vars
+          trans_name acc_name
+          (if eol then pp_print_cut else pp_print_nothing) ()
   in
   let pp_closure ff () =
     fprintf ff "@[<v 4>def %a(%a%s%a):@,%a%a@,return %a@]"
