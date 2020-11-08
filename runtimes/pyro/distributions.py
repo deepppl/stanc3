@@ -1,21 +1,42 @@
 import pyro.distributions as d
-from torch.distributions import constraints, transform_to
-from torch.distributions.constraints import Constraint
-from pyro.distributions.transforms import CorrLCholeskyTransform
-from torch import sort
-from torch import log as tlog
-from torch import exp as texp
-from torch import ones as tones
-from torch import long as dtype_long
-from torch import float as dtype_float
-import torch
+import torch as tensor
+from torch.distributions import constraints, transform_to as transform
+from torch import (
+    norm as tnorm,
+    log as tlog,
+    exp as texp,
+    ones as tones,
+    zeros as tzeros,
+    zeros_like as tzeros_like,
+    long as dtype_long,
+    float as dtype_float,
+    LongTensor as Number,
+    tensor as array,
+)
+
+
+def tsort(x):
+    return torch.sort(x).values
+
+
+d.BernoulliLogits = lambda logits: d.Bernoulli(logits=logits)
+d.BinomialLogits = lambda logits, n: d.Binomial(n, logits=logits)
+d.Logistic = d.LogisticNormal
+
+
+def _cast_float(x):
+    if isinstance(x, Number):
+        return x.type(dtype_float)
+    return array(x, dtype=dtype_float)
+
 
 ## Utility functions
 def _cast1(f):
     def f_casted(y, *args):
-        y = y.type(torch.float) if isinstance(y, torch.LongTensor) else torch.tensor(y, dtype=torch.float)
-        return f(y, *args)
+        return f(_cast_float(y), *args)
+
     return f_casted
+
 
 def _distrib(d, nargs, typ):
     def d_ext(*args):
@@ -23,60 +44,76 @@ def _distrib(d, nargs, typ):
             return d(*args)
         else:
             return d(args[0] * tones(args[nargs], dtype=typ), *args[1:nargs])
+
     return d_ext
+
 
 def _lpdf(d):
     def lpdf(y, *args):
         return d(*args).log_prob(y)
+
     return lpdf
+
 
 def _lpmf(d):
     def lpmf(y, *args):
         return d(*args).log_prob(y)
+
     return lpmf
 
+
 def _cdf(d):
+    # XXX TODO: check id correct XXX
     def lccdf(y, *args):
         return d(*args).cdf(y)
+
     return lccdf
 
+
 def _lcdf(d):
+    # XXX TODO: check id correct XXX
     def lccdf(y, *args):
         return tlog(d(*args).cdf(y))
+
     return lccdf
+
 
 def _lccdf(d):
     # XXX TODO: check id correct XXX
     def lccdf(y, *args):
         return tlog(d(*args).icdf(y))
+
     return lccdf
+
 
 def _rng(d):
     def rng(*args):
         return d(*args).sample()
+
     return rng
 
 
 ## Priors
 
+
 class improper_uniform(d.Normal):
     def __init__(self, shape=[]):
-        zeros = torch.zeros(shape) if shape != [] else 0
-        ones = torch.ones(shape) if shape  != [] else 1
+        zeros = tzeros(shape) if shape != [] else 0
+        ones = tones(shape) if shape != [] else 1
         super(improper_uniform, self).__init__(zeros, ones)
 
     def log_prob(self, x):
-        return x.new_zeros(x.shape)
+        return tzeros_like(x)
+
 
 class lower_constrained_improper_uniform(improper_uniform):
     def __init__(self, lower_bound=0, shape=[]):
         super().__init__(shape)
-        self._cstr = constraints.greater_than_eq(lower_bound)
-        self.support = constraints.greater_than_eq(lower_bound)
+        self.support = constraints.greater_than(lower_bound)
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return transform_to(self._cstr)(s)
+        return transform(self.support)(s)
 
 class _LessThanEq(Constraint):
     """
@@ -91,26 +128,27 @@ class _LessThanEq(Constraint):
         fmt_string += '(upper_bound={})'.format(self.upper_bound)
         return fmt_string
 
+less_than_eq = _LessThanEq
+
 class upper_constrained_improper_uniform(improper_uniform):
-    def __init__(self, upper_bound=0.0, shape=[]):
+    def __init__(self, upper_bound=0, shape=[]):
         super().__init__(shape)
-        self._cstr = _LessThanEq(upper_bound)
-        self.support = constraints.greater_than_eq(upper_bound)
+        self.support = less_than_eq(upper_bound)
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return transform_to(self._cstr)(s)
+        return transform(self.support)(s)
+
 
 class simplex_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
         super().__init__(shape)
         self.support = constraints.simplex
 
-    _transform = transform_to(constraints.simplex)
-
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return self._transform(s)
+        return transform(self.support)(s)
+
 
 class unit_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
@@ -118,7 +156,8 @@ class unit_constrained_improper_uniform(improper_uniform):
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return s / torch.norm(s)
+        return s / tnorm(s)
+
 
 class ordered_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
@@ -126,20 +165,18 @@ class ordered_constrained_improper_uniform(improper_uniform):
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return sort(s).values
+        return tsort(s)
+
 
 class positive_ordered_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
         super().__init__(shape)
         self.support = constraints.positive
 
-    _to_positive = transform_to(constraints.positive)
-    def _transform(self, x):
-        return sort(self._to_positive(x)).values
-
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return self._transform(s)
+        s = transform(self.support)(s)
+        return tsort(s)
 
 
 class cholesky_factor_corr_constrained_improper_uniform(improper_uniform):
@@ -147,11 +184,9 @@ class cholesky_factor_corr_constrained_improper_uniform(improper_uniform):
         super().__init__(shape[0])
         self.support = constraints.lower_cholesky
 
-    _transform = CorrLCholeskyTransform()
-
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
-        return self._transform(s)
+        return transform(self.support)(s)
 
 
 ## Stan distributions
@@ -191,7 +226,7 @@ bernoulli_rng = _rng(bernoulli)
 # real bernoulli_logit_lpmf(ints y | reals alpha)
 # The log Bernoulli probability mass of y given chance of success inv_logit(alpha)
 
-bernoulli_logit = _distrib(lambda logits: d.Bernoulli(logits=logits), 1, dtype_float)
+bernoulli_logit = _distrib(d.BernoulliLogits, 1, dtype_float)
 bernoulli_logit_lpmf = _lpmf(bernoulli_logit)
 
 
@@ -202,7 +237,7 @@ bernoulli_logit_lpmf = _lpmf(bernoulli_logit)
 # real binomial_logit_lpmf(ints n | ints N, reals alpha)
 # The log binomial probability mass of n successes in N trials given logit-scaled chance of success alpha
 
-binomial_logit = _distrib(lambda n, logits: d.Binomial(n, logits=logits), 2, dtype_long)
+binomial_logit = _distrib(lambda n, logits: d.BinomialLogits(logits, n), 2, dtype_long)
 binomial_logit_lpmf = _cast1(_lpmf(binomial_logit))
 
 ## 13.5 Categorical Distribution
@@ -218,7 +253,9 @@ categorical_rng = lambda theta: _rng(categorical)(theta) + 1
 # The log categorical probability mass function with outcome(s) y in 1:N
 # given log-odds of outcomes beta.
 
-categorical_logit = _distrib(lambda logits: d.Categorical(logits=logits), 1, dtype_float)
+categorical_logit = _distrib(
+    lambda logits: d.Categorical(logits=logits), 1, dtype_float
+)
 categorical_logit_lpmf = lambda y, beta: _lpmf(categorical_logit)(y - 1, beta)
 categorical_logit_rng = lambda beta: _rng(categorical_logit)(beta) + 1
 
@@ -281,6 +318,8 @@ def std_normal(*args):
         return d.Normal(0, tones(args[0]))
     else:
         return d.Normal(0, 1)
+
+
 std_normal_lpdf = _lpdf(std_normal)
 std_normal_cdf = _cdf(std_normal)
 std_normal_lcdf = _lcdf(std_normal)
@@ -328,7 +367,7 @@ double_exponential_rng = _rng(double_exponential)
 # real logistic_lpdf(reals y | reals mu, reals sigma)
 # The log of the logistic density of y given location mu and scale sigma
 
-logistic = _distrib(d.LogisticNormal, 2, dtype_float)
+logistic = _distrib(d.Logistic, 2, dtype_float)
 logistic_lpdf = _lpdf(logistic)
 logistic_cdf = _cdf(logistic)
 logistic_lcdf = _lcdf(logistic)
@@ -437,4 +476,3 @@ multi_normal_rng = _rng(multi_normal)
 dirichlet = _distrib(d.Dirichlet, 2, dtype_float)
 dirichlet_lpdf = _lpdf(dirichlet)
 dirichlet_rng = _rng(dirichlet)
-
