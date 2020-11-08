@@ -6,10 +6,13 @@ from torch import tensor as array
 from torch import long as dtype_long
 from torch import float as dtype_float
 
+
 def _XXX_TODO_XXX_(f):
     def todo(*args):
-        assert False, f'{f}: not yet implemented'
+        assert False, f"{f}: not yet implemented"
+
     return todo
+
 
 # 3.2 Mathematical Constants
 
@@ -24,11 +27,13 @@ e = lambda: array(math.e, dtype=dtype_float)
 # real sqrt2()
 # The square root of 2
 from math import sqrt as msqrt
+
 sqrt2 = lambda: array(msqrt(2), dtype=dtype_float)
 
 # real log2()
 # The natural logarithm of 2
 from math import log as mlog
+
 log2 = lambda: array(mlog(2), dtype=dtype_float)
 
 # real log10()
@@ -39,15 +44,15 @@ log10 = lambda: array(mlog(10), dtype=dtype_float)
 
 # real not_a_number()
 # Not-a-number, a special non-finite real value returned to signal an error
-not_a_number = lambda : array(math.nan, dtype=dtype_float)
+not_a_number = lambda: array(math.nan, dtype=dtype_float)
 
 # real positive_infinity()
 # Positive infinity, a special non-finite real value larger than all finite numbers
-positive_infinity = lambda : array(float("inf"), dtype=dtype_float)
+positive_infinity = lambda: array(float("inf"), dtype=dtype_float)
 
 # real negative_infinity()
 # Negative infinity, a special non-finite real value smaller than all finite numbers
-negative_infinity = lambda : array(float("-inf"), dtype=dtype_float)
+negative_infinity = lambda: array(float("-inf"), dtype=dtype_float)
 
 # real machine_precision()
 # The smallest number x
@@ -61,6 +66,7 @@ machine_precision = lambda: array(10 ** (-15.95), dtype=dtype_float)
 # R fabs(T x)
 # absolute value of x
 from torch import abs as tabs
+
 mabs = abs
 abs_int = lambda x: array(mabs(x), dtype=dtype_float)
 abs_real = tabs
@@ -102,6 +108,7 @@ fmod_real_real = lambda x, y: x % y
 # floor of x, which is the largest integer less than or equal to x, converted to a real value; see warning at start of section step-like functions
 from torch import floor as tfloor
 from math import floor as mfloor
+
 floor_int = lambda x: array(mfloor(x), dtype=dtype_float)
 floor_real = tfloor
 floor_vector = tfloor
@@ -113,6 +120,7 @@ floor_array = tfloor
 # ceiling of x, which is the smallest integer greater than or equal to x, converted to a real value; see warning at start of section step-like functions
 from torch import ceil as tceil
 from math import ceil as mceil
+
 ceil_int = lambda x: array(mceil(x), dtype=dtype_float)
 ceil_real = tceil
 ceil_vector = tceil
@@ -123,6 +131,7 @@ ceil_array = tceil
 # R round(T x)
 # nearest integer to x, converted to a real value; see warning at start of section step-like functions
 from torch import round as tround
+
 mround = round
 round_int = lambda x: array(mround(x), dtype=dtype_float)
 round_real = tround
@@ -135,6 +144,7 @@ round_array = tround
 # integer nearest to but no larger in magnitude than x, converted to a double value; see warning at start of section step-like functions
 from torch import trunc as ttrunc
 from math import trunc as mtrunc
+
 trunc_int = lambda x: array(mtrunc(x), dtype=dtype_float)
 trunc_real = ttrunc
 trunc_vector = ttrunc
@@ -147,6 +157,7 @@ trunc_array = ttrunc
 # R sqrt(T x)
 # square root of x
 from torch import sqrt as tsqrt
+
 sqrt_int = lambda x: array(msqrt(x), dtype=dtype_float)
 sqrt_real = tsqrt
 sqrt_vector = tsqrt
@@ -156,16 +167,17 @@ sqrt_array = tsqrt
 
 # R cbrt(T x)
 # cube root of x
-cbrt_int = _XXX_TODO_XXX_('cbrt')
-cbrt_real = _XXX_TODO_XXX_('cbrt')
-cbrt_vector = _XXX_TODO_XXX_('cbrt')
-cbrt_rowvector = _XXX_TODO_XXX_('cbrt')
-cbrt_matrix = _XXX_TODO_XXX_('cbrt')
-cbrt_array = _XXX_TODO_XXX_('cbrt')
+cbrt_int = _XXX_TODO_XXX_("cbrt")
+cbrt_real = _XXX_TODO_XXX_("cbrt")
+cbrt_vector = _XXX_TODO_XXX_("cbrt")
+cbrt_rowvector = _XXX_TODO_XXX_("cbrt")
+cbrt_matrix = _XXX_TODO_XXX_("cbrt")
+cbrt_array = _XXX_TODO_XXX_("cbrt")
 
 # R square(T x)
 # square of x
 from torch import square as tsquare
+
 square_int = lambda x: x * x
 square_real = tsquare
 square_vector = tsquare
@@ -178,6 +190,7 @@ square_array = tsquare
 # natural exponential of x
 from torch import exp as texp
 from math import exp as mexp
+
 exp_int = lambda x: array(mexp(x), dtype=dtype_float)
 exp_real = texp
 exp_vector = texp
@@ -187,16 +200,17 @@ exp_array = texp
 
 # R exp2(T x)
 # base-2 exponential of x
-exp2_int = _XXX_TODO_XXX_('exp2')
-exp2_real = _XXX_TODO_XXX_('exp2')
-exp2_vector = _XXX_TODO_XXX_('exp2')
-exp2_rowvector = _XXX_TODO_XXX_('exp2')
-exp2_matrix = _XXX_TODO_XXX_('exp2')
-exp2_array = _XXX_TODO_XXX_('exp2')
+exp2_int = _XXX_TODO_XXX_("exp2")
+exp2_real = _XXX_TODO_XXX_("exp2")
+exp2_vector = _XXX_TODO_XXX_("exp2")
+exp2_rowvector = _XXX_TODO_XXX_("exp2")
+exp2_matrix = _XXX_TODO_XXX_("exp2")
+exp2_array = _XXX_TODO_XXX_("exp2")
 
 # R log(T x)
 # natural logarithm of x
 from torch import log as tlog
+
 log_int = lambda x: array(mlog(x), dtype=dtype_float)
 log_real = tlog
 log_vector = tlog
@@ -208,6 +222,7 @@ log_array = tlog
 # base-2 logarithm of x
 from torch import log2 as tlog2
 from math import log2 as mlog2
+
 log2_int = lambda x: array(mlog2(x), dtype=dtype_float)
 log2_real = tlog2
 log2_vector = tlog2
@@ -219,6 +234,7 @@ log2_array = tlog2
 # base-10 logarithm of x
 from torch import log10 as tlog10
 from math import log10 as mlog10
+
 log10_int = lambda x: array(mlog10(x), dtype=dtype_float)
 log10_real = tlog10
 log10_vector = tlog10
@@ -235,42 +251,44 @@ pow_real_real = lambda x, y: x ** y
 
 # R inv(T x)
 # inverse of x
-inv_int = _XXX_TODO_XXX_('inv')
-inv_real = _XXX_TODO_XXX_('inv')
-inv_vector = _XXX_TODO_XXX_('inv')
-inv_rowvector = _XXX_TODO_XXX_('inv')
-inv_matrix = _XXX_TODO_XXX_('inv')
-inv_array = _XXX_TODO_XXX_('inv')
+inv_int = _XXX_TODO_XXX_("inv")
+inv_real = _XXX_TODO_XXX_("inv")
+inv_vector = _XXX_TODO_XXX_("inv")
+inv_rowvector = _XXX_TODO_XXX_("inv")
+inv_matrix = _XXX_TODO_XXX_("inv")
+inv_array = _XXX_TODO_XXX_("inv")
 
 # R inv_sqrt(T x)
 # inverse of the square root of x
-inv_sqrt_int = _XXX_TODO_XXX_('inv_sqrt')
-inv_sqrt_real = _XXX_TODO_XXX_('inv_sqrt')
-inv_sqrt_vector = _XXX_TODO_XXX_('inv_sqrt')
-inv_sqrt_rowvector = _XXX_TODO_XXX_('inv_sqrt')
-inv_sqrt_matrix = _XXX_TODO_XXX_('inv_sqrt')
-inv_sqrt_array = _XXX_TODO_XXX_('inv_sqrt')
+inv_sqrt_int = _XXX_TODO_XXX_("inv_sqrt")
+inv_sqrt_real = _XXX_TODO_XXX_("inv_sqrt")
+inv_sqrt_vector = _XXX_TODO_XXX_("inv_sqrt")
+inv_sqrt_rowvector = _XXX_TODO_XXX_("inv_sqrt")
+inv_sqrt_matrix = _XXX_TODO_XXX_("inv_sqrt")
+inv_sqrt_array = _XXX_TODO_XXX_("inv_sqrt")
 
 # R inv_square(T x)
 # inverse of the square of x
-inv_square_int = _XXX_TODO_XXX_('inv_square')
-inv_square_real = _XXX_TODO_XXX_('inv_square')
-inv_square_vector = _XXX_TODO_XXX_('inv_square')
-inv_square_rowvector = _XXX_TODO_XXX_('inv_square')
-inv_square_matrix = _XXX_TODO_XXX_('inv_square')
-inv_square_array = _XXX_TODO_XXX_('inv_square')
+inv_square_int = _XXX_TODO_XXX_("inv_square")
+inv_square_real = _XXX_TODO_XXX_("inv_square")
+inv_square_vector = _XXX_TODO_XXX_("inv_square")
+inv_square_rowvector = _XXX_TODO_XXX_("inv_square")
+inv_square_matrix = _XXX_TODO_XXX_("inv_square")
+inv_square_array = _XXX_TODO_XXX_("inv_square")
 
 ## 3.9 Trigonometric Functions
 
 # real hypot(real x, real y)
 # Return the length of the hypotenuse of a right triangle with sides of length x and y.
 from math import hypot
+
 hypot_real_real = hypot
 
 # R cos(T x)
 # cosine of the angle x (in radians)
 from torch import cos as tcos
 from math import cos as mcos
+
 cos_int = lambda x: array(mcos(x), dtype=dtype_float)
 cos_real = tcos
 cos_vector = tcos
@@ -282,6 +300,7 @@ cos_array = tcos
 # sine of the angle x (in radians)
 from torch import sin as tsin
 from math import sin as msin
+
 sin_int = lambda x: array(msin(x), dtype=dtype_float)
 sin_real = tsin
 sin_vector = tsin
@@ -293,6 +312,7 @@ sin_array = tsin
 # tangent of the angle x (in radians)
 from torch import tan as ttan
 from math import tan as mtan
+
 tan_int = lambda x: array(mtan(x), dtype=dtype_float)
 tan_real = ttan
 tan_vector = ttan
@@ -304,6 +324,7 @@ tan_array = ttan
 # principal arc (inverse) cosine (in radians) of x
 from torch import acos as tacos
 from math import acos as macos
+
 acos_int = lambda x: array(macos(x), dtype=dtype_float)
 acos_real = tacos
 acos_vector = tacos
@@ -315,6 +336,7 @@ acos_array = tacos
 # principal arc (inverse) sine (in radians) of x
 from torch import asin as tasin
 from math import asin as masin
+
 asin_int = lambda x: array(masin(x), dtype=dtype_float)
 asin_real = tasin
 asin_vector = tasin
@@ -327,6 +349,7 @@ asin_array = tasin
 # to π
 from torch import atan as tatan
 from math import atan as matan
+
 atan_int = lambda x: array(matan(x), dtype=dtype_float)
 atan_real = tatan
 atan_vector = tatan
@@ -337,6 +360,7 @@ atan_array = tatan
 # real atan2(real y, real x)
 # Return the principal arc (inverse) tangent (in radians) of y divided by x
 from torch import atan2 as tatan2
+
 atan2_real_real = tatan2
 
 
@@ -346,6 +370,7 @@ atan2_real_real = tatan2
 # hyperbolic cosine of x (in radians)
 from torch import cosh as tcosh
 from math import cosh as mcosh
+
 cosh_int = lambda x: array(mcosh(x), dtype=dtype_float)
 cosh_real = tcosh
 cosh_vector = tcosh
@@ -357,6 +382,7 @@ cosh_array = tcosh
 # hyperbolic sine of x (in radians)
 from torch import sinh as tsinh
 from math import sinh as msinh
+
 sinh_int = lambda x: array(msinh(x), dtype=dtype_float)
 sinh_real = tsinh
 sinh_vector = tsinh
@@ -368,6 +394,7 @@ sinh_array = tsinh
 # hyperbolic tangent of x (in radians)
 from torch import tanh as ttanh
 from math import tanh as mtanh
+
 tanh_int = lambda x: array(mtanh(x), dtype=dtype_float)
 tanh_real = ttanh
 tanh_vector = ttanh
@@ -379,6 +406,7 @@ tanh_array = ttanh
 # inverse hyperbolic cosine (in radians)
 from torch import acosh as tacosh
 from math import acosh as macosh
+
 acosh_int = lambda x: array(macosh(x), dtype=dtype_float)
 acosh_real = tacosh
 acosh_vector = tacosh
@@ -390,6 +418,7 @@ acosh_array = tacosh
 # inverse hyperbolic cosine (in radians)
 from torch import asinh as tasinh
 from math import asinh as masinh
+
 asinh_int = lambda x: array(masinh(x), dtype=dtype_float)
 asinh_real = tasinh
 asinh_vector = tasinh
@@ -401,6 +430,7 @@ asinh_array = tasinh
 # inverse hyperbolic tangent (in radians) of x
 from torch import atanh as tatanh
 from math import atanh as matanh
+
 atanh_int = lambda x: array(matanh(x), dtype=dtype_float)
 atanh_real = tatanh
 atanh_vector = tatanh
@@ -413,23 +443,17 @@ atanh_array = tatanh
 
 # R logit(T x)
 # log odds, or logit, function applied to x
-logit_int = _XXX_TODO_XXX_('logit')
-logit_real = _XXX_TODO_XXX_('logit')
-logit_vector = _XXX_TODO_XXX_('logit')
-logit_rowvector = _XXX_TODO_XXX_('logit')
-logit_matrix = _XXX_TODO_XXX_('logit')
-logit_array = _XXX_TODO_XXX_('logit')
-# from torch import logit as tlogit
-# logit_int = lambda x: tlogit(array(x, dtype=dtype_float))
-# logit_real = tlogit
-# logit_vector = tlogit
-# logit_rowvector = tlogit
-# logit_matrix = tlogit
-# logit_array = tlogit
+logit_int = _XXX_TODO_XXX_("logit")
+logit_real = _XXX_TODO_XXX_("logit")
+logit_vector = _XXX_TODO_XXX_("logit")
+logit_rowvector = _XXX_TODO_XXX_("logit")
+logit_matrix = _XXX_TODO_XXX_("logit")
+logit_array = _XXX_TODO_XXX_("logit")
 
 # R inv_logit(T x)
 # logistic sigmoid function applied to x
 from torch import sigmoid
+
 inv_logit_int = lambda x: sigmoid(array(x, dtype=dtype_float))
 inv_logit_real = sigmoid
 inv_logit_vector = sigmoid
@@ -439,59 +463,60 @@ inv_logit_array = sigmoid
 
 # R inv_cloglog(T x)
 # inverse of the complementary log-log function applied to x
-inv_cloglog_int = _XXX_TODO_XXX_('inv_cloglog')
-inv_cloglog_real = _XXX_TODO_XXX_('inv_cloglog')
-inv_cloglog_vector = _XXX_TODO_XXX_('inv_cloglog')
-inv_cloglog_rowvector = _XXX_TODO_XXX_('inv_cloglog')
-inv_cloglog_matrix = _XXX_TODO_XXX_('inv_cloglog')
-inv_cloglog_array = _XXX_TODO_XXX_('inv_cloglog')
+inv_cloglog_int = _XXX_TODO_XXX_("inv_cloglog")
+inv_cloglog_real = _XXX_TODO_XXX_("inv_cloglog")
+inv_cloglog_vector = _XXX_TODO_XXX_("inv_cloglog")
+inv_cloglog_rowvector = _XXX_TODO_XXX_("inv_cloglog")
+inv_cloglog_matrix = _XXX_TODO_XXX_("inv_cloglog")
+inv_cloglog_array = _XXX_TODO_XXX_("inv_cloglog")
 
 
 ## 3.14 Composed Functions
 
 # R expm1(T x)
 # natural exponential of x minus 1
-expm1_int = _XXX_TODO_XXX_('expm1')
-expm1_real = _XXX_TODO_XXX_('expm1')
-expm1_vector = _XXX_TODO_XXX_('expm1')
-expm1_rowvector = _XXX_TODO_XXX_('expm1')
-expm1_matrix = _XXX_TODO_XXX_('expm1')
-expm1_array = _XXX_TODO_XXX_('expm1')
+expm1_int = _XXX_TODO_XXX_("expm1")
+expm1_real = _XXX_TODO_XXX_("expm1")
+expm1_vector = _XXX_TODO_XXX_("expm1")
+expm1_rowvector = _XXX_TODO_XXX_("expm1")
+expm1_matrix = _XXX_TODO_XXX_("expm1")
+expm1_array = _XXX_TODO_XXX_("expm1")
 
 
 # real fma(real x, real y, real z)
 # Return z plus the result of x multiplied by y. fma(x,y,z)=(x×y)+z
-fma_real_real_real = _XXX_TODO_XXX_('fma')
+fma_real_real_real = _XXX_TODO_XXX_("fma")
 
 # real multiply_log(real x, real y)
 # Warning: This function is deprecated and should be replaced with lmultiply. Return the product of x and the natural logarithm of y.
-multiply_log_real_real = _XXX_TODO_XXX_('multiply_log')
+multiply_log_real_real = _XXX_TODO_XXX_("multiply_log")
 
 # real lmultiply(real x, real y)
 # Return the product of x and the natural logarithm of y.
-lmultiply_real_real = _XXX_TODO_XXX_('lmultiply')
+lmultiply_real_real = _XXX_TODO_XXX_("lmultiply")
 
 # R log1p(T x)
 # natural logarithm of 1 plus x
-log1p_int = _XXX_TODO_XXX_('log1p')
-log1p_real = _XXX_TODO_XXX_('log1p')
-log1p_vector = _XXX_TODO_XXX_('log1p')
-log1p_rowvector = _XXX_TODO_XXX_('log1p')
-log1p_matrix = _XXX_TODO_XXX_('log1p')
-log1p_array = _XXX_TODO_XXX_('log1p')
+log1p_int = _XXX_TODO_XXX_("log1p")
+log1p_real = _XXX_TODO_XXX_("log1p")
+log1p_vector = _XXX_TODO_XXX_("log1p")
+log1p_rowvector = _XXX_TODO_XXX_("log1p")
+log1p_matrix = _XXX_TODO_XXX_("log1p")
+log1p_array = _XXX_TODO_XXX_("log1p")
 
 # R log1m(T x)
 # natural logarithm of 1 minus x
-log1m_int = _XXX_TODO_XXX_('log1m')
-log1m_real = _XXX_TODO_XXX_('log1m')
-log1m_vector = _XXX_TODO_XXX_('log1m')
-log1m_rowvector = _XXX_TODO_XXX_('log1m')
-log1m_matrix = _XXX_TODO_XXX_('log1m')
-log1m_array = _XXX_TODO_XXX_('log1m')
+log1m_int = _XXX_TODO_XXX_("log1m")
+log1m_real = _XXX_TODO_XXX_("log1m")
+log1m_vector = _XXX_TODO_XXX_("log1m")
+log1m_rowvector = _XXX_TODO_XXX_("log1m")
+log1m_matrix = _XXX_TODO_XXX_("log1m")
+log1m_array = _XXX_TODO_XXX_("log1m")
 
 # R log1p_exp(T x)
 # natural logarithm of one plus the natural exponentiation of x
 from torch.nn import Softplus
+
 log1p_exp_int = lambda x: Softplus()(array(x, dtype=dtype_float))
 log1p_exp_real = Softplus()
 log1p_exp_vector = Softplus()
@@ -501,25 +526,28 @@ log1p_exp_array = Softplus()
 
 # R log1m_exp(T x)
 # logarithm of one minus the natural exponentiation of x
-log1m_exp_int = _XXX_TODO_XXX_('log1m_exp')
-log1m_exp_real = _XXX_TODO_XXX_('log1m_exp')
-log1m_exp_vector = _XXX_TODO_XXX_('log1m_exp')
-log1m_exp_rowvector = _XXX_TODO_XXX_('log1m_exp')
-log1m_exp_matrix = _XXX_TODO_XXX_('log1m_exp')
-log1m_exp_array = _XXX_TODO_XXX_('log1m_exp')
+log1m_exp_int = _XXX_TODO_XXX_("log1m_exp")
+log1m_exp_real = _XXX_TODO_XXX_("log1m_exp")
+log1m_exp_vector = _XXX_TODO_XXX_("log1m_exp")
+log1m_exp_rowvector = _XXX_TODO_XXX_("log1m_exp")
+log1m_exp_matrix = _XXX_TODO_XXX_("log1m_exp")
+log1m_exp_array = _XXX_TODO_XXX_("log1m_exp")
 
 # real log_diff_exp(real x, real y)
 # Return the natural logarithm of the difference of the natural exponentiation of x and the natural exponentiation of y.
-log_diff_exp_real_real = _XXX_TODO_XXX_('log_diff_exp')
+log_diff_exp_real_real = _XXX_TODO_XXX_("log_diff_exp")
 
 # real log_mix(real theta, real lp1, real lp2)
 # Return the log mixture of the log densities lp1 and lp2 with mixing proportion theta, defined by log_mix(θ,λ1,λ2)=log(θexp(λ1)+(1−θ)exp(λ2))=log_sum_exp(log(θ)+λ1, log(1−θ)+λ2).
 def log_mix_real_real_real(theta, lp1, lp2):
     return log_sum_exp_real_real(log_real(theta) + lp1, log_real(1 - theta) + lp2)
 
+
 # real log_sum_exp(real x, real y)
 # Return the natural logarithm of the sum of the natural exponentiation of x and the natural exponentiation of y. log_sum_exp(x,y)=log(exp(x)+exp(y))
 from torch import logsumexp
+
+
 def log_sum_exp_real_real(x, y):
     max = x if x > y else y
     dx = x - max
@@ -527,9 +555,11 @@ def log_sum_exp_real_real(x, y):
     sum_of_exp = exp_real(dx) + exp_real(dy)
     return max + log_real(sum_of_exp)
 
+
 # R log_inv_logit(T x)
 # natural logarithm of the inverse logit function of x
 from torch.nn import LogSigmoid
+
 log_inv_logit_int = lambda x: LogSigmoid()(array(x, dtype=dtype_float))
 log_inv_logit_real = LogSigmoid()
 log_inv_logit_vector = LogSigmoid()
@@ -556,6 +586,7 @@ log1m_inv_logit_array = lambda x: tlog(1 - inv_logit_array(x))
 # int min(int[] x)
 # The minimum value in x, or error if x is size 0.
 from torch import min as tmin
+
 min_array = tmin
 
 # real max(real[] x)
@@ -563,6 +594,7 @@ min_array = tmin
 # int max(int[] x)
 # The maximum value in x, or error if x is size 0.
 from torch import max as tmax
+
 max_array = max
 
 
@@ -574,6 +606,7 @@ max_array = max
 # real sum(real[] x)
 # The sum of the elements in x; see definition above.
 from torch import sum
+
 sum_array = sum
 
 # real prod(real[] x)
@@ -581,6 +614,7 @@ sum_array = sum
 # real prod(int[] x)
 # The product of the elements in x, product(x)={∏Nn=1xnifN>01ifN=0
 from torch import prod as tprod
+
 prod_array = tprod
 
 # real log_sum_exp(real[] x)
@@ -594,18 +628,21 @@ log_sum_exp_array = lambda x: logsumexp(x, 0)
 # The sample mean of the elements in x.
 # It is an error to the call the mean function with an array of size 0.
 from torch import mean
+
 mean_array = mean
 
 # real variance(real[] x)
 # The sample variance of the elements in x.
 # It is an error to call the variance function with an array of size 0.
 from torch import var
+
 variance_array = var
 
 # real sd(real[] x)
 # The sample standard deviation of elements in x.
 # It is an error to call the sd function with an array of size 0.
 from torch import std
+
 sd_array = std
 
 
@@ -616,20 +653,20 @@ sd_array = std
 # real distance(row_vector x, vector y)
 # real distance(row_vector x, row_vector y)
 # The Euclidean distance between x and y
-distance_vector_vector = _XXX_TODO_XXX_('distance')
-distance_vector_rowvector = _XXX_TODO_XXX_('distance')
-distance_rowvector_vector = _XXX_TODO_XXX_('distance')
-distance_rowvector_rowvector = _XXX_TODO_XXX_('distance')
+distance_vector_vector = _XXX_TODO_XXX_("distance")
+distance_vector_rowvector = _XXX_TODO_XXX_("distance")
+distance_rowvector_vector = _XXX_TODO_XXX_("distance")
+distance_rowvector_rowvector = _XXX_TODO_XXX_("distance")
 
 # real squared_distance(vector x, vector y)
 # real squared_distance(vector x, row_vector [] y)
 # real squared_distance(row_vector x, vector [] y)
 # real squared_distance(row_vector x, row_vector[] y)
 # The squared Euclidean distance between x and y
-squared_distance_vector_vector = _XXX_TODO_XXX_('squared_distance')
-squared_distance_vector_rowvector = _XXX_TODO_XXX_('squared_distance')
-squared_distance_rowvector_vector = _XXX_TODO_XXX_('squared_distance')
-squared_distance_rowvector_rowvector = _XXX_TODO_XXX_('squared_distance')
+squared_distance_vector_vector = _XXX_TODO_XXX_("squared_distance")
+squared_distance_vector_rowvector = _XXX_TODO_XXX_("squared_distance")
+squared_distance_rowvector_vector = _XXX_TODO_XXX_("squared_distance")
+squared_distance_rowvector_rowvector = _XXX_TODO_XXX_("squared_distance")
 
 
 ## 4.2 Array Size and Dimension Function
@@ -723,6 +760,7 @@ cols_matrix = lambda x: x.shape[1]
 # real dot_product(vector x, vector y)
 # The dot product of x and y
 from torch import dot as tdot
+
 dot_product_vector_vector = tdot
 
 # real dot_product(vector x, row_vector y)
@@ -739,27 +777,27 @@ dot_product_rowvector_rowvector = tdot
 
 # row_vector columns_dot_product(vector x, vector y)
 # The dot product of the columns of x and y
-columns_dot_product_vector_vector = _XXX_TODO_XXX_('columns_dot_product')
+columns_dot_product_vector_vector = _XXX_TODO_XXX_("columns_dot_product")
 
 # row_vector columns_dot_product(row_vector x, row_vector y)
 # The dot product of the columns of x and y
-columns_dot_product_rowvector_rowvector = _XXX_TODO_XXX_('columns_dot_product')
+columns_dot_product_rowvector_rowvector = _XXX_TODO_XXX_("columns_dot_product")
 
 # row_vector columns_dot_product(matrix x, matrix y)
 # The dot product of the columns of x and y
-columns_dot_product_matrix_matrix = _XXX_TODO_XXX_('columns_dot_product')
+columns_dot_product_matrix_matrix = _XXX_TODO_XXX_("columns_dot_product")
 
 # vector rows_dot_product(vector x, vector y)
 # The dot product of the rows of x and y
-rows_dot_product_vector_vector = _XXX_TODO_XXX_('rows_dot_product')
+rows_dot_product_vector_vector = _XXX_TODO_XXX_("rows_dot_product")
 
 # vector rows_dot_product(row_vector x, row_vector y)
 # The dot product of the rows of x and y
-rows_dot_product_rowvector_rowvector = _XXX_TODO_XXX_('rows_dot_product')
+rows_dot_product_rowvector_rowvector = _XXX_TODO_XXX_("rows_dot_product")
 
 # vector rows_dot_product(matrix x, matrix y)
 # The dot product of the rows of x and y
-rows_dot_product_matrix_matrix = _XXX_TODO_XXX_('rows_dot_product')
+rows_dot_product_matrix_matrix = _XXX_TODO_XXX_("rows_dot_product")
 
 # real dot_self(vector x)
 # The dot product of the vector x with itself
@@ -797,64 +835,64 @@ rows_dot_self_matrix = lambda x: rows_dot_product_matrix_matrix(x, x)
 
 # matrix tcrossprod(matrix x)
 # The product of x postmultiplied by its own transpose, similar to the tcrossprod(x) function in R. The result is a symmetric matrix.
-tcrossprod_matrix = _XXX_TODO_XXX_('tcrossprod')
+tcrossprod_matrix = _XXX_TODO_XXX_("tcrossprod")
 
 # matrix crossprod(matrix x)
 # The product of x premultiplied by its own transpose, similar to the crossprod(x) function in R. The result is a symmetric matrix.
-crossprod_matrix = _XXX_TODO_XXX_('crossprod')
+crossprod_matrix = _XXX_TODO_XXX_("crossprod")
 
 # matrix quad_form(matrix A, matrix B)
 # The quadratic form, i.e., B' * A * B.
-quad_form_matrix_matrix = _XXX_TODO_XXX_('quad_form')
+quad_form_matrix_matrix = _XXX_TODO_XXX_("quad_form")
 
 # real quad_form(matrix A, vector B)
 # The quadratic form, i.e., B' * A * B.
-quad_form_matrix_vector = _XXX_TODO_XXX_('quad_form')
+quad_form_matrix_vector = _XXX_TODO_XXX_("quad_form")
 
 # matrix quad_form_diag(matrix m, vector v)
 # The quadratic form using the column vector v as a diagonal matrix, i.e., diag_matrix(v) * m * diag_matrix(v).
-quad_form_diag_matrix_vector = _XXX_TODO_XXX_('quad_form_diag')
+quad_form_diag_matrix_vector = _XXX_TODO_XXX_("quad_form_diag")
 
 # matrix quad_form_diag(matrix m, row_vector rv)
 # The quadratic form using the row vector rv as a diagonal matrix, i.e., diag_matrix(rv) * m * diag_matrix(rv).
-quad_form_diag_matrix_row_vector  = _XXX_TODO_XXX_('quad_form_diag')
+quad_form_diag_matrix_row_vector = _XXX_TODO_XXX_("quad_form_diag")
 
 # matrix quad_form_sym(matrix A, matrix B)
 # Similarly to quad_form, gives B' * A * B, but additionally checks if A is symmetric and ensures that the result is also symmetric.
-quad_form_sym_matrix_matrix = _XXX_TODO_XXX_('quad_form_sym')
+quad_form_sym_matrix_matrix = _XXX_TODO_XXX_("quad_form_sym")
 
 # real quad_form_sym(matrix A, vector B)
 # Similarly to quad_form, gives B' * A * B, but additionally checks if A is symmetric and ensures that the result is also symmetric.
-quad_form_sym_matrix_vector = _XXX_TODO_XXX_('quad_form_sym')
+quad_form_sym_matrix_vector = _XXX_TODO_XXX_("quad_form_sym")
 
 # real trace_quad_form(matrix A, matrix B)
 # The trace of the quadratic form, i.e., trace(B' * A * B).
-trace_quad_form_matrix_matrix = _XXX_TODO_XXX_('trace_quad_form')
+trace_quad_form_matrix_matrix = _XXX_TODO_XXX_("trace_quad_form")
 
 # real trace_gen_quad_form(matrix D, matrix A, matrix B)
 # The trace of a generalized quadratic form, i.e., trace(D * B' * A * B).
-trace_gen_quad_form_matrix_matrix_matrix = _XXX_TODO_XXX_('trace_gen_quad_form')
+trace_gen_quad_form_matrix_matrix_matrix = _XXX_TODO_XXX_("trace_gen_quad_form")
 
 # matrix multiply_lower_tri_self_transpose(matrix x)
 # The product of the lower triangular portion of x (including the diagonal) times its own transpose; that is, if L is a matrix of the same dimensions as x with L(m,n) equal to x(m,n) for n≤m
 # and L(m,n) equal to 0 if n>m, the result is the symmetric matrix LL⊤. This is a specialization of tcrossprod(x) for lower-triangular matrices. The input matrix does not need to be square.
-multiply_lower_tri_self_matrix = _XXX_TODO_XXX_('multiply_lower_tri_self')
+multiply_lower_tri_self_matrix = _XXX_TODO_XXX_("multiply_lower_tri_self")
 
 # matrix diag_pre_multiply(vector v, matrix m)
 # Return the product of the diagonal matrix formed from the vector v and the matrix m, i.e., diag_matrix(v) * m.
-diag_pre_multiply_vector_matrix = _XXX_TODO_XXX_('diag_pre_multiply')
+diag_pre_multiply_vector_matrix = _XXX_TODO_XXX_("diag_pre_multiply")
 
 # matrix diag_pre_multiply(row_vector rv, matrix m)
 # Return the product of the diagonal matrix formed from the vector rv and the matrix m, i.e., diag_matrix(rv) * m.
-diag_pre_multiply_rowvector_matrix = _XXX_TODO_XXX_('diag_pre_multiply')
+diag_pre_multiply_rowvector_matrix = _XXX_TODO_XXX_("diag_pre_multiply")
 
 # matrix diag_post_multiply(matrix m, vector v)
 # Return the product of the matrix m and the diagonal matrix formed from the vector v, i.e., m * diag_matrix(v).
-diag_post_multiply_matrix_vector = _XXX_TODO_XXX_('diag_post_multiply')
+diag_post_multiply_matrix_vector = _XXX_TODO_XXX_("diag_post_multiply")
 
 # matrix diag_post_multiply(matrix m, row_vector rv)
 # Return the product of the matrix m and the diagonal matrix formed from the the row vector rv, i.e., m * diag_matrix(rv).
-diag_post_multiply_matrix_rowvector = _XXX_TODO_XXX_('diag_post_multiply')
+diag_post_multiply_matrix_rowvector = _XXX_TODO_XXX_("diag_post_multiply")
 
 ## 5.6 Reductions
 
@@ -1004,7 +1042,7 @@ add_diag_matrix_vector = lambda m, v: m + diag(v)
 # matrix add_diag(matrix m, real d)
 # Add scalar d to every diagonal element of matrix m.
 
-add_diag_matrix_real = lambda m, r: r*eye(m.shape[0]) + m
+add_diag_matrix_real = lambda m, r: r * eye(m.shape[0]) + m
 
 # vector diagonal(matrix x)
 # The diagonal of the matrix x
@@ -1034,15 +1072,21 @@ row_matrix_int = lambda x, m: x[m - 1]
 
 # matrix block(matrix x, int i, int j, int n_rows, int n_cols)
 # Return the submatrix of x that starts at row i and column j and extends n_rows rows and n_cols columns.
-block_matrix_int_int_int_int = lambda x, i, j, n_rows, n_cols: x[i - 1 : i - 1 + n_rows, j - 1 : j - 1 + n_cols]
+block_matrix_int_int_int_int = lambda x, i, j, n_rows, n_cols: x[
+    i - 1 : i - 1 + n_rows, j - 1 : j - 1 + n_cols
+]
 
 # vector sub_col(matrix x, int i, int j, int n_rows)
 # Return the sub-column of x that starts at row i and column j and extends n_rows rows and 1 column.
-sub_col_matrix_int_int_int = lambda x, i, j, n_rows: (x[i - 1 : i - 1 + n_rows, j - 1 : j])[:,0]
+sub_col_matrix_int_int_int = lambda x, i, j, n_rows: (
+    x[i - 1 : i - 1 + n_rows, j - 1 : j]
+)[:, 0]
 
 # row_vector sub_row(matrix x, int i, int j, int n_cols)
 # Return the sub-row of x that starts at row i and column j and extends 1 row and n_cols columns.
-sub_row_matrix_int_int_int = lambda x, i, y, n_cols: x[i - 1 : i, j - 1 : j - 1 + n_cols]
+sub_row_matrix_int_int_int = lambda x, i, y, n_cols: x[
+    i - 1 : i, j - 1 : j - 1 + n_cols
+]
 
 # 5.9.2.2 Vector and Array Slicing Operations
 
@@ -1094,15 +1138,17 @@ append_col_matrix_matrix = lambda x, y: cat([x.t(), y.t()]).t()
 
 # matrix append_col(matrix x, vector y)
 # Combine matrix x and vector y by columns. The matrix and the vector must have the same number of rows.
-append_col_matrix_vector = lambda x, y: cat([x.t(), y.expand(1,y.shape[0])]).t()
+append_col_matrix_vector = lambda x, y: cat([x.t(), y.expand(1, y.shape[0])]).t()
 
 # matrix append_col(vector x, matrix y)
 # Combine vector x and matrix y by columns. The vector and the matrix must have the same number of rows.
-append_col_vector_matrix = lambda x, y: cat([x.expand(1,x.shape[0]), y.t()]).t()
+append_col_vector_matrix = lambda x, y: cat([x.expand(1, x.shape[0]), y.t()]).t()
 
 # matrix append_col(vector x, vector y)
 # Combine vectors x and y by columns. The vectors must have the same number of rows.
-append_col_vector_vector = lambda x, y: cat([x.expand(1,x.shape[0]), y.expand(1,y.shape[0])]).t()
+append_col_vector_vector = lambda x, y: cat(
+    [x.expand(1, x.shape[0]), y.expand(1, y.shape[0])]
+).t()
 
 # row_vector append_col(row_vector x, row_vector y)
 # Combine row vectors x and y of any size into another row vector.
@@ -1126,15 +1172,17 @@ append_row_matrix_matrix = lambda x, y: cat([x, y])
 
 # matrix append_row(matrix x, row_vector y)
 # Combine matrix x and row vector y by rows. The matrix and the row vector must have the same number of columns.
-append_row_matrix_rowvector = lambda x, y: cat([x, y.expand(1,y.shape[0])])
+append_row_matrix_rowvector = lambda x, y: cat([x, y.expand(1, y.shape[0])])
 
 # matrix append_row(row_vector x, matrix y)
 # Combine row vector x and matrix y by rows. The row vector and the matrix must have the same number of columns.
-append_row_rowvector_matrix = lambda x, y: cat([x.expand(1,x.shape[0]), y])
+append_row_rowvector_matrix = lambda x, y: cat([x.expand(1, x.shape[0]), y])
 
 # matrix append_row(row_vector x, row_vector y)
 # Combine row vectors x and y by row. The row vectors must have the same number of columns.
-append_row_rowvector_rowvector = lambda x, y: cat([x.expand(1,x.shape[0]), y.expand(1,y.shape[0])])
+append_row_rowvector_rowvector = lambda x, y: cat(
+    [x.expand(1, x.shape[0]), y.expand(1, y.shape[0])]
+)
 
 # vector append_row(vector x, vector y)
 # Concatenate vectors x and y of any size into another vector.
@@ -1156,11 +1204,13 @@ append_row_vector_int = lambda x, y: cat([x, array([y], dtype=dtype_float)])
 # vector softmax(vector x)
 # The softmax of x
 from torch.nn import Softmax as tSoftmax
+
 softmax_vector = lambda x: tSoftmax(dim=x.shape)(x)
 
 # vector log_softmax(vector x)
 # The natural logarithm of the softmax of x
 from torch.nn import LogSoftmax as tLogSoftmax
+
 softmax_vector = lambda x: tLogSoftmax(dim=x.shape)(x)
 
 # 5.11.2 Cumulative Sums
@@ -1168,6 +1218,7 @@ softmax_vector = lambda x: tLogSoftmax(dim=x.shape)(x)
 # real[] cumulative_sum(real[] x)
 # The cumulative sum of x
 from torch import cumsum as tcumsum
+
 cumulative_sum_array = lambda x: tcumsum(x, dim=0)
 
 # vector cumulative_sum(vector v)
@@ -1181,8 +1232,10 @@ cumulative_sum_rowvector = lambda x: tcumsum(x, dim=0)
 ## 5.12 Covariance Functions
 ## 5.12.1 Exponentiated quadratic covariance function
 
+
 def cov_exp_quad(x, alpha, rho):
     return alpha * alpha * texp(-0.5 * torch.pow(torch.cdist(x, x) / rho, 2))
+
 
 # matrix cov_exp_quad(row_vectors x, real alpha, real rho)
 # The covariance matrix with an exponentiated quadratic kernel of x.
@@ -1194,7 +1247,9 @@ cov_exp_quad_vector_real_real = cov_exp_quad
 
 # matrix cov_exp_quad(real[] x, real alpha, real rho)
 # The covariance matrix with an exponentiated quadratic kernel of x.
-cov_exp_quad_array_real_real = lambda x, alpha, rho: cov_exp_quad(x.view(1, -1), alpha, rho)
+cov_exp_quad_array_real_real = lambda x, alpha, rho: cov_exp_quad(
+    x.view(1, -1), alpha, rho
+)
 
 # matrix cov_exp_quad(row_vectors x1, row_vectors x2, real alpha, real rho)
 # The covariance matrix with an exponentiated quadratic kernel of x1 and x2.
@@ -1235,7 +1290,7 @@ to_matrix_rowvector = lambda v: v.expand(1, v.shape[0]).t()
 
 # matrix to_matrix(matrix m, int m, int n)
 # Convert a matrix m to a matrix with m rows and n columns filled in column-major order.
-to_matrix_matrix_int_int = lambda mat, m, n: mat.t().reshape(m,n)
+to_matrix_matrix_int_int = lambda mat, m, n: mat.t().reshape(m, n)
 
 # matrix to_matrix(vector v, int m, int n)
 # Convert a vector v to a matrix with m rows and n columns filled in column-major order.
@@ -1249,25 +1304,28 @@ to_matrix_rowvector_int_int = lambda v, m, n: v.reshape(n, m).t()
 # Convert a matrix m to a matrix with m rows and n columns filled in row-major order if col_major equals 0 (otherwise, they get filled in column-major order).
 def to_matrix_matrix_int_int_int(mat, m, n, col_major):
     if col_major == 0:
-        mat.reshape(m,n)
+        mat.reshape(m, n)
     else:
         to_matrix_matrix_int_int(mat, m, n)
+
 
 # matrix to_matrix(vector v, int m, int n, int col_major)
 # Convert a vector v to a matrix with m rows and n columns filled in row-major order if col_major equals 0 (otherwise, they get filled in column-major order).
 def to_matrix_vector_int_int_int(v, m, n, col_major):
     if col_major == 0:
-        v.reshape(m,n)
+        v.reshape(m, n)
     else:
         to_matrix_vector_int_int(v, m, n)
+
 
 # matrix to_matrix(row_vector v, int m, int n, int col_major)
 # Convert a row_vector a to a matrix with m rows and n columns filled in row-major order if col_major equals 0 (otherwise, they get filled in column-major order).
 def to_matrix_rowvector_int_int_int(v, m, n, col_major):
     if col_major == 0:
-        v.reshape(m,n)
+        v.reshape(m, n)
     else:
         to_matrix_rowvector_int_int(v, m, n)
+
 
 # matrix to_matrix(real[] a, int m, int n)
 # Convert a one-dimensional array a to a matrix with m rows and n columns filled in column-major order.
@@ -1354,16 +1412,31 @@ to_array_1d_array = lambda a: a.reshape(-1)
 
 from torchdiffeq import odeint
 
-def integrate_ode_rk45_array_real_array_array_array_array(ode, initial_state, initial_time, times, theta, x_r, x_i):
+
+def integrate_ode_rk45_array_real_array_array_array_array(
+    ode, initial_state, initial_time, times, theta, x_r, x_i
+):
     f = lambda t, y: ode(t, y, theta, x_r, x_i)
     return odeint(f, initial_state, times)
-integrate_ode_rk45_array_int_array_array_array_array = integrate_ode_rk45_array_real_array_array_array_array
+
+
+integrate_ode_rk45_array_int_array_array_array_array = (
+    integrate_ode_rk45_array_real_array_array_array_array
+)
 
 # real[ , ] integrate_ode_rk45(function ode, real[] initial_state, real initial_time, real[] times, real[] theta, real[] x_r, int[] x_i, real rel_tol, real abs_tol, int max_num_steps)
 # Solves the ODE system for the times provided using the Runge Kutta Dopri algorithm with the implementation from Boost with additional control parameters for the solver.
 
-def integrate_ode_rk45_array_real_array_array_array_array_real_real_int(ode, initial_state, times, theta, x_r, x_i, rtol, atol, mxstep):
-    f = lambda t, y: ode(t, y, theta, x_r, x_i)
-    return odeint(f, initial_state, times, rtol=rtol, atol=atol, options={"max_num_steps": mxstep})
 
-integrate_ode_rk45_array_int_array_array_array_array_real_real_real = integrate_ode_rk45_array_real_array_array_array_array_real_real_int
+def integrate_ode_rk45_array_real_array_array_array_array_real_real_int(
+    ode, initial_state, times, theta, x_r, x_i, rtol, atol, mxstep
+):
+    f = lambda t, y: ode(t, y, theta, x_r, x_i)
+    return odeint(
+        f, initial_state, times, rtol=rtol, atol=atol, options={"max_num_steps": mxstep}
+    )
+
+
+integrate_ode_rk45_array_int_array_array_array_array_real_real_real = (
+    integrate_ode_rk45_array_real_array_array_array_array_real_real_int
+)

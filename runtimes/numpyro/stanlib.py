@@ -300,6 +300,7 @@ cos_array = tcos
 # sine of the angle x (in radians)
 from math import sin as msin
 from jax.numpy import sin as tsin
+
 sin_int = lambda x: array(msin(x), dtype=dtype_float)
 sin_real = tsin
 sin_vector = tsin
@@ -515,6 +516,7 @@ log1m_array = _XXX_TODO_XXX_("log1m")
 # R log1p_exp(T x)
 # natural logarithm of one plus the natural exponentiation of x
 from jax.nn import softplus
+
 log1p_exp_int = lambda x: softplus(array(x, dtype=dtype_float))
 log1p_exp_real = softplus
 log1p_exp_vector = softplus
@@ -1226,6 +1228,7 @@ cumulative_sum_rowvector = tcumsum
 
 from jax.numpy import power as pow
 from jax.numpy.linalg import norm
+
 
 def cov_exp_quad(x, alpha, rho):
     return alpha * alpha * texp(-0.5 * pow(norm(x) / rho, 2))
