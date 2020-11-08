@@ -1,6 +1,7 @@
 def _XXX_TODO_XXX_(f):
     def todo(*args):
-        assert False, f'{f}: not yet implemented'
+        assert False, f"{f}: not yet implemented"
+
     return todo
 
 
@@ -8,7 +9,10 @@ import numpyro.distributions as d
 from numpyro.distributions import constraints, transforms
 from numpyro.distributions.transforms import biject_to as transform
 from numpyro.distributions.constraints import Constraint
-from numpyro.distributions.transforms import  CorrCholeskyTransform, biject_to as transform
+from numpyro.distributions.transforms import (
+    CorrCholeskyTransform,
+    biject_to as transform,
+)
 from jax.numpy import sort as tsort
 from jax.numpy.linalg import norm as tnorm
 from jax.numpy import log as tlog
@@ -20,19 +24,23 @@ import jax.numpy as tensor
 from numbers import Number
 from jax.numpy import array
 
-dtype_float=tensor.dtype('float32')
-dtype_long=tensor.dtype('int32')
+dtype_float = tensor.dtype("float32")
+dtype_long = tensor.dtype("int32")
+
 
 def _cast_float(x):
     if isinstance(x, Number):
         return x.astype(dtype_float)
     return array(x, dtype=dtype_float)
 
+
 ## Utility functions
 def _cast1(f):
     def f_casted(y, *args):
         return f(_cast_float(y), *args)
+
     return f_casted
+
 
 def _distrib(d, nargs, typ):
     def d_ext(*args):
@@ -40,43 +48,57 @@ def _distrib(d, nargs, typ):
             return d(*args)
         else:
             return d(args[0] * tones(args[nargs], dtype=typ), *args[1:nargs])
+
     return d_ext
+
 
 def _lpdf(d):
     def lpdf(y, *args):
         return d(*args).log_prob(y)
+
     return lpdf
+
 
 def _lpmf(d):
     def lpmf(y, *args):
         return d(*args).log_prob(y)
+
     return lpmf
+
 
 def _cdf(d):
     # XXX TODO: check id correct XXX
     def lccdf(y, *args):
         return d(*args).cdf(y)
+
     return lccdf
+
 
 def _lcdf(d):
     # XXX TODO: check id correct XXX
     def lccdf(y, *args):
         return tlog(d(*args).cdf(y))
+
     return lccdf
+
 
 def _lccdf(d):
     # XXX TODO: check id correct XXX
     def lccdf(y, *args):
         return tlog(d(*args).icdf(y))
+
     return lccdf
+
 
 def _rng(d):
     def rng(*args):
         return d(*args).sample()
+
     return rng
 
 
 ## Priors
+
 
 class improper_uniform(d.Normal):
     def __init__(self, shape=[]):
@@ -87,6 +109,7 @@ class improper_uniform(d.Normal):
     def log_prob(self, x):
         return tzeros_like(x)
 
+
 class lower_constrained_improper_uniform(improper_uniform):
     def __init__(self, lower_bound=0, shape=[]):
         super().__init__(shape)
@@ -96,24 +119,38 @@ class lower_constrained_improper_uniform(improper_uniform):
         s = super().sample(*args, **kwargs)
         return transform(self.support)(s)
 
+class _LessThanEq(Constraint):
+    """
+    Constrain to a real half line `[-inf, upper_bound]`.
+    """
+    def __init__(self, upper_bound):
+        self.upper_bound = upper_bound
+
+    def __call__(self, x):
+        return x <= self.upper_bound
+
+less_than_eq = _LessThanEq
+
 class upper_constrained_improper_uniform(improper_uniform):
     def __init__(self, upper_bound=0, shape=[]):
         super().__init__(shape)
-        self.support = constraints.less_than(upper_bound)
+        self.support = less_than_eq(upper_bound)
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
         return transform(self.support)(s)
 
+
 class simplex_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
-        shape = (*shape[:-1], shape[-1] - 1) # HACK to get correct output dimensions
+        shape = (*shape[:-1], shape[-1] - 1)  # HACK to get correct output dimensions
         super().__init__(shape)
         self.support = constraints.simplex
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
         return transform(self.support)(s)
+
 
 class unit_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
@@ -123,6 +160,7 @@ class unit_constrained_improper_uniform(improper_uniform):
         s = super().sample(*args, **kwargs)
         return s / tnorm(s)
 
+
 class ordered_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
         super().__init__(shape)
@@ -130,6 +168,7 @@ class ordered_constrained_improper_uniform(improper_uniform):
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
         return tsort(s)
+
 
 class positive_ordered_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
@@ -216,7 +255,9 @@ categorical_rng = lambda theta: _rng(categorical)(theta) + 1
 # The log categorical probability mass function with outcome(s) y in 1:N
 # given log-odds of outcomes beta.
 
-categorical_logit = _distrib(lambda logits: d.Categorical(logits=logits), 1, dtype_float)
+categorical_logit = _distrib(
+    lambda logits: d.Categorical(logits=logits), 1, dtype_float
+)
 categorical_logit_lpmf = lambda y, beta: _lpmf(categorical_logit)(y - 1, beta)
 categorical_logit_rng = lambda beta: _rng(categorical_logit)(beta) + 1
 
@@ -279,6 +320,8 @@ def std_normal(*args):
         return d.Normal(0, tones(args[0]))
     else:
         return d.Normal(0, 1)
+
+
 std_normal_lpdf = _lpdf(std_normal)
 std_normal_cdf = _cdf(std_normal)
 std_normal_lcdf = _lcdf(std_normal)

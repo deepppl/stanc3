@@ -1,6 +1,7 @@
 import pyro.distributions as d
 import torch as tensor
 from torch.distributions import constraints, transform_to as transform
+from pyro.distributions.constraints import Constraint
 from torch import (
     norm as tnorm,
     log as tlog,
