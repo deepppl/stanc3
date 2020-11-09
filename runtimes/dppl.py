@@ -4,11 +4,12 @@ import inspect
 import pathlib
 import importlib
 import subprocess
+import inspect
+import jax
 from os.path import splitext, basename, dirname
 from pandas import DataFrame, Series
 from collections import defaultdict
 from functools import partial
-import inspect
 
 
 def _flatten_dict(d):
@@ -57,22 +58,10 @@ def _compile(backend, mode, stanfile, pyfile):
 
 
 class Model:
-    def __init__(self, backend, stanfile, compile, mode):
-        if backend == "pyro":
-            import pyro
-            import torch as tensor
-
-            self.pyro = pyro
-            self.tensor = tensor
-            self.tensor.array = tensor.tensor
-        elif backend == "numpyro":
-            import numpyro as pyro
-            import jax.numpy as tensor
-
-            self.pyro = pyro
-            self.tensor = tensor
-            self.tensor.long = tensor.dtype("int32")
-            self.tensor.float = tensor.dtype("float32")
+    def __init__(self, pyro, tensor, stanfile, compile, mode):
+        self.pyro = pyro
+        self.tensor = tensor
+        self.pyro_backend = pyro.__name__
 
         if not os.path.exists("_tmp"):
             os.makedirs("_tmp")
@@ -80,8 +69,10 @@ class Model:
 
         self.name = splitext(basename(stanfile))[0]
         self.pyfile = f"_tmp/{self.name}.py"
+
         if compile:
-            _compile(backend, mode, stanfile, self.pyfile)
+            _compile(self.pyro_backend, mode, stanfile, self.pyfile)
+
         modname = f"_tmp.{self.name}"
         self.module = importlib.import_module(modname)
         if modname in sys.modules:
@@ -92,15 +83,13 @@ class Model:
             kernel = self.pyro.infer.NUTS(self.module.model, adapt_step_size=True)
 
         # HACK pyro an numpyro MCMC do not have the same parameters...
-        if self.pyro.__name__ == "numpyro":
-            import jax
-
+        if self.pyro_backend == "numpyro":
             rng_key, _ = jax.random.split(jax.random.PRNGKey(0))
             mcmc = self.pyro.infer.MCMC(
                 kernel, warmups, samples - warmups, num_chains=chains, **kwargs
             )
             mcmc.run = partial(mcmc.run, rng_key)
-        elif self.pyro.__name__ == "pyro":
+        elif self.pyro_backend == "pyro":
             kwargs = {"mp_context": "forkserver", **kwargs}
             mcmc = self.pyro.infer.MCMC(
                 kernel,
@@ -202,5 +191,17 @@ class SVIProxy(object):
             self.kwargs.update(self.module.transformed_data(**self.kwargs))
         return self.svi.step(**kwargs)
 
-PyroModel = partial(Model, "pyro")
-NumpyroModel = partial(Model, "numpyro")
+
+import pyro
+import torch
+
+torch.array = torch.tensor
+
+import numpyro
+import jax.numpy as jnp
+
+jnp.long = jnp.dtype("int32")
+jnp.float = jnp.dtype("float32")
+
+PyroModel = partial(Model, pyro, torch)
+NumpyroModel = partial(Model, numpyro, jnp)
