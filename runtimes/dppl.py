@@ -201,3 +201,6 @@ class SVIProxy(object):
         if hasattr(self.module, "transformed_data"):
             self.kwargs.update(self.module.transformed_data(**self.kwargs))
         return self.svi.step(**kwargs)
+
+PyroModel = partial(Model, "pyro")
+NumpyroModel = partial(Model, "numpyro")
