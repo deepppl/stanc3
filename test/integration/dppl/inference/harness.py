@@ -3,8 +3,9 @@ from typing import Any, Callable, ClassVar, Dict, Optional, List
 from dataclasses import dataclass, field
 
 import pystan
-from runtimes.pyro.dppl import PyroModel
-from runtimes.numpyro.dppl import NumpyroModel
+# from runtimes.pyro.dppl import PyroModel
+# from runtimes.numpyro.dppl import NumpyroModel
+from runtimes.dppl import Model
 
 from scipy.stats import entropy, ks_2samp
 import numpy as np
@@ -94,7 +95,7 @@ class MCMCTest:
         assert self.with_pyro or self.with_numpyro, "Should run either Pyro or Numpyro"
         if self.with_pyro:
             with TimeIt("Pyro_Compilation", self.timers):
-                model = PyroModel(self.model_file, mode='mixed')
+                model = Model("pyro", self.model_file, True, "mixed")
             with TimeIt("Pyro_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,
@@ -102,12 +103,12 @@ class MCMCTest:
                     chains=self.config.chains,
                     thin=self.config.thin,
                 )
-                data = model.convert_inputs(self.data)
+                data = model.module.convert_inputs(self.data)
                 mcmc.run(**data)
                 self.pyro_samples = mcmc.get_samples()
         if self.with_numpyro:
             with TimeIt("Numpyro_Compilation", self.timers):
-                model = NumpyroModel(self.model_file, mode='mixed')
+                model = Model("numpyro", self.model_file, True, "mixed")
             with TimeIt("Numpyro_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,
@@ -115,14 +116,14 @@ class MCMCTest:
                     chains=self.config.chains,
                     thin=self.config.thin,
                 )
-                data = model.convert_inputs(self.data)
+                data = model.module.convert_inputs(self.data)
                 mcmc.run(**data)
                 self.numpyro_samples = mcmc.get_samples()
 
     def run_naive_pyro(self):
         assert self.with_pyro or self.with_numpyro, "Should run either Pyro or Numpyro"
         if self.with_pyro:
-            model = PyroModel(self.model_file, mode='comprehensive')
+            model = Model("pyro", self.model_file, True, "comprehensive")
             with TimeIt("Pyro_naive_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,
@@ -130,11 +131,11 @@ class MCMCTest:
                     chains=self.config.chains,
                     thin=self.config.thin,
                 )
-                data = model.convert_inputs(self.data)
+                data = model.module.convert_inputs(self.data)
                 mcmc.run(**data)
                 self.pyro_naive_samples = mcmc.get_samples()
         if self.with_numpyro:
-            model = NumpyroModel(self.model_file, mode='comprehensive')
+            model = Model("numpyro", self.model_file, True, "comprehensive")
             with TimeIt("Numpyro_naive_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,
@@ -142,7 +143,7 @@ class MCMCTest:
                     chains=self.config.chains,
                     thin=self.config.thin,
                 )
-                data = model.convert_inputs(self.data)
+                data = model.module.convert_inputs(self.data)
                 mcmc.run(**data)
                 self.numpyro_naive_samples = mcmc.get_samples()
 
