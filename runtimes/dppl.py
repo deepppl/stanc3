@@ -36,6 +36,7 @@ def _exec(cmd):
             print(output, file=sys.stdout)
     except subprocess.CalledProcessError as exc:
         print(f"Error {exc.returncode}: {exc.stderr}", file=sys.stderr)
+        assert False
 
 
 def _compile(backend, mode, stanfile, pyfile):
@@ -81,7 +82,10 @@ class Model:
         self.pyfile = f"_tmp/{self.name}.py"
         if compile:
             _compile(backend, mode, stanfile, self.pyfile)
-        self.module = importlib.import_module(f"_tmp.{self.name}")
+        modname = f"_tmp.{self.name}"
+        self.module = importlib.import_module(modname)
+        if modname in sys.modules:
+                    importlib.reload(sys.modules[modname])
 
     def mcmc(self, samples, warmups=0, chains=1, thin=1, kernel=None, **kwargs):
         if kernel is None:
