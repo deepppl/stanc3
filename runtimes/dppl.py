@@ -8,8 +8,8 @@ from os.path import splitext, basename, dirname
 from pandas import DataFrame, Series
 from collections import defaultdict
 from functools import partial
-from pyro.infer.autoguide.initialization import init_to_sample
 import inspect
+
 
 def _flatten_dict(d):
     def _flatten(name, a):
@@ -85,19 +85,17 @@ class Model:
         modname = f"_tmp.{self.name}"
         self.module = importlib.import_module(modname)
         if modname in sys.modules:
-                    importlib.reload(sys.modules[modname])
+            importlib.reload(sys.modules[modname])
 
     def mcmc(self, samples, warmups=0, chains=1, thin=1, kernel=None, **kwargs):
         if kernel is None:
-            kernel = self.pyro.infer.NUTS(
-                self.module.model, adapt_step_size=True
-            )  # , init_strategy=init_to_sample,)
+            kernel = self.pyro.infer.NUTS(self.module.model, adapt_step_size=True)
 
         # HACK pyro an numpyro MCMC do not have the same parameters...
         if self.pyro.__name__ == "numpyro":
             import jax
 
-            rng_key = jax.random.split(jax.random.PRNGKey(0))
+            rng_key, _ = jax.random.split(jax.random.PRNGKey(0))
             mcmc = self.pyro.infer.MCMC(
                 kernel, warmups, samples - warmups, num_chains=chains, **kwargs
             )
