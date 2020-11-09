@@ -1,12 +1,16 @@
-from os.path import splitext, basename, dirname
-import importlib.util
-import pyro
-import torch
-from pandas import DataFrame, Series
-from collections import defaultdict
+import os
+import sys
+import inspect
+import pathlib
+import importlib
 import subprocess
 import inspect
-from pyro.infer.autoguide.initialization import init_to_sample
+import pyro
+import torch as tensor
+from os.path import splitext, basename, dirname
+from pandas import DataFrame, Series
+from collections import defaultdict
+from functools import partial
 
 
 def _flatten_dict(d):
@@ -25,74 +29,87 @@ def _flatten_dict(d):
     }
 
 
-class PyroModel:
-    def __init__(self, stanfile, pyfile=None, compile=True, mode="comprehensive"):
-        self.name = basename(stanfile)
-        self.pyfile = splitext(stanfile)[0] + ".py" if pyfile == None else pyfile
-        if compile:
-            subprocess.check_call(
-                [
-                    "dune",
-                    "exec",
-                    "stanc",
-                    "--",
-                    "--pyro",
-                    "--mode",
-                    mode,
-                    "--o",
-                    self.pyfile,
-                    stanfile,
-                ]
-            )
-        module = importlib.import_module(splitext(basename(self.pyfile))[0])
-        self.convert_inputs = module.convert_inputs
-        self._model = module.model
-        self._transformed_data = None
-        self._generated_quantities = None
-        if hasattr(module, "transformed_data"):
-            self._transformed_data = module.transformed_data
-        if hasattr(module, "generated_quantities"):
-            self._generated_quantities = module.generated_quantities
-        if hasattr(module, "guide"):
-            self._guide = module.guide
+def _exec(cmd):
+    try:
+        output = subprocess.check_output(
+            cmd, stderr=subprocess.PIPE, universal_newlines=True
+        )
+        if output:
+            print(output, file=sys.stdout)
+    except subprocess.CalledProcessError as exc:
+        print(f"Error {exc.returncode}: {exc.stderr}", file=sys.stderr)
+        assert False
 
-    def mcmc(self, samples, warmups=0, chains=1, thin=1, kernel=None, init_strategy=init_to_sample):
+
+def _compile(mode, stanfile, pyfile):
+    _exec(
+        [
+            "dune",
+            "exec",
+            "stanc",
+            "--",
+            "--pyro",
+            "--mode",
+            mode,
+            "--o",
+            pyfile,
+            stanfile,
+        ]
+    )
+
+
+class PyroModel:
+    def __init__(self, stanfile, compile, mode):
+        if not os.path.exists("_tmp"):
+            os.makedirs("_tmp")
+            pathlib.Path("_tmp/__init__.py").touch()
+
+        self.name = splitext(basename(stanfile))[0]
+        self.pyfile = f"_tmp/{self.name}.py"
+        if compile:
+            _compile(mode, stanfile, self.pyfile)
+        modname = f"_tmp.{self.name}"
+        self.module = importlib.import_module(modname)
+        if modname in sys.modules:
+            importlib.reload(sys.modules[modname])
+
+    def mcmc(self, samples, warmups=0, chains=1, thin=1, kernel=None, **kwargs):
         if kernel is None:
-            kernel = pyro.infer.NUTS(self._model, adapt_step_size=True, init_strategy=init_strategy)
+            kernel = pyro.infer.NUTS(self.module.model, adapt_step_size=True)
+
+        kwargs = {"mp_context": "forkserver", **kwargs}
         mcmc = pyro.infer.MCMC(
             kernel,
             samples - warmups,
             warmup_steps=warmups,
             num_chains=chains,
+            **kwargs,
         )
-        return MCMCProxy(mcmc, self._generated_quantities, self._transformed_data, thin)
+        mcmc.thin = thin
+        return MCMCProxy(mcmc, self.module)
 
     def svi(
         self, optimizer=None, loss=None, params={"lr": 0.0005, "betas": (0.90, 0.999)}
     ):
         optimizer = optimizer if optimizer else pyro.optim.Adam(params)
         loss = loss if loss is not None else pyro.infer.Trace_ELBO()
-        svi = pyro.infer.SVI(self._model, self._guide, optimizer, loss)
-        return SVIProxy(svi, self._generated_quantities, self._transformed_data)
+        svi = pyro.infer.SVI(self.module.model, self.module.guide, optimizer, loss)
+        return SVIProxy(svi, self.module)
 
 
 class MCMCProxy:
     def __init__(
         self,
         mcmc,
-        generated_quantities=None,
-        transformed_data=None,
-        thin=1,
+        module,
     ):
         self.mcmc = mcmc
-        self.transformed_data = transformed_data
-        self.generated_quantities = generated_quantities
-        self.thin = thin
+        self.module = module
         self.kwargs = {}
 
     def _sample_model(self):
         samples = self.mcmc.get_samples()
-        return {x: samples[x][:: self.thin] for x in samples}
+        return {x: samples[x][:: self.mcmc.thin] for x in samples}
 
     def _sample_generated(self, samples):
         kwargs = self.kwargs
@@ -100,19 +117,19 @@ class MCMCProxy:
         num_samples = len(list(samples.values())[0])
         for i in range(num_samples):
             kwargs.update({x: samples[x][i] for x in samples})
-            if self.generated_quantities:
-                d = self.generated_quantities(kwargs)
+            if hasattr(self.module, "generated_quantities"):
+                d = self.module.generated_quantities(kwargs)
                 for k, v in d.items():
                     res[k].append(v)
-        return {k: torch.stack(v) for k, v in res.items()}
+        return {k: tensor.stack(v) for k, v in res.items()}
 
     def run(self, **kwargs):
         self.kwargs = kwargs
-        if self.transformed_data:
-            self.kwargs.update(self.transformed_data(**self.kwargs))
-        self.mcmc.run(**kwargs)
+        if hasattr(self.module, "transformed_data"):
+            self.kwargs.update(self.module.transformed_data(**self.kwargs))
+        self.mcmc.run(**self.kwargs)
         self.samples = self._sample_model()
-        if self.generated_quantities:
+        if hasattr(self.module, "generated_quantities"):
             gen = self._sample_generated(self.samples)
             self.samples.update(gen)
 
@@ -121,29 +138,34 @@ class MCMCProxy:
 
     def summary(self):
         d_mean = _flatten_dict(
-            {k: torch.mean(v, axis=0) for k, v in self.samples.items()}
+            {
+                k: tensor.mean(tensor.array(v, dtype=tensor.float), axis=0)
+                for k, v in self.samples.items()
+            }
         )
         d_std = _flatten_dict(
-            {k: torch.std(v, axis=0) for k, v in self.samples.items()}
+            {
+                k: tensor.std(tensor.array(v, dtype=tensor.float), axis=0)
+                for k, v in self.samples.items()
+            }
         )
         return DataFrame({"mean": Series(d_mean), "std": Series(d_std)})
 
 
 class SVIProxy(object):
-    def __init__(self, svi, generated_quantities=None, transformed_data=None):
+    def __init__(self, svi, module):
         self.svi = svi
-        self.transformed_data = transformed_data
-        self.generated_quantities = generated_quantities
+        self.module = module
         self.args = []
         self.kwargs = {}
 
-    def posterior(self, n):
-        signature = inspect.signature(self.svi.guide)
-        args = [None for i in range(len(signature.parameters))]
-        return [self.svi.guide(*args) for _ in range(n)]
+    def posterior(self, n, **kwargs):
+        # signature = inspect.signature(self.svi.guide)
+        # kwargs = {k : None for k in signature.parameters}
+        return [self.svi.guide(**kwargs) for _ in range(n)]
 
     def step(self, *args, **kwargs):
         self.kwargs = kwargs
-        if self.transformed_data:
-            self.kwargs.update(self.transformed_data(**self.kwargs))
+        if hasattr(self.module, "transformed_data"):
+            self.kwargs.update(self.module.transformed_data(**self.kwargs))
         return self.svi.step(**kwargs)
