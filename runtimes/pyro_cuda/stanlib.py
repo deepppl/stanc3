@@ -1418,33 +1418,33 @@ to_array_1d_array = lambda a: a.reshape(-1)
 # real[ , ] integrate_ode_rk45(function ode, real[] initial_state, real initial_time, real[] times, real[] theta, real[] x_r, int[] x_i)
 # Solves the ODE system for the times provided using the Runge Kutta Dopri algorithm with the implementation from Boost.
 
-from torchdiffeq import odeint
+# from torchdiffeq import odeint
 
 
-def integrate_ode_rk45_array_real_array_array_array_array(
-    ode, initial_state, initial_time, times, theta, x_r, x_i
-):
-    f = lambda t, y: ode(t, y, theta, x_r, x_i)
-    return odeint(f, initial_state, times)
+# def integrate_ode_rk45_array_real_array_array_array_array(
+#     ode, initial_state, initial_time, times, theta, x_r, x_i
+# ):
+#     f = lambda t, y: ode(t, y, theta, x_r, x_i)
+#     return odeint(f, initial_state, times)
 
 
-integrate_ode_rk45_array_int_array_array_array_array = (
-    integrate_ode_rk45_array_real_array_array_array_array
-)
+# integrate_ode_rk45_array_int_array_array_array_array = (
+#     integrate_ode_rk45_array_real_array_array_array_array
+# )
 
-# real[ , ] integrate_ode_rk45(function ode, real[] initial_state, real initial_time, real[] times, real[] theta, real[] x_r, int[] x_i, real rel_tol, real abs_tol, int max_num_steps)
-# Solves the ODE system for the times provided using the Runge Kutta Dopri algorithm with the implementation from Boost with additional control parameters for the solver.
-
-
-def integrate_ode_rk45_array_real_array_array_array_array_real_real_int(
-    ode, initial_state, times, theta, x_r, x_i, rtol, atol, mxstep
-):
-    f = lambda t, y: ode(t, y, theta, x_r, x_i)
-    return odeint(
-        f, initial_state, times, rtol=rtol, atol=atol, options={"max_num_steps": mxstep}
-    )
+# # real[ , ] integrate_ode_rk45(function ode, real[] initial_state, real initial_time, real[] times, real[] theta, real[] x_r, int[] x_i, real rel_tol, real abs_tol, int max_num_steps)
+# # Solves the ODE system for the times provided using the Runge Kutta Dopri algorithm with the implementation from Boost with additional control parameters for the solver.
 
 
-integrate_ode_rk45_array_int_array_array_array_array_real_real_real = (
-    integrate_ode_rk45_array_real_array_array_array_array_real_real_int
-)
+# def integrate_ode_rk45_array_real_array_array_array_array_real_real_int(
+#     ode, initial_state, times, theta, x_r, x_i, rtol, atol, mxstep
+# ):
+#     f = lambda t, y: ode(t, y, theta, x_r, x_i)
+#     return odeint(
+#         f, initial_state, times, rtol=rtol, atol=atol, options={"max_num_steps": mxstep}
+#     )
+
+
+# integrate_ode_rk45_array_int_array_array_array_array_real_real_real = (
+#     integrate_ode_rk45_array_real_array_array_array_array_real_real_int
+# )

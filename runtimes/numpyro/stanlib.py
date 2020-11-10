@@ -1405,25 +1405,25 @@ to_array_1d_array = lambda a: a.reshape(-1)
 # real[ , ] integrate_ode_rk45(function ode, real[] initial_state, real initial_time, real[] times, real[] theta, real[] x_r, int[] x_i)
 # Solves the ODE system for the times provided using the Runge Kutta Dopri algorithm with the implementation from Boost.
 
-from jax.experimental.ode import odeint
+# from jax.experimental.ode import odeint
 
-integrate_ode_rk45_array_real_array_array_array_array = (
-    lambda ode, initial_state, initial_time, times, theta, x_r, x_i: odeint(
-        ode, initial_state, times, theta, x_r, x_i
-    )
-)
-integrate_ode_rk45_array_int_array_array_array_array = (
-    integrate_ode_rk45_array_real_array_array_array_array
-)
+# integrate_ode_rk45_array_real_array_array_array_array = (
+#     lambda ode, initial_state, initial_time, times, theta, x_r, x_i: odeint(
+#         ode, initial_state, times, theta, x_r, x_i
+#     )
+# )
+# integrate_ode_rk45_array_int_array_array_array_array = (
+#     integrate_ode_rk45_array_real_array_array_array_array
+# )
 
-# real[ , ] integrate_ode_rk45(function ode, real[] initial_state, real initial_time, real[] times, real[] theta, real[] x_r, int[] x_i, real rel_tol, real abs_tol, int max_num_steps)
-# Solves the ODE system for the times provided using the Runge Kutta Dopri algorithm with the implementation from Boost with additional control parameters for the solver.
+# # real[ , ] integrate_ode_rk45(function ode, real[] initial_state, real initial_time, real[] times, real[] theta, real[] x_r, int[] x_i, real rel_tol, real abs_tol, int max_num_steps)
+# # Solves the ODE system for the times provided using the Runge Kutta Dopri algorithm with the implementation from Boost with additional control parameters for the solver.
 
-integrate_ode_rk45_array_real_array_array_array_array_real_real_int = (
-    lambda ode, initial_state, times, theta, x_r, x_i, rtol, atol, mxstep,: odeint(
-        ode, initial_state, times, theta, x_r, x_i, rtol=rtol, atol=atol, mxstep=mxstep
-    )
-)
-integrate_ode_rk45_array_int_array_array_array_array_real_real_real = (
-    integrate_ode_rk45_array_real_array_array_array_array_real_real_int
-)
+# integrate_ode_rk45_array_real_array_array_array_array_real_real_int = (
+#     lambda ode, initial_state, times, theta, x_r, x_i, rtol, atol, mxstep,: odeint(
+#         ode, initial_state, times, theta, x_r, x_i, rtol=rtol, atol=atol, mxstep=mxstep
+#     )
+# )
+# integrate_ode_rk45_array_int_array_array_array_array_real_real_real = (
+#     integrate_ode_rk45_array_real_array_array_array_array_real_real_int
+# )
