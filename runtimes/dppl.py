@@ -80,7 +80,11 @@ class Model:
 
     def mcmc(self, samples, warmups=0, chains=1, thin=1, kernel=None, **kwargs):
         if kernel is None:
-            kernel = self.pyro.infer.NUTS(self.module.model, adapt_step_size=True)
+            kernel = self.pyro.infer.NUTS(
+                self.module.model,
+                adapt_step_size=True,
+                init_strategy=self.pyro.init_to_sample,
+            )
 
         # HACK pyro an numpyro MCMC do not have the same parameters...
         if self.pyro_backend == "numpyro":
@@ -196,12 +200,14 @@ import pyro
 import torch
 
 torch.array = torch.tensor
+pyro.init_to_sample = pyro.infer.autoguide.initialization.init_to_sample
 
 import numpyro
 import jax.numpy as jnp
 
 jnp.long = jnp.dtype("int32")
 jnp.float = jnp.dtype("float32")
+numpyro.init_to_sample = numpyro.infer.initialization.init_to_sample
 
 PyroModel = partial(Model, pyro, torch)
 NumpyroModel = partial(Model, numpyro, jnp)
