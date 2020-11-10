@@ -2,8 +2,7 @@ from dataclasses import dataclass, field
 from posteriordb import PosteriorDatabase
 from os.path import splitext, basename
 import os
-from runtimes.dppl import PyroModel
-from runtimes.dppl import NumpyroModel
+from runtimes.dppl import PyroModel, NumpyroModel
 from pyro.infer.autoguide.initialization import init_to_uniform, init_to_sample
 
 import numpy as np
@@ -31,8 +30,8 @@ def test(posterior, config):
     data = posterior.data
     stanfile = model.code_file_path("stan")
     try:
-        # pyro_model = PyroModel(stanfile, mode='mixed', compile=True)
-        pyro_model = NumpyroModel(stanfile, mode='mixed', compile=True)
+        # pyro_model = PyroModel(stanfile, mode='mixed', recompile=True)
+        pyro_model = NumpyroModel(stanfile, mode='mixed', recompile=True)
     except Exception as e:
     # except torch.Tensor as e:
         return { 'code': 1, 'msg': f'compilation error ({posterior.name}): {model.name}', 'exn': e }
