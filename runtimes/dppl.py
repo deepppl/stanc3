@@ -40,7 +40,7 @@ def _exec(cmd):
         assert False
 
 
-def _compile(backend, mode, stanfile, pyfile):
+def compile(backend, mode, stanfile, pyfile):
     _exec(
         [
             "dune",
@@ -58,7 +58,7 @@ def _compile(backend, mode, stanfile, pyfile):
 
 
 class Model:
-    def __init__(self, pyro, tensor, stanfile, compile, mode):
+    def __init__(self, pyro, tensor, stanfile, recompile=True, mode="mixed"):
         self.pyro = pyro
         self.tensor = tensor
         self.pyro_backend = pyro.__name__
@@ -70,8 +70,8 @@ class Model:
         self.name = splitext(basename(stanfile))[0]
         self.pyfile = f"_tmp/{self.name}.py"
 
-        if compile:
-            _compile(self.pyro_backend, mode, stanfile, self.pyfile)
+        if recompile:
+            compile(self.pyro_backend, mode, stanfile, self.pyfile)
 
         modname = f"_tmp.{self.name}"
         self.module = importlib.import_module(modname)

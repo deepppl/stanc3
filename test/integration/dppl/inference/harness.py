@@ -3,8 +3,6 @@ from typing import Any, Callable, ClassVar, Dict, Optional, List
 from dataclasses import dataclass, field
 
 import pystan
-# from runtimes.pyro.dppl import PyroModel
-# from runtimes.numpyro.dppl import NumpyroModel
 from runtimes.dppl import PyroModel, NumpyroModel
 
 from scipy.stats import entropy, ks_2samp
@@ -95,7 +93,7 @@ class MCMCTest:
         assert self.with_pyro or self.with_numpyro, "Should run either Pyro or Numpyro"
         if self.with_pyro:
             with TimeIt("Pyro_Compilation", self.timers):
-                model = PyroModel(self.model_file, True, "mixed")
+                model = PyroModel(self.model_file, recompile=True, mode="mixed")
             with TimeIt("Pyro_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,
@@ -108,7 +106,7 @@ class MCMCTest:
                 self.pyro_samples = mcmc.get_samples()
         if self.with_numpyro:
             with TimeIt("Numpyro_Compilation", self.timers):
-                model = NumpyroModel(self.model_file, True, "mixed")
+                model = NumpyroModel(self.model_file, recompile=True, mode="mixed")
             with TimeIt("Numpyro_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,
