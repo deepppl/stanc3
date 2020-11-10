@@ -121,7 +121,7 @@ class MCMCTest:
     def run_naive_pyro(self):
         assert self.with_pyro or self.with_numpyro, "Should run either Pyro or Numpyro"
         if self.with_pyro:
-            model = PyroModel(self.model_file, True, "comprehensive")
+            model = PyroModel(self.model_file, recompile=True, mode="comprehensive")
             with TimeIt("Pyro_naive_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,
@@ -133,7 +133,7 @@ class MCMCTest:
                 mcmc.run(**data)
                 self.pyro_naive_samples = mcmc.get_samples()
         if self.with_numpyro:
-            model = NumpyroModel(self.model_file, True, "comprehensive")
+            model = NumpyroModel(self.model_file, recompile=True, mode="comprehensive")
             with TimeIt("Numpyro_naive_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,
