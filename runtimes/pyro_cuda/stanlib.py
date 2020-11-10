@@ -3,8 +3,8 @@ import torch
 import torch.nn
 from torch import ones
 from torch import tensor
-from torch.cuda import LongTensor as dtype_long
-from torch import FloatTensor as dtype_float
+from torch.cuda import long as dtype_long
+from torch import float as dtype_float
 
 def _cuda(f):
     def inner(*args, **kwargs):

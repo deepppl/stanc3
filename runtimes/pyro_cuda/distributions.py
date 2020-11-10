@@ -11,8 +11,8 @@ from torch import (
     zeros_like as tzeros_like,
     tensor,
 )
-from torch.cuda import LongTensor as dtype_long
-from torch.cuda import FloatTensor as dtype_float
+from torch import long as dtype_long
+from torch import float as dtype_float
 
 def _cuda(f):
     def inner(*args, **kwargs):

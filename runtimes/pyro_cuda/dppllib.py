@@ -3,8 +3,8 @@ from pyro.distributions import Exponential, Bernoulli, Binomial, Poisson, GammaP
 from pyro import module as register_network
 from pyro import random_module
 from torch import tensor, zeros, ones, Tensor, matmul, true_divide, floor_divide, transpose, empty
-from torch.cuda import LongTensor as dtype_long
-from torch import FloatTensor as dtype_float
+from torch import long as dtype_long
+from torch import float as dtype_float
 
 import torch
 
