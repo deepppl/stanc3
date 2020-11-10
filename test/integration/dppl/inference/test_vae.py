@@ -4,8 +4,7 @@ from torch import nn
 from torch import tensor
 import pyro
 import numpy as np
-# from runtimes.pyro.dppl import PyroModel
-from runtimes.dppl import Model
+from runtimes.dppl import PyroModel
 
 from .util import loadData
 import os
@@ -72,7 +71,7 @@ class Classifier:
 def test_vae_inference():
     encoder, decoder = build_vae()
     train_loader, test_loader = loadData(batch_size)
-    model = Model("pyro", "good/vae.stan", True, "mixed")
+    model = PyroModel("good/vae.stan", True, "mixed")
     svi = model.svi(params = {'lr' : 0.01})
 
     for epoch in range(4):  # loop over the dataset multiple times

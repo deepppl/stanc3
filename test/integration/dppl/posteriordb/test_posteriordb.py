@@ -2,8 +2,8 @@ from dataclasses import dataclass, field
 from posteriordb import PosteriorDatabase
 from os.path import splitext, basename
 import os
-from runtimes.pyro.dppl import PyroModel
-from runtimes.numpyro.dppl import NumpyroModel
+from runtimes.dppl import PyroModel
+from runtimes.dppl import NumpyroModel
 from pyro.infer.autoguide.initialization import init_to_uniform, init_to_sample
 
 import numpy as np
@@ -30,10 +30,9 @@ def test(posterior, config):
     model = posterior.model
     data = posterior.data
     stanfile = model.code_file_path("stan")
-    pythonfile = os.path.join(os.getcwd(), splitext(basename(stanfile))[0] + ".py")
     try:
-        pyro_model = PyroModel(stanfile, mode='mixed', pyfile=pythonfile, compile=True)
-        # pyro_model = NumpyroModel(stanfile, mode='mixed', pyfile=pythonfile)
+        # pyro_model = PyroModel(stanfile, mode='mixed', compile=True)
+        pyro_model = NumpyroModel(stanfile, mode='mixed', compile=True)
     except Exception as e:
     # except torch.Tensor as e:
         return { 'code': 1, 'msg': f'compilation error ({posterior.name}): {model.name}', 'exn': e }
@@ -44,7 +43,7 @@ def test(posterior, config):
                                thin=config.thin,
                                # init_strategy=init_to_sample
                                )
-        inputs = pyro_model.convert_inputs(data.values())
+        inputs = pyro_model.module.convert_inputs(data.values())
         mcmc.run(**inputs)
     except Exception as e:
     # except torch.Tensor as e:
@@ -111,7 +110,7 @@ constraints = [
 # posterior = my_pdb.posterior('sblri-blr')
 # posterior = my_pdb.posterior('rstan_downloads-prophet')
 # posterior = my_pdb.posterior('ecdc0401-covid19imperial_v2')
-posterior = my_pdb.posterior('ecdc0501-covid19imperial_v2')
+# posterior = my_pdb.posterior('ecdc0501-covid19imperial_v2')
 # posterior = my_pdb.posterior('dogs-dogs')
 # posterior = my_pdb.posterior('mcycle_gp-accel_gp')
 # posterior = my_pdb.posterior('garch-garch11')
@@ -131,12 +130,13 @@ posterior = my_pdb.posterior('ecdc0501-covid19imperial_v2')
 # posterior = my_pdb.posterior('sir-sir')
 # posterior = my_pdb.posterior('mnist_100-nn_rbm1bJ10')
 # posterior = my_pdb.posterior('arma-arma11')
+# posterior = my_pdb.posterior('arK-arK')
 
-config = Config()
-res = test(posterior, config)
-print(res['code'])
-print(res['msg'])
-print(res['exn'])
+# config = Config()
+# res = test(posterior, config)
+# print(res['code'])
+# print(res['msg'])
+# print(res['exn'])
 
 success = 0
 compile_error = 0

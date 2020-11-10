@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 import pystan
 # from runtimes.pyro.dppl import PyroModel
 # from runtimes.numpyro.dppl import NumpyroModel
-from runtimes.dppl import Model
+from runtimes.dppl import PyroModel, NumpyroModel
 
 from scipy.stats import entropy, ks_2samp
 import numpy as np
@@ -95,7 +95,7 @@ class MCMCTest:
         assert self.with_pyro or self.with_numpyro, "Should run either Pyro or Numpyro"
         if self.with_pyro:
             with TimeIt("Pyro_Compilation", self.timers):
-                model = Model("pyro", self.model_file, True, "mixed")
+                model = PyroModel(self.model_file, True, "mixed")
             with TimeIt("Pyro_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,
@@ -108,7 +108,7 @@ class MCMCTest:
                 self.pyro_samples = mcmc.get_samples()
         if self.with_numpyro:
             with TimeIt("Numpyro_Compilation", self.timers):
-                model = Model("numpyro", self.model_file, True, "mixed")
+                model = NumpyroModel(self.model_file, True, "mixed")
             with TimeIt("Numpyro_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,
@@ -123,7 +123,7 @@ class MCMCTest:
     def run_naive_pyro(self):
         assert self.with_pyro or self.with_numpyro, "Should run either Pyro or Numpyro"
         if self.with_pyro:
-            model = Model("pyro", self.model_file, True, "comprehensive")
+            model = PyroModel(self.model_file, True, "comprehensive")
             with TimeIt("Pyro_naive_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,
@@ -135,7 +135,7 @@ class MCMCTest:
                 mcmc.run(**data)
                 self.pyro_naive_samples = mcmc.get_samples()
         if self.with_numpyro:
-            model = Model("numpyro", self.model_file, True, "comprehensive")
+            model = NumpyroModel(self.model_file, True, "comprehensive")
             with TimeIt("Numpyro_naive_Runtime", self.timers):
                 mcmc = model.mcmc(
                     self.config.iterations,

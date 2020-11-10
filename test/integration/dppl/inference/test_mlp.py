@@ -8,7 +8,7 @@ from pyro import distributions as dist
 from pyro.infer import SVI, Trace_ELBO
 from pyro.optim import Adam
 from torch.autograd import Variable
-from runtimes.dppl import Model
+from runtimes.dppl import PyroModel
 
 import os
 
@@ -42,7 +42,7 @@ def predict(data, posterior):
 def test_mlp_inference():
     mlp = build_mlp()
     train_loader, test_loader = loadData(batch_size)
-    model = Model("pyro", "good/mlp.stan", True, "mixed")
+    model = PyroModel("good/mlp.stan", True, "mixed")
     svi = model.svi(params = {'lr' : 0.01})
 
     for epoch in range(2):  # loop over the dataset multiple times
