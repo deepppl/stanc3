@@ -1,0 +1,27 @@
+diff --git a/build/build.py b/build/build.py
+index 7192b86..8c20794 100755
+--- a/build/build.py
++++ b/build/build.py
+@@ -140,9 +140,9 @@ def get_bazel_path(bazel_path_flag):
+   if bazel_path_flag:
+     return bazel_path_flag
+ 
+-  bazel = download_and_verify_bazel()
+-  if bazel:
+-    return bazel
++  #bazel = download_and_verify_bazel()
++  #if bazel:
++  #  return bazel
+ 
+   bazel = which("bazel")
+   if bazel:
+@@ -362,7 +362,7 @@ def main():
+ 
+   print("\nBuilding XLA and installing it in the jaxlib source tree...")
+   config_args = args.bazel_options
+-  config_args += ["--config=short_logs"]
++  config_args += ["--config=short_logs", "--cxxopt=-fpermissive"]
+   if args.enable_march_native:
+     config_args += ["--config=opt"]
+   if args.enable_mkl_dnn:
+
