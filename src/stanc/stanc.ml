@@ -140,6 +140,9 @@ let options =
     ; ( "--pyro"
       , Arg.Unit (fun () -> backend := Some Ast_to_Pyro.Pyro)
       , " If set, generate Pyro code." )
+    ; ( "--pyro-cuda"
+      , Arg.Unit (fun () -> backend := Some Ast_to_Pyro.Pyro_cuda)
+      , " If set, generate Pyro code." )
     ; ( "--numpyro"
       , Arg.Unit (fun () -> backend := Some Ast_to_Pyro.Numpyro)
       , " If set, generate NumPyro code." )
@@ -219,14 +222,9 @@ let use_file filename =
       let cpp = Fmt.strf "%a" Stan_math_code_gen.pp_prog opt_mir in
       Out_channel.write_all !output_file ~data:cpp ;
       if !print_model_cpp then print_endline cpp
-    | Some Ast_to_Pyro.Pyro ->
+    | Some backend ->
       let py =
-        Fmt.strf "%a" (Ast_to_Pyro.trans_prog Pyro mode) typed_ast
-      in
-      Out_channel.write_all !output_file ~data:py
-    | Some Ast_to_Pyro.Numpyro ->
-      let py =
-        Fmt.strf "%a" (Ast_to_Pyro.trans_prog Numpyro mode) typed_ast
+        Fmt.strf "%a" (Ast_to_Pyro.trans_prog backend mode) typed_ast
       in
       Out_channel.write_all !output_file ~data:py)
 
@@ -258,7 +256,7 @@ let main () =
   if !output_file = "" then
     begin match !backend with
     | None -> output_file := remove_dotstan !model_file ^ ".hpp"
-    | Some Pyro | Some Numpyro ->
+    | Some Pyro | Some Pyro_cuda | Some Numpyro ->
       output_file := remove_dotstan !model_file ^ ".py"
     end;
   use_file !model_file

@@ -8,6 +8,7 @@ module SSet = Set.Make(String)
 type backend =
   | Pyro
   | Numpyro
+  | Pyro_cuda
 
 type mode =
   | Comprehensive
@@ -1280,7 +1281,7 @@ and to_clone ctx e =
     | _ -> false
   in
   match ctx.ctx_backend with
-  | Pyro -> ctx.ctx_to_clone && can_be_modified e
+  | Pyro | Pyro_cuda -> ctx.ctx_to_clone && can_be_modified e
   | Numpyro -> false
 
 let trans_expr_opt ctx (type_ : typed_expression Type.t) ff = function
@@ -1329,7 +1330,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             (trans_rhs (expr_of_lval assign_lhs)) assign_rhs
       | { lval= LIndexed (_, _indices); _ } as assign_lhs ->
           begin match ctx.ctx_backend with
-          | Pyro ->
+          | Pyro | Pyro_cuda ->
               let rec trans_lval ff = function
                 | { lval= LVariable id; _ } -> trans_id ff id
                 | { lval= LIndexed (lhs, indices); _ } ->
@@ -1428,7 +1429,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
   | Reject ps -> fprintf ff "stanlib.reject(%a)" (trans_printables ctx) ps
   | IfThenElse (cond, ifb, None) ->
       begin match ctx.ctx_backend with
-      | Pyro ->
+      | Pyro | Pyro_cuda ->
           fprintf ff "@[<v 0>@[<v 4>if %a:@,%a@]@]"
             (trans_expr ctx) cond
             (trans_stmt ctx) ifb
@@ -1455,7 +1456,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       end
   | IfThenElse (cond, ifb, Some elseb) ->
       begin match ctx.ctx_backend with
-      | Pyro ->
+      | Pyro | Pyro_cuda ->
           fprintf ff "@[<v 0>@[<v 4>if %a:@,%a@]@,@[<v 4>else:@,%a@]@]"
             (trans_expr ctx) cond
             (trans_stmt ctx) ifb
@@ -1487,7 +1488,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             get_updated_arrays_stmt ctx.ctx_to_clone_vars body }
       in
       begin match ctx.ctx_backend with
-      | Pyro ->
+      | Pyro | Pyro_cuda ->
           fprintf ff "@[<v4>while %a:@,%a@]"
             (trans_expr ctx) cond
             (trans_stmt ctx') body
@@ -1523,7 +1524,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             get_updated_arrays_stmt ctx.ctx_to_clone_vars loop_body }
       in
       begin match ctx.ctx_backend with
-      | Pyro ->
+      | Pyro | Pyro_cuda ->
           fprintf ff "@[<v 4>for %a in range(%a,%a + 1):@,%a@]"
             trans_id loop_variable
             (trans_expr ctx) lower_bound
@@ -1553,7 +1554,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             get_updated_arrays_stmt ctx.ctx_to_clone_vars body }
       in
       begin match ctx.ctx_backend with
-      | Pyro ->
+      | Pyro | Pyro_cuda ->
         fprintf ff "@[<v4>for %a in %a:@,%a@]"
           trans_id loop_variable
           (trans_expr ctx) iteratee
@@ -2000,11 +2001,13 @@ let trans_prog backend mode ff (p : typed_program) =
     match backend with
     | Pyro -> "pyro"
     | Numpyro -> "numpyro"
+    | Pyro_cuda -> "pyro_cuda"
   in
   let dppllib =
     match backend with
     | Pyro -> pyro_dppllib
     | Numpyro -> numpyro_dppllib
+    | Pyro_cuda -> pyro_dppllib
   in
   let dppllib =
     if p.networksblock <> None then dppllib @ dppllib_networks else dppllib
