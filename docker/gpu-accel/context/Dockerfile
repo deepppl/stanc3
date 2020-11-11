@@ -17,8 +17,8 @@ RUN set -eux ; \
     --slave /usr/bin/g++ g++ /usr/bin/g++-8 \
     --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-8 \
     --slave /usr/bin/gcov gcov /usr/bin/gcov-8
- 
-#    
+
+#
 # install OpenMPI
 #
 RUN set -eux ; \
@@ -34,12 +34,12 @@ ENV OMPI_F77 gfortran
 ENV OMPI_FC gfortran
 
 
-#    
+#
 # Point to CUDA libs
 #
-ENV CUDADIR=/usr/local/cuda 
-  
-#    
+ENV CUDADIR=/usr/local/cuda
+
+#
 # install java
 #
 RUN set -eux ; \
@@ -48,8 +48,8 @@ RUN set -eux ; \
      openjdk-8-jdk-headless \
     ; \
   rm -rf /var/lib/apt/lists/*
-  
-#    
+
+#
 # install extra utilities
 #
 RUN set -eux ; \
@@ -65,7 +65,7 @@ RUN set -eux ; \
     unzip \
     ; \
   rm -rf /var/lib/apt/lists/*
-   
+
 #
 # Path to install all packages including anaconda.
 #
@@ -76,7 +76,7 @@ RUN set -eux ; \
   useradd -m -r -g user --uid=1000 --home-dir=$InstallPath --shell=/bin/bash user
 
 USER user:user
-WORKDIR $InstallPath 
+WORKDIR $InstallPath
 
 #
 # Install miniconda
@@ -92,7 +92,7 @@ RUN set -eux ; \
   fi ; \
   bash $MinicondaInstallFile -f -b -p $InstallPath/miniconda3 ; \
   rm -rf $MinicondaInstallFile
-  
+
 #
 # Install antlr4 and test
 #
@@ -105,12 +105,12 @@ RUN set -eux ; \
   echo "export CLASSPATH=\".:$(pwd)/antlr-4.7.2-complete.jar:\$CLASSPATH\"" >> antlr4 ; \
   echo "java -Xmx8192M -cp \"$(pwd)/antlr-4.7.2-complete.jar:\$CLASSPATH\" org.antlr.v4.Tool \$@" >> antlr4 ; \
   chmod +x antlr4
-  
+
 ENV PATH $InstallPath/antlr4:$PATH
 
 RUN set -eux ; \
   antlr4
-  
+
 #
 # Install MAGMA
 #
@@ -122,7 +122,7 @@ RUN set -eux ; \
   conda install -y openblas
 
 ENV OPENBLASDIR $InstallPath/miniconda3/envs/magma
-  
+
 RUN set -eux ; \
   cd $InstallPath ; \
   . miniconda3/bin/activate ; \
@@ -138,7 +138,7 @@ RUN set -eux ; \
   make sparse-lib -j ; \
   make install prefix=$InstallPath/magma ; \
   cd ; rm -rf $InstallPath/magma/install
-    
+
 ENV MAGMA_HOME $InstallPath/magma
 
 #
@@ -165,12 +165,12 @@ RUN set -eux ; \
   cd $InstallPath ; \
   . miniconda3/bin/activate ; \
   conda create -y -n pytorch python=3.7
-  
+
 RUN set -eux ; \
   cd $InstallPath ; \
   . miniconda3/bin/activate ; \
   conda activate pytorch ; \
-  git clone --single-branch -b v1.6.0 --recursive https://github.com/pytorch/pytorch pytorch-v1.6.0 ; \
+  git clone --single-branch -b v1.6.0 --recursive https://github.com/pytorch/pytorch pytorch-v1.7.0 ; \
   cd pytorch*/ ; \
   git submodule sync ; \
   git submodule update --init --recursive ; \
@@ -198,7 +198,7 @@ RUN set -eux ; \
   python setup.py install ; \
   cd ; \
   true
-  
+
 #
 # Install deepppl dependencies
 #
@@ -206,7 +206,7 @@ RUN set -eux ; \
   cd $InstallPath ; \
   . miniconda3/bin/activate ; \
   conda create -y --name deepppl --clone pytorch
-  
+
 # Install bazel needed to install JAX
 RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; \
@@ -231,7 +231,7 @@ RUN set -eux ; \
 COPY jax-v0.1.51.patch $InstallPath
 RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; \
-  git clone --single-branch -b jaxlib-v0.1.51 https://github.com/google/jax ; \
+  git clone --single-branch -b jaxlib-v0.1.55 https://github.com/google/jax ; \
   cd jax ; \
   git apply < $InstallPath/jax-v0.1.51.patch ; \
   python build/build.py \
@@ -243,30 +243,22 @@ RUN set -eux ; \
   pip install -e build ; \
   pip install -e . ; \
   cd $InstallPath ; \
-  true 
-  
+  true
+
+
 # Already installed dependencies:
 #   numpy (pytorch dependency)
 #   pytorch (from source)
 #   pytorch-vision (from source)
 RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
-    'antlr4-python3-runtime==4.7.2'
-RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install -y \
-    'astor==0.7.1'
+    'pyro-ppl==1.4.0'
 RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
-    'astpretty==1.2.1'
+    'numpyro==0.4.0'
 RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
-    'observations==0.1.4'
-RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
-    'pyro-ppl==1.3.1'
-RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; pip install \
-    'numpyro==0.3.0'
+    'pystan>=2.19'
 RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install -y \
     'pytest>=3.6.1'
@@ -282,20 +274,13 @@ RUN set -eux ; \
 RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; conda install -y \
     'pandas>=0.25.1'
-  
-RUN set -eux ; \
-  cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; \
-  git clone https://github.com/deepppl/deepppl ; \
-  cd deepppl/deepppl ; \
-  make -j ; \
-  pip install ..
-  
+
 # Remove pytorch environment as it was cloned to deepppl one.
 RUN set -eux ; \
   cd $InstallPath ; \
   . miniconda3/bin/activate ; \
-  conda env remove -y -n pytorch  
-  
+  conda env remove -y -n pytorch
+
 ##########################################################################################
 FROM ##BaseImage##
 LABEL maintainer "Samuel Antao <samuel.antao@ibm.com>"
@@ -331,18 +316,18 @@ RUN set -eux ; \
     --slave /usr/bin/g++ g++ /usr/bin/g++-8 \
     --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-8 \
     --slave /usr/bin/gcov gcov /usr/bin/gcov-8
- 
+
 
 ENV OMPI_CC gcc
 ENV OMPI_CXX g++
 ENV OMPI_F77 gfortran
 ENV OMPI_FC gfortran
 
-#    
+#
 # Point to CUDA libs
 #
-ENV CUDADIR=/usr/local/cuda 
-  
+ENV CUDADIR=/usr/local/cuda
+
 #
 # Path to install all packages including anaconda.
 #
@@ -353,14 +338,10 @@ RUN set -eux ; \
   useradd -m -r -g user --uid=1000 --home-dir=$InstallPath --shell=/bin/bash user
 
 USER user:user
-WORKDIR $InstallPath 
+WORKDIR $InstallPath
 
-# Copy the relevant bits - pytorch is installed in miniconda so not need to copy it over 
+# Copy the relevant bits - pytorch is installed in miniconda so not need to copy it over
 # separately.
-COPY --chown=user:user --from=dev /opt/user/antlr4 /opt/user/antlr4
-
-COPY --chown=user:user --from=dev /opt/user/deepppl /opt/user/deepppl
-
 COPY --chown=user:user --from=dev /opt/user/fxdiv /opt/user/fxdiv
 
 RUN set -eux ; \
@@ -419,8 +400,8 @@ RUN set -eux ; \
   git clone --single-branch -b deep https://github.com/mandel/stanc3 ; \
   cd stanc3 ; \
   dune subst ; \
-  dune build @install --profile dynamic 
-ENV PATH $InstallPath/stanc3/_build/install/default/bin:$PATH  
+  dune build @install --profile dynamic
+ENV PATH $InstallPath/stanc3/_build/install/default/bin:$PATH
 RUN stanc --help
 
 # Add the relevant folders in stanc3 to the conda environment. This provide the runtime modules
@@ -430,7 +411,7 @@ RUN set -eux ; \
 
 RUN set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; \
-  pip install torchdiffeq 
+  pip install torchdiffeq
 
 # In x86_64 we need LD_LIBRARY_PATH to point to MKL.
 ENV LD_LIBRARY_PATH $InstallPath/miniconda3/envs/deepppl/lib
@@ -438,7 +419,7 @@ ENV LD_LIBRARY_PATH $InstallPath/miniconda3/envs/deepppl/lib
 # Copy example notebook
 COPY --chown=user:user notebook $InstallPath/notebook
 
-EXPOSE 8888  
+EXPOSE 8888
 
 WORKDIR $InstallPath/notebook
 CMD set -eux ; \
@@ -446,6 +427,3 @@ CMD set -eux ; \
   cd $InstallPath ; . miniconda3/bin/activate ; conda activate deepppl ; \
   nvidia-smi ; \
   jupyter-notebook --ip=0.0.0.0 --port=8888
-  
-  
-
