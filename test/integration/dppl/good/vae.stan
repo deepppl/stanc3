@@ -13,8 +13,7 @@ model {
   real mu[28, 28];
   z ~ normal(0, 1);
   mu = decoder(z);
-  for (i in 1:28)
-    x[i] ~ bernoulli(mu[i]);
+  x ~ bernoulli(mu);
 }
 guide {
   real encoded[2, nz] = encoder(x);
