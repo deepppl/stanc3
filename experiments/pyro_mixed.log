@@ -1,0 +1,141 @@
+XXX Failed eight_schools-eight_schools_noncentered
+         mean       std       err
+tau  0.032104  4.767809  3.569956
+TTT eight_schools-eight_schools_noncentered: 299.198392404709
+YYY Success earnings-earn_height
+TTT earnings-earn_height: 1851.5503372820094
+YYY Success kidiq-kidscore_momhs
+TTT kidiq-kidscore_momhs: 315.4741552253254
+YYY Success eight_schools-eight_schools_centered
+TTT eight_schools-eight_schools_centered: 1236.4284118418582
+YYY Success dogs-dogs_log
+TTT dogs-dogs_log: 45647.97643867694
+YYY Success kidiq-kidscore_momiq
+TTT kidiq-kidscore_momiq: 803.3210287881084
+YYY Success sblri-blr
+TTT sblri-blr: 335.6415394716896
+YYY Success earnings-logearn_height
+TTT earnings-logearn_height: 1824.49176873127
+YYY Success earnings-logearn_interaction_z
+TTT earnings-logearn_interaction_z: 412.38251859601587
+YYY Success nes1992-nes
+TTT nes1992-nes: 1569.7217930089682
+YYY Success earnings-log10earn_height
+TTT earnings-log10earn_height: 1929.6176014398225
+YYY Success nes1980-nes
+TTT nes1980-nes: 1739.426546227187
+XXX Failed hudson_lynx_hare-lotka_volterra with cannot import name 'integrate_ode_rk45_array_int_array_array_array_array_real_real_real' from 'runtimes.pyro.stanlib' (/home/baudart/projects/deepstan/stanc3/runtimes/pyro/stanlib.py)
+YYY Success mesquite-mesquite
+TTT mesquite-mesquite: 1842.9621937992051
+YYY Success kidiq_with_mom_work-kidscore_interaction_c
+TTT kidiq_with_mom_work-kidscore_interaction_c: 240.94335923111066
+XXX Failed diamonds-diamonds with 
+ Trace Shapes:     
+  Param Sites:     
+ Sample Sites:     
+        b dist 24 |
+         value 24 |
+Intercept dist    |
+         value    |
+    sigma dist    |
+         value    |
+  expr__1 dist    |
+         value 24 |
+  expr__2 dist    |
+         value    |
+YYY Success hmm_example-hmm_example
+TTT hmm_example-hmm_example: 16732.68968510488
+YYY Success kidiq_with_mom_work-kidscore_mom_work
+TTT kidiq_with_mom_work-kidscore_mom_work: 388.37108727078885
+YYY Success nes1996-nes
+TTT nes1996-nes: 1600.246716006659
+XXX Failed one_comp_mm_elim_abs-one_comp_mm_elim_abs with name 'integrate_ode_bdf_array_real_array_array_array_array' is not defined
+YYY Success nes1976-nes
+TTT nes1976-nes: 1570.8843939490616
+YYY Success nes2000-nes
+TTT nes2000-nes: 1684.04583778698
+YYY Success kidiq_with_mom_work-kidscore_interaction_z
+TTT kidiq_with_mom_work-kidscore_interaction_z: 248.44330632779747
+YYY Success kidiq_with_mom_work-kidscore_interaction_c2
+TTT kidiq_with_mom_work-kidscore_interaction_c2: 286.53047463065013
+YYY Success kilpisjarvi_mod-kilpisjarvi
+TTT kilpisjarvi_mod-kilpisjarvi: 20463.63154573599
+YYY Success arK-arK
+TTT arK-arK: 74947.37925826013
+YYY Success mesquite-logmesquite_logva
+TTT mesquite-logmesquite_logva: 1010.1553670600988
+YYY Success sblrc-blr
+TTT sblrc-blr: 528.727944327984
+YYY Success mesquite-logmesquite_logvolume
+TTT mesquite-logmesquite_logvolume: 232.60400012601167
+YYY Success nes1984-nes
+TTT nes1984-nes: 1582.7887322730385
+YYY Success kidiq-kidscore_interaction
+TTT kidiq-kidscore_interaction: 2918.867699542083
+YYY Success earnings-logearn_logheight_male
+TTT earnings-logearn_logheight_male: 11368.105659507215
+YYY Success arma-arma11
+TTT arma-arma11: 5763.265623547137
+XXX Failed mcycle_gp-accel_gp with 
+       Trace Shapes:     
+        Param Sites:     
+       Sample Sites:     
+      Intercept dist    |
+               value    |
+         sdgp_1 dist    |
+               value    |
+       lscale_1 dist    |
+               value    |
+          zgp_1 dist 40 |
+               value 40 |
+Intercept_sigma dist    |
+               value    |
+   sdgp_sigma_1 dist    |
+               value    |
+ lscale_sigma_1 dist    |
+               value    |
+    zgp_sigma_1 dist 20 |
+               value 20 |
+        expr__1 dist    |
+               value    |
+XXX Failed gp_pois_regr-gp_regr with name 'multi_normal_cholesky' is not defined
+YYY Success earnings-logearn_height_male
+TTT earnings-logearn_height_male: 2984.1856264900416
+YYY Success bball_drive_event_0-hmm_drive_0
+TTT bball_drive_event_0-hmm_drive_0: 181758.52946077986
+YYY Success nes1988-nes
+TTT nes1988-nes: 1613.593808916863
+XXX Failed garch-garch11
+            mean       std      err
+alpha1  0.633674  0.144213  0.06639
+TTT garch-garch11: 30629.992702080403
+YYY Success kidiq-kidscore_momhsiq
+TTT kidiq-kidscore_momhsiq: 1097.3197231516242
+YYY Success mesquite-logmesquite_logvas
+TTT mesquite-logmesquite_logvas: 1706.0491160498932
+XXX Failed gp_pois_regr-gp_pois_regr with cholesky_cpu: U(2,2) is zero, singular U.
+Trace Shapes:     
+ Param Sites:     
+Sample Sites:     
+     rho dist    |
+        value    |
+   alpha dist    |
+        value    |
+ f_tilde dist 11 |
+        value 11 |
+YYY Success nes1972-nes
+TTT nes1972-nes: 1621.6129742404446
+YYY Success mesquite-logmesquite_logvash
+TTT mesquite-logmesquite_logvash: 1651.4922354733571
+YYY Success mesquite-logmesquite
+TTT mesquite-logmesquite: 958.9662156207487
+YYY Success dogs-dogs
+TTT dogs-dogs: 57004.80162741244
+XXX Failed low_dim_gauss_mix-low_dim_gauss_mix
+           mean       std       err
+mu[1] -0.491995  2.745814  2.241520
+mu[2]  0.628309  2.745286  2.241523
+theta  0.524474  0.120080  0.097076
+TTT low_dim_gauss_mix-low_dim_gauss_mix: 105652.88119574357
+YYY Success earnings-logearn_interaction
+TTT earnings-logearn_interaction: 5839.308033159003

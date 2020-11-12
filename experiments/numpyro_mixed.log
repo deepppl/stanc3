@@ -1,0 +1,113 @@
+XXX Failed eight_schools-eight_schools_noncentered
+         mean       std       err
+tau -0.048594  4.779793  3.650653
+TTT eight_schools-eight_schools_noncentered: 49.46461501158774
+YYY Success earnings-earn_height
+TTT earnings-earn_height: 12.914879014715552
+YYY Success kidiq-kidscore_momhs
+TTT kidiq-kidscore_momhs: 6.652051715180278
+YYY Success eight_schools-eight_schools_centered
+TTT eight_schools-eight_schools_centered: 7.994581286795437
+YYY Success dogs-dogs_log
+TTT dogs-dogs_log: 45.484844979830086
+YYY Success kidiq-kidscore_momiq
+TTT kidiq-kidscore_momiq: 7.431303572840989
+YYY Success sblri-blr
+TTT sblri-blr: 6.906883194111288
+YYY Success earnings-logearn_height
+TTT earnings-logearn_height: 12.593734989874065
+YYY Success earnings-logearn_interaction_z
+TTT earnings-logearn_interaction_z: 8.758047936484218
+YYY Success nes1992-nes
+TTT nes1992-nes: 20.245479110628366
+XXX Failed earnings-log10earn_height
+           mean       std       err
+sigma  0.407199  0.008328  0.018914
+TTT earnings-log10earn_height: 12.922731006518006
+YYY Success nes1980-nes
+TTT nes1980-nes: 13.276046322658658
+XXX Failed hudson_lynx_hare-lotka_volterra with cannot import name 'integrate_ode_rk45_array_int_array_array_array_array_real_real_real' from 'runtimes.numpyro.stanlib' (/home/baudart/projects/deepstan/stanc3/runtimes/numpyro/stanlib.py)
+YYY Success mesquite-mesquite
+TTT mesquite-mesquite: 8.65932076703757
+YYY Success kidiq_with_mom_work-kidscore_interaction_c
+TTT kidiq_with_mom_work-kidscore_interaction_c: 7.223044359125197
+XXX Failed diamonds-diamonds with 'StudentT' object has no attribute 'icdf'
+XXX Failed hmm_example-hmm_example with Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead.
+YYY Success kidiq_with_mom_work-kidscore_mom_work
+TTT kidiq_with_mom_work-kidscore_mom_work: 7.546842876821756
+YYY Success nes1996-nes
+TTT nes1996-nes: 17.72643581405282
+XXX Failed one_comp_mm_elim_abs-one_comp_mm_elim_abs with name 'integrate_ode_bdf_array_real_array_array_array_array' is not defined
+YYY Success nes1976-nes
+TTT nes1976-nes: 16.953109321184456
+YYY Success nes2000-nes
+TTT nes2000-nes: 12.165913871489465
+YYY Success kidiq_with_mom_work-kidscore_interaction_z
+TTT kidiq_with_mom_work-kidscore_interaction_z: 7.2546387715265155
+YYY Success kidiq_with_mom_work-kidscore_interaction_c2
+TTT kidiq_with_mom_work-kidscore_interaction_c2: 7.223067131824791
+YYY Success kilpisjarvi_mod-kilpisjarvi
+TTT kilpisjarvi_mod-kilpisjarvi: 16.390810159035027
+XXX Failed arK-arK
+             mean        std       err
+alpha    0.048160   9.976996  0.048879
+beta[1]  0.009287  10.001383  0.682876
+beta[2] -0.044911   9.990742  0.483954
+beta[3] -0.124932  10.116556  0.230748
+beta[5]  0.001962   9.832302  0.303474
+sigma   -0.584802  51.148075  0.735369
+TTT arK-arK: 13.68308466207236
+YYY Success mesquite-logmesquite_logva
+TTT mesquite-logmesquite_logva: 7.4112180294469
+YYY Success sblrc-blr
+TTT sblrc-blr: 7.0599903194233775
+YYY Success mesquite-logmesquite_logvolume
+TTT mesquite-logmesquite_logvolume: 6.456422719173133
+YYY Success nes1984-nes
+TTT nes1984-nes: 18.85613898653537
+YYY Success kidiq-kidscore_interaction
+TTT kidiq-kidscore_interaction: 11.641243310645223
+YYY Success earnings-logearn_logheight_male
+TTT earnings-logearn_logheight_male: 51.40530308149755
+XXX Failed arma-arma11 with Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead.
+XXX Failed mcycle_gp-accel_gp with Shapes must be 1D sequences of concrete values of integer type, got [Traced<ShapedArray(int32[])>with<DynamicJaxprTrace(level=0/1)>].
+If using `jit`, try using `static_argnums` or applying `jit` to smaller subfunctions.
+XXX Failed gp_pois_regr-gp_regr with name 'multi_normal_cholesky' is not defined
+YYY Success earnings-logearn_height_male
+TTT earnings-logearn_height_male: 17.89205329399556
+XXX Failed bball_drive_event_0-hmm_drive_0 with Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead.
+YYY Success nes1988-nes
+TTT nes1988-nes: 17.89279352221638
+XXX Failed bball_drive_event_1-hmm_drive_1 with Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead.
+XXX Failed garch-garch11 with Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead.
+YYY Success kidiq-kidscore_momhsiq
+TTT kidiq-kidscore_momhsiq: 8.045272181741893
+YYY Success mesquite-logmesquite_logvas
+TTT mesquite-logmesquite_logvas: 8.275691028684378
+XXX Failed gp_pois_regr-gp_pois_regr
+           mean       std       err
+alpha  0.488162  1.254444  2.433182
+rho    6.519359  0.801359  0.852829
+TTT gp_pois_regr-gp_pois_regr: 211.17901612911373
+YYY Success nes1972-nes
+TTT nes1972-nes: 19.34665921702981
+YYY Success mesquite-logmesquite_logvash
+TTT mesquite-logmesquite_logvash: 8.256053022108972
+YYY Success mesquite-logmesquite
+TTT mesquite-logmesquite: 7.8797358414158225
+XXX Failed dogs-dogs
+             mean         std       err
+beta[1] -0.013243  100.024368  1.573908
+beta[2]  0.058910   98.876198  0.441982
+beta[3]  0.525968   99.852249  0.687025
+TTT dogs-dogs: 43.88972942251712
+XXX Failed low_dim_gauss_mix-low_dim_gauss_mix
+              mean       std       err
+mu[1]     0.002941  1.997844  2.736456
+mu[2]    -0.021716  1.980597  2.891548
+sigma[1]  0.006014  2.000196  1.022060
+sigma[2]  0.015162  2.013119  1.008660
+theta     0.497645  0.151287  0.123904
+TTT low_dim_gauss_mix-low_dim_gauss_mix: 9.41164375282824
+YYY Success earnings-logearn_interaction
+TTT earnings-logearn_interaction: 28.161878326907754
