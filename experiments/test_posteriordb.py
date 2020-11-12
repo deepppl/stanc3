@@ -1,5 +1,5 @@
 import time, datetime
-import os, sys, logging, argparse
+import os, sys, traceback, logging, argparse
 import numpy, numpyro
 
 from typing import Any, Dict, IO
@@ -110,8 +110,9 @@ class Monitor:
         if exc_type == ComparisonError:
             print(f"{name},False,{duration}", file=self.file, flush=True)
         elif exc_type is not None:
-            logger.error(f'Failed {self.name} with "{exc_value}"')
-            print(f"{name},False,NaN,exc_value", file=self.file, flush=True)
+            err = " ".join(traceback.format_exception_only(exc_type, exc_value)).rstrip()
+            logger.error(f"Failed {self.name} with {err}")
+            print(f'{name},False,NaN, "{err}"', file=self.file, flush=True)
         else:
             print(f"{name},True,{duration}", file=self.file, flush=True)
         return True
