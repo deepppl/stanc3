@@ -83,6 +83,9 @@ let distribution =
     "ordered_constrained_improper_uniform";
     "positive_ordered_constrained_improper_uniform";
     "cholesky_factor_corr_constrained_improper_uniform";
+    "cholesky_factor_cov_constrained_improper_uniform";
+    "cov_constrained_improper_uniform";
+    "corr_constrained_improper_uniform";
     (* 19 Continuous Distributions on [0, 1] *)
     (* 19.1 Beta Distribution *)
     "beta";
@@ -1363,6 +1366,8 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       let ctx = set_to_clone ctx in
       trans_fun_app ctx fn_kind id ff args
   | IncrementLogProb e | TargetPE e ->
+      if ctx.ctx_mode = Generative then
+        raise_s [%message "Non generative feature"];
       let ctx = set_to_clone ctx in
       fprintf ff "factor(%a, %a)"
         (gen_id ctx.ctx_loops) e
@@ -1381,18 +1386,25 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       let is_sample =
         match ctx.ctx_mode with
         | Comprehensive -> false
-        | Generative | Mixed ->
+        | Generative ->
+            let _, fv = free_vars_expr (SSet.empty, SSet.empty) arg in
+            let contains_param =
+              List.exists ~f:(fun x -> SSet.mem fv x.name)
+                (get_var_decl_names_block ctx.ctx_prog.parametersblock)
+            in
+            if contains_param then
+              match arg.expr with Variable _ -> true | _ -> false
+            else
+              false
+        | Mixed ->
             begin match arg.expr with
             | Variable {name; _} ->
                 let is_parameter =
                   List.exists ~f:(fun x -> x.name = name)
                     (get_var_decl_names_block ctx.ctx_prog.parametersblock)
                 in
-                if is_parameter &&
-                   (ctx.ctx_mode = Generative ||
-                    not (Hashtbl.mem ctx.ctx_params name)) then
-                  (ignore (Hashtbl.add ctx.ctx_params
-                             ~key:name ~data:());
+                if is_parameter && not (Hashtbl.mem ctx.ctx_params name) then
+                  (ignore (Hashtbl.add ctx.ctx_params ~key:name ~data:());
                    true)
                 else false
             | _ -> false
@@ -1860,7 +1872,9 @@ let trans_parameter ctx ff p =
 
 let trans_parametersblock ctx networks data tdata ff (networks_params, params) =
   match ctx.ctx_mode with
-  | Generative -> ()
+  | Generative ->
+      if networks_params <> [] || params <> [] then
+        raise_s [%message "Non generative feature"]
   | Comprehensive | Mixed ->
       fprintf ff "# Parameters@,%a%a"
         (print_list_newline ~eol:true
@@ -1884,7 +1898,7 @@ let trans_modelblock ctx networks data tdata parameters tparameters ff model =
     split_networks networks parameters
   in
   match ctx.ctx_mode with
-  | Comprehensive | Generative ->
+  | Comprehensive ->
       fprintf ff "@[<v 4>def model(%a%a):@,%a%a%a%a@]@,@,@."
         trans_block_as_args (Option.merge ~f:(@) data tdata)
         trans_networks_as_arg networks
@@ -1893,9 +1907,27 @@ let trans_modelblock ctx networks data tdata parameters tparameters ff model =
         (nparameters, parameters)
         (trans_block "Transformed parameters" ctx) tparameters
         (trans_block ~eol:false "Model" ctx) model
+  | Generative ->
+      let rem_parameters, model_ext =
+        match Option.merge ~f:(@) tparameters model with
+        | None -> parameters, None
+        | Some model ->
+          let model = moveup_observes model in
+          let parameters, model = push_priors parameters model in
+          let model = moveup_observes model in
+          let parameters, model = push_priors parameters model in
+          parameters, Some model
+      in
+      fprintf ff "@[<v 4>def model(%a%a):@,%a%a%a@]@,@,@."
+        trans_block_as_args (Option.merge ~f:(@) data tdata)
+        trans_networks_as_arg networks
+        (register_network rnetworks) model
+        (trans_parametersblock ctx networks data tdata)
+        (nparameters, rem_parameters)
+        (trans_block ~eol:false "Model" ctx) model_ext
   | Mixed ->
       let rem_parameters, model_ext =
-        match (Option.merge ~f:(@) tparameters model) with
+        match Option.merge ~f:(@) tparameters model with
         | None -> parameters, None
         | Some model ->
           let model = moveup_observes model in
