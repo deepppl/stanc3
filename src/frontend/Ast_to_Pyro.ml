@@ -1757,13 +1757,18 @@ let trans_prior ctx (decl_type: typed_expression Type.t) ff transformation =
   | CholeskyCorr ->
       fprintf ff "cholesky_factor_corr_constrained_improper_uniform(shape=%a)"
         (trans_dims ctx) decl_type
+  | CholeskyCov ->
+      fprintf ff "cholesky_factor_cov_constrained_improper_uniform(shape=%a)"
+        (trans_dims ctx) decl_type
+  | Covariance ->
+      fprintf ff "cov_constrained_improper_uniform(shape=%a)"
+        (trans_dims ctx) decl_type
+  | Correlation ->
+      fprintf ff "corr_constrained_improper_uniform(shape=%a)"
+        (trans_dims ctx) decl_type
   | Offset _
   | Multiplier _
   | OffsetMultiplier _ ->
-      assert false (* XXX TODO XXX *)
-  | CholeskyCov
-  | Correlation
-  | Covariance ->
       raise_s [%message "Unsupported type constraints"]
 
 let trans_block ?(eol=true) comment ctx ff block =

@@ -191,6 +191,39 @@ class cholesky_factor_corr_constrained_improper_uniform(improper_uniform):
         return transform(self.support)(s)
 
 
+class cholesky_factor_cov_constrained_improper_uniform(improper_uniform):
+    def __init__(self, shape=[]):
+        super().__init__(shape[0])
+        self.support = "XXX TODO XXX"
+        assert False, 'cholesky_factor_cov_constrained_improper_uniform: not yet implemented'
+
+    def sample(self, *args, **kwargs):
+        s = super().sample(*args, **kwargs)
+        return transform(self.support)(s)
+
+
+class cov_constrained_improper_uniform(improper_uniform):
+    def __init__(self, shape=[]):
+        super().__init__(shape[0])
+        self.support = "XXX TODO XXX"
+        assert False, 'cov_constrained_improper_uniform: not yet implemented'
+
+    def sample(self, *args, **kwargs):
+        s = super().sample(*args, **kwargs)
+        return transform(self.support)(s)
+
+
+class corr_constrained_improper_uniform(improper_uniform):
+    def __init__(self, shape=[]):
+        super().__init__(shape[0])
+        self.support = "XXX TODO XXX"
+        assert False, 'corr_constrained_improper_uniform: not yet implemented'
+
+    def sample(self, *args, **kwargs):
+        s = super().sample(*args, **kwargs)
+        return transform(self.support)(s)
+
+
 ## Stan distributions
 
 ## 19 Continuous Distributions on [0, 1]
