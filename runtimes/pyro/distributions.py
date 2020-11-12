@@ -55,6 +55,7 @@ def _lpdf(d):
 
     return lpdf
 
+_lupdf = _lpdf
 
 def _lpmf(d):
     def lpmf(y, *args):
@@ -474,6 +475,6 @@ multi_normal_rng = _rng(multi_normal)
 # real dirichlet_lpdf(vector theta | vector alpha)
 # The log of the Dirichlet density for simplex theta given prior counts (plus one) alpha
 
-dirichlet = _distrib(d.Dirichlet, 2, dtype_float)
+dirichlet = _distrib(d.Dirichlet, 1, dtype_float)
 dirichlet_lpdf = _lpdf(dirichlet)
 dirichlet_rng = _rng(dirichlet)
