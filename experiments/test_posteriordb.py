@@ -108,13 +108,13 @@ class Monitor:
     def __exit__(self, exc_type, exc_value, exc_traceback):
         duration = time.perf_counter() - self.start
         if exc_type == ComparisonError:
-            print(f"{name},False,{duration}", file=self.file, flush=True)
+            print(f"{name},{duration},mismatch", file=self.file, flush=True)
         elif exc_type is not None:
             err = " ".join(traceback.format_exception_only(exc_type, exc_value)).rstrip()
             logger.error(f"Failed {self.name} with {err}")
-            print(f'{name},False,NaN, "{err}"', file=self.file, flush=True)
+            print(f'{name},,error, "{err}"', file=self.file, flush=True)
         else:
-            print(f"{name},True,{duration}", file=self.file, flush=True)
+            print(f"{name},{duration},success", file=self.file, flush=True)
         return True
 
 
@@ -173,7 +173,7 @@ if __name__ == "__main__":
     golds = [x for x in my_pdb.posterior_names() if test_ref(x)]
 
     with open(logpath, "a") as logfile:
-        print(",status,time,exception", file=logfile, flush=True)
+        print(",time,status,exception", file=logfile, flush=True)
         for name in (n for n in golds):
             with Monitor(name, logfile):
                 posterior = my_pdb.posterior(name)

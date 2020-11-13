@@ -1,0 +1,50 @@
+,time,status,exception
+eight_schools-eight_schools_noncentered,47.40119181852788,mismatch
+earnings-earn_height,11.72417504992336,success
+kidiq-kidscore_momhs,5.800893831066787,success
+eight_schools-eight_schools_centered,6.88010205514729,success
+dogs-dogs_log,42.05737846251577,success
+kidiq-kidscore_momiq,6.646350486204028,success
+sblri-blr,5.879037872888148,success
+earnings-logearn_height,11.459999281913042,success
+earnings-logearn_interaction_z,7.779943608678877,success
+nes1992-nes,18.61971130222082,success
+earnings-log10earn_height,11.834095732308924,mismatch
+nes1980-nes,12.239278849214315,success
+hudson_lynx_hare-lotka_volterra,,error, "ImportError: cannot import name 'integrate_ode_rk45_array_int_array_array_array_array_real_real_real' from 'runtimes.numpyro.stanlib' (/home/baudart/projects/deepstan/stanc3/runtimes/numpyro/stanlib.py)"
+mesquite-mesquite,7.781205718405545,success
+kidiq_with_mom_work-kidscore_interaction_c,6.31456995382905,success
+diamonds-diamonds,,error, "AttributeError: 'StudentT' object has no attribute 'icdf'"
+hmm_example-hmm_example,,error, "ValueError: Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead."
+kidiq_with_mom_work-kidscore_mom_work,6.733961772173643,success
+nes1996-nes,16.41775338165462,success
+one_comp_mm_elim_abs-one_comp_mm_elim_abs,,error, "NameError: name 'integrate_ode_bdf_array_real_array_array_array_array' is not defined"
+nes1976-nes,15.83925569895655,success
+nes2000-nes,11.153159104287624,success
+kidiq_with_mom_work-kidscore_interaction_z,6.354373915120959,success
+kidiq_with_mom_work-kidscore_interaction_c2,6.2866039192304015,success
+kilpisjarvi_mod-kilpisjarvi,15.28658617194742,success
+arK-arK,11.864241509698331,mismatch
+mesquite-logmesquite_logva,6.473565747030079,success
+sblrc-blr,5.9162804409861565,success
+mesquite-logmesquite_logvolume,5.409886855632067,success
+nes1984-nes,16.99154914263636,success
+kidiq-kidscore_interaction,10.459056067280471,success
+earnings-logearn_logheight_male,48.86347420234233,success
+arma-arma11,,error, "ValueError: Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead."
+mcycle_gp-accel_gp,,error, "TypeError: Shapes must be 1D sequences of concrete values of integer type, got [Traced<ShapedArray(int32[])>with<DynamicJaxprTrace(level=0/1)>]."
+gp_pois_regr-gp_regr,,error, "NameError: name 'multi_normal_cholesky' is not defined"
+earnings-logearn_height_male,16.632454488426447,success
+bball_drive_event_0-hmm_drive_0,,error, "ValueError: Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead."
+nes1988-nes,16.50120234489441,success
+bball_drive_event_1-hmm_drive_1,,error, "ValueError: Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead."
+garch-garch11,,error, "ValueError: Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead."
+kidiq-kidscore_momhsiq,7.107520228251815,success
+mesquite-logmesquite_logvas,7.342601398937404,success
+gp_pois_regr-gp_pois_regr,198.75288090389222,mismatch
+nes1972-nes,18.02781113423407,success
+mesquite-logmesquite_logvash,7.170512781478465,success
+mesquite-logmesquite,6.94671181589365,success
+dogs-dogs,41.643187574110925,mismatch
+low_dim_gauss_mix-low_dim_gauss_mix,8.096633335575461,mismatch
+earnings-logearn_interaction,26.44412922114134,success
