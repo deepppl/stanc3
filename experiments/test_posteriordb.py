@@ -68,7 +68,7 @@ def gold_summary(posterior):
     return DataFrame({"mean": Series(d_mean), "std": Series(d_std)})
 
 
-def run_pyro_model(*, posterior, model, mode, config):
+def run_pyro_model(*, posterior, backend, mode, config):
     """
     Compile and run the model.
     Returns the summary Dataframe
@@ -76,7 +76,13 @@ def run_pyro_model(*, posterior, model, mode, config):
     model = posterior.model
     data = posterior.data.values()
     stanfile = model.code_file_path("stan")
-    pyro_model = model(stanfile, recompile=True, mode=mode)
+    if backend == "numpyro":
+        pyro_model = NumpyroModel(stanfile, recompile=True, mode=mode)
+    elif backend == "pyro":
+        pyro_model = PyroModel(stanfile, recompile=True, mode=mode)
+    else:
+        assert False, "Invalid backend (should be one of pyro, numpyro, or stan)"
+    
     mcmc = pyro_model.mcmc(
         config.iterations,
         warmups=config.warmups,
@@ -121,23 +127,14 @@ def compare(*, posterior, backend, mode, config):
     """
     logger.info(f"Processing {posterior.name}")
     sg = gold_summary(posterior)
-    if backend == "numpyro":
-        sm = run_pyro_model(
-            posterior=posterior, model=NumpyroModel, mode=mode, config=config
-        )
-    elif backend == "pyro":
-        sm = run_pyro_model(
-            posterior=posterior, model=PyroModel, mode=mode, config=config
-        )
-    elif backend == "stan":
+    if backend == "stan":
         sm = run_stan_model(posterior=posterior, config=config)
     else:
-        assert False, "Invalid backend (should be one of pyro, numpyro, or stan)"
-
+        sm = run_pyro_model(posterior=posterior, backend=backend, mode=mode, config=config)
     sm["err"] = abs(sm["mean"] - sg["mean"])
     sm = sm.dropna()
     # perf_cmdstan condition: err > 0.0001 and (err / stdev) > 0.3
-    comp = sm[(sm["err"] > 0.0001) & (sm["err"] / sg["std"] > 0.3)].dropna()
+    comp = sm[(sm["err"] > 0.001) & (sm["err"] / sg["std"] > 0.5)].dropna()
     if not comp.empty:
         logger.error(f"Failed {posterior.name}")
         raise ComparisonError(str(comp))
