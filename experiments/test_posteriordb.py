@@ -7,7 +7,8 @@ from dataclasses import dataclass, field
 from pandas import DataFrame, Series
 from posteriordb import PosteriorDatabase
 from os.path import splitext, basename
-from runtimes.dppl import NumpyroModel as Model, _flatten_dict
+from runtimes.dppl import NumpyroModel, PyroModel, _flatten_dict
+from cmdstanpy import CmdStanModel
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ def parse_config(posterior):
         chains=args["chains"],
         thin=args["thin"],
     )
+
 
 def valid_ref(pdb, name):
     """
@@ -66,24 +68,45 @@ def gold_summary(posterior):
     return DataFrame({"mean": Series(d_mean), "std": Series(d_std)})
 
 
-def run_model(*, posterior, mode, config):
+def run_pyro_model(*, posterior, model, mode, config):
     """
     Compile and run the model.
     Returns the summary Dataframe
     """
     model = posterior.model
-    data = posterior.data
+    data = posterior.data.values()
     stanfile = model.code_file_path("stan")
-    pyro_model = Model(stanfile, recompile=True, mode=mode)
+    pyro_model = model(stanfile, recompile=True, mode=mode)
     mcmc = pyro_model.mcmc(
         config.iterations,
         warmups=config.warmups,
         chains=config.chains,
         thin=config.thin,
     )
-    inputs = pyro_model.module.convert_inputs(data.values())
+    inputs = pyro_model.module.convert_inputs(data)
     mcmc.run(**inputs)
     return mcmc.summary()
+
+
+def run_stan_model(*, posterior, config):
+    """
+    Compile and run the stan model
+    Return the summary Dataframe
+    """
+    stanfile = posterior.model.code_file_path(framework="stan")
+    model = CmdStanModel(stan_file=stanfile)
+    data = posterior.data.values()
+    fit = model.sample(
+        data=data,
+        iter_warmup=config.warmups,
+        iter_sampling=config.iterations,
+        thin=config.thin,
+        chains=config.chains,
+    )
+    summary = fit.summary()
+    summary = summary[~summary.index.str.endswith("__")]
+    summary = summary.rename(columns={"Mean": "mean", "StdDev": "std"})
+    return summary[["mean", "std"]]
 
 
 class ComparisonError(Exception):
@@ -92,13 +115,25 @@ class ComparisonError(Exception):
         super().__init__(self.message)
 
 
-def compare(*, posterior, mode, config):
+def compare(*, posterior, backend, mode, config):
     """
     Compare gold standard with model.
     """
     logger.info(f"Processing {posterior.name}")
     sg = gold_summary(posterior)
-    sm = run_model(posterior=posterior, mode=mode, config=config)
+    if backend == "numpyro":
+        sm = run_pyro_model(
+            posterior=posterior, model=NumpyroModel, mode=mode, config=config
+        )
+    elif backend == "pyro":
+        sm = run_pyro_model(
+            posterior=posterior, model=PyroModel, mode=mode, config=config
+        )
+    elif backend == "stan":
+        sm = run_stan_model(posterior=posterior, config=config)
+    else:
+        assert False, "Invalid backend (should be one of pyro, numpyro, or stan)"
+
     sm["err"] = abs(sm["mean"] - sg["mean"])
     sm = sm.dropna()
     # perf_cmdstan condition: err > 0.0001 and (err / stdev) > 0.3
@@ -114,11 +149,12 @@ def compare(*, posterior, mode, config):
 class Monitor:
     """
     Monitor execution and log results in a csv file.
-    - Successes log `success` and duration 
+    - Successes log `success` and duration
     - Comparison errors log `mismatch` and duration
     - Failures log `error` and the exception string (no duration)
     - !! All exception are catched (including keyboard interuptions)
     """
+
     name: str
     file: IO
 
@@ -164,9 +200,14 @@ if __name__ == "__main__":
         description="Run experiments on PosteriorDB models."
     )
     parser.add_argument(
+        "--backend",
+        help="inference backend (pyro, numpyro, or stan)",
+        required=True,
+    )
+    parser.add_argument(
         "--mode",
         help="compilation mode (generative, comprehensive, mixed)",
-        required=True,
+        default="mixed"
     )
     parser.add_argument("--iterations", type=int, help="number of iterations")
     parser.add_argument("--warmups", type=int, help="warmups steps")
@@ -185,22 +226,29 @@ if __name__ == "__main__":
     my_pdb = PosteriorDatabase(pdb_path)
 
     today = datetime.datetime.now()
-    logpath = f"{today.strftime('%y%m%d_%H%M')}_numpyro_{args.mode}.csv"
+    logpath = f"{today.strftime('%y%m%d_%H%M')}_{args.backend}_{args.mode}.csv"
 
     golds = [x for x in my_pdb.posterior_names() if valid_ref(my_pdb, x)]
 
     with open(logpath, "a") as logfile:
         print(",time,status,exception", file=logfile, flush=True)
         for name in (n for n in golds):
+            # Configurations
+            posterior = my_pdb.posterior(name)
+            config = parse_config(posterior)
+            if args.iterations:
+                config.iterations = args.iterations
+            if args.warmups:
+                config.warmups = args.warmups
+            if args.chains:
+                config.chains = args.chains
+            if args.thin:
+                config.thin = args.thin
+            # Run
             with Monitor(name, logfile):
-                posterior = my_pdb.posterior(name)
-                config = parse_config(posterior)
-                if args.iterations:
-                    config.iterations = args.iterations
-                if args.warmups:
-                    config.warmups = args.warmups
-                if args.chains:
-                    config.chains = args.chains
-                if args.thin:
-                    config.thin = args.thin
-                compare(posterior=posterior, mode=args.mode, config=config)
+                compare(
+                    posterior=posterior,
+                    backend=args.backend,
+                    mode=args.mode,
+                    config=config,
+                )
