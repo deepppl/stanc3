@@ -21,6 +21,9 @@ class Config:
 
 
 def parse_config(posterior):
+    """
+    Parse configuration from PosteriorDB
+    """
     args = posterior.reference_draws_info()["inference"]["method_arguments"]
     return Config(
         iterations=args["iter"],
@@ -28,6 +31,17 @@ def parse_config(posterior):
         chains=args["chains"],
         thin=args["thin"],
     )
+
+def valid_ref(pdb, name):
+    """
+    Test if reference exists in PosteriorDB
+    """
+    try:
+        posterior = pdb.posterior(name)
+        posterior.reference_draws_info()
+        return True
+    except Exception:
+        return False
 
 
 def gold_summary(posterior):
@@ -98,6 +112,13 @@ def compare(*, posterior, mode, config):
 
 @dataclass
 class Monitor:
+    """
+    Monitor execution and log results in a csv file.
+    - Successes log `success` and duration 
+    - Comparison errors log `mismatch` and duration
+    - Failures log `error` and the exception string (no duration)
+    - !! All exception are catched (including keyboard interuptions)
+    """
     name: str
     file: IO
 
@@ -166,15 +187,7 @@ if __name__ == "__main__":
     today = datetime.datetime.now()
     logpath = f"{today.strftime('%y%m%d_%H%M')}_numpyro_{args.mode}.csv"
 
-    def test_ref(name):
-        try:
-            posterior = my_pdb.posterior(name)
-            posterior.reference_draws_info()
-            return True
-        except Exception:
-            return False
-
-    golds = [x for x in my_pdb.posterior_names() if test_ref(x)]
+    golds = [x for x in my_pdb.posterior_names() if valid_ref(my_pdb, x)]
 
     with open(logpath, "a") as logfile:
         print(",time,status,exception", file=logfile, flush=True)
