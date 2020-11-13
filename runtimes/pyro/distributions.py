@@ -6,6 +6,7 @@ from torch import (
     norm as tnorm,
     log as tlog,
     exp as texp,
+    matmul as tmatmul,
     ones as tones,
     zeros as tzeros,
     zeros_like as tzeros_like,
@@ -500,6 +501,14 @@ multi_normal = _distrib(d.MultivariateNormal, 2, dtype_float)
 multi_normal_lpdf = _lpdf(multi_normal)
 multi_normal_rng = _rng(multi_normal)
 
+## 22.3 Multivariate Normal Distribution, Cholesky Parameterization
+
+# real multi_normal_cholesky_lpdf(vectors y | vectors mu, matrix L)
+# The log of the multivariate normal density of vector(s) y given location vector(s) mu and lower-triangular Cholesky factor of the covariance matrix L
+
+multi_normal_cholesky = _distrib(lambda mu, l: d.MultivariateNormal(mu, tmatmul(l, l.t())), 2, dtype_float)
+multi_normal_cholesky_lpdf = _lpdf(multi_normal_cholesky)
+multi_normal_cholesky_rng = _rng(multi_normal_cholesky)
 
 ## 23 Simplex Distributions
 

@@ -20,6 +20,8 @@ from jax.numpy import exp as texp
 from jax.numpy import ones as tones
 from jax.numpy import zeros as tzeros
 from jax.numpy import zeros_like as tzeros_like
+from jax.numpy import transpose as ttranspose
+from jax.numpy import matmul as tmatmul
 import jax.numpy as tensor
 from numbers import Number
 from jax.numpy import array
@@ -499,6 +501,15 @@ uniform_rng = _rng(uniform)
 multi_normal = _distrib(d.MultivariateNormal, 2, dtype_float)
 multi_normal_lpdf = _lpdf(multi_normal)
 multi_normal_rng = _rng(multi_normal)
+
+## 22.3 Multivariate Normal Distribution, Cholesky Parameterization
+
+# real multi_normal_cholesky_lpdf(vectors y | vectors mu, matrix L)
+# The log of the multivariate normal density of vector(s) y given location vector(s) mu and lower-triangular Cholesky factor of the covariance matrix L
+
+multi_normal_cholesky = _distrib(lambda mu, l: d.MultivariateNormal(mu, tmatmul(l, ttranspose(l))), 2, dtype_float)
+multi_normal_cholesky_lpdf = _lpdf(multi_normal_cholesky)
+multi_normal_cholesky_rng = _rng(multi_normal_cholesky)
 
 
 ## 23 Simplex Distributions
