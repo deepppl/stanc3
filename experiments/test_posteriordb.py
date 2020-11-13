@@ -134,7 +134,7 @@ def compare(*, posterior, backend, mode, config):
     sm["err"] = abs(sm["mean"] - sg["mean"])
     sm = sm.dropna()
     # perf_cmdstan condition: err > 0.0001 and (err / stdev) > 0.3
-    comp = sm[(sm["err"] > 0.001) & (sm["err"] / sg["std"] > 0.5)].dropna()
+    comp = sm[(sm["err"] > 0.0001) & (sm["err"] / sg["std"] > 0.3)].dropna()
     if not comp.empty:
         logger.error(f"Failed {posterior.name}")
         raise ComparisonError(str(comp))
