@@ -1,0 +1,50 @@
+,time,status,exception
+eight_schools-eight_schools_noncentered,299.198392404709,mismatch
+Success earnings-earn_height,1851.5503372820094,success
+kidiq-kidscore_momhs,315.4741552253254,success
+eight_schools-eight_schools_centered,1236.4284118418582,success
+dogs-dogs_log,45647.97643867694,success
+kidiq-kidscore_momiq,803.3210287881084,success
+sblri-blr,335.6415394716896,success
+earnings-logearn_height,1824.49176873127,success
+earnings-logearn_interaction_z,412.38251859601587,success
+nes1992-nes,1569.7217930089682,success
+earnings-log10earn_height,1929.6176014398225,success
+nes1980-nes,1739.426546227187,success
+hudson_lynx_hare-lotka_volterra,,error,"cannot import name 'integrate_ode_rk45_array_int_array_array_array_array_real_real_real' from 'runtimes.pyro.stanlib'"
+mesquite-mesquite,1842.9621937992051,success
+kidiq_with_mom_work-kidscore_interaction_c,240.94335923111066,success
+diamonds-diamonds,,error,"Trace Shapes"
+hmm_example-hmm_example,16732.68968510488,success
+kidiq_with_mom_work-kidscore_mom_work,388.37108727078885,success
+nes1996-nes,1600.246716006659,success
+one_comp_mm_elim_abs-one_comp_mm_elim_abs,,error,"name 'integrate_ode_bdf_array_real_array_array_array_array' is not defined"
+nes1976-nes,1570.8843939490616,success
+nes2000-nes,1684.04583778698,success
+kidiq_with_mom_work-kidscore_interaction_z,248.44330632779747,success
+kidiq_with_mom_work-kidscore_interaction_c2,286.53047463065013,success
+kilpisjarvi_mod-kilpisjarvi,20463.63154573599,success
+arK-arK,74947.37925826013,success
+mesquite-logmesquite_logva,1010.1553670600988,success
+sblrc-blr,528.727944327984,success
+mesquite-logmesquite_logvolume,232.60400012601167,success
+nes1984-nes,1582.7887322730385,success
+kidiq-kidscore_interaction,2918.867699542083,success
+earnings-logearn_logheight_male,11368.105659507215,success
+arma-arma11,5763.265623547137,success
+mcycle_gp-accel_gp,,error,"Trace Shapes"
+gp_pois_regr-gp_regr,,error,"name 'multi_normal_cholesky' is not defined"
+earnings-logearn_height_male,2984.1856264900416,success
+bball_drive_event_0-hmm_drive_0,181758.52946077986,success
+nes1988-nes,1613.593808916863,success
+bball_drive_event_1-hmm_drive_1,,error,"KeyboardInterupt"
+garch-garch11,30629.992702080403,mismatch
+kidiq-kidscore_momhsiq,1097.3197231516242,success
+mesquite-logmesquite_logvas,1706.0491160498932,success
+gp_pois_regr-gp_pois_regr,,error,"cholesky_cpu: U(2,2) is zero, singular U."
+nes1972-nes,1621.6129742404446,success
+mesquite-logmesquite_logvash,1651.4922354733571,success
+mesquite-logmesquite,958.9662156207487,success
+dogs-dogs,57004.80162741244,success
+low_dim_gauss_mix-low_dim_gauss_mix,105652.88119574357,mismatch
+earnings-logearn_interaction,5839.308033159003,success
