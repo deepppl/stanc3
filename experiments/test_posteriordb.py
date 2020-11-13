@@ -110,9 +110,13 @@ class Monitor:
         if exc_type == ComparisonError:
             print(f"{name},{duration},mismatch", file=self.file, flush=True)
         elif exc_type is not None:
-            err = " ".join(traceback.format_exception_only(exc_type, exc_value)).rstrip()
+            err = (
+                " ".join(traceback.format_exception_only(exc_type, exc_value))
+                .replace("\n", " ")
+                .replace("\r", "")
+            )
             logger.error(f"Failed {self.name} with {err}")
-            print(f'{name},,error, "{err}"', file=self.file, flush=True)
+            print(f'{name},,error,"{err}"', file=self.file, flush=True)
         else:
             print(f"{name},{duration},success", file=self.file, flush=True)
         return True
