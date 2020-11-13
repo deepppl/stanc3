@@ -33,7 +33,7 @@ kidiq-kidscore_interaction,,error,"AssertionError "
 earnings-logearn_logheight_male,,error,"AssertionError "
 arma-arma11,,error,"ValueError: Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead. "
 mcycle_gp-accel_gp,,error,"AssertionError "
-gp_pois_regr-gp_regr,,error,"NameError: name 'multi_normal_cholesky' is not defined "
+gp_pois_regr-gp_regr,11.564831741154194,mismatch
 earnings-logearn_height_male,,error,"AssertionError "
 bball_drive_event_0-hmm_drive_0,,error,"AssertionError "
 nes1988-nes,,error,"AssertionError "

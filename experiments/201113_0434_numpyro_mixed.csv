@@ -33,7 +33,7 @@ kidiq-kidscore_interaction,10.459056067280471,success
 earnings-logearn_logheight_male,48.86347420234233,success
 arma-arma11,,error,"ValueError: Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead."
 mcycle_gp-accel_gp,,error,"TypeError: Shapes must be 1D sequences of concrete values of integer type, got [Traced<ShapedArray(int32[])>with<DynamicJaxprTrace(level=0/1)>]."
-gp_pois_regr-gp_regr,,error,"NameError: name 'multi_normal_cholesky' is not defined"
+gp_pois_regr-gp_regr,11.491979040205479,mismatch
 earnings-logearn_height_male,16.632454488426447,success
 bball_drive_event_0-hmm_drive_0,,error,"ValueError: Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead."
 nes1988-nes,16.50120234489441,success

@@ -33,7 +33,7 @@ kidiq-kidscore_interaction,2918.867699542083,success
 earnings-logearn_logheight_male,11368.105659507215,success
 arma-arma11,5763.265623547137,success
 mcycle_gp-accel_gp,,error,"Trace Shapes"
-gp_pois_regr-gp_regr,,error,"name 'multi_normal_cholesky' is not defined"
+gp_pois_regr-gp_regr,,error,"RuntimeError: cholesky_cpu: U(2,2) is zero, singular U."
 earnings-logearn_height_male,2984.1856264900416,success
 bball_drive_event_0-hmm_drive_0,181758.52946077986,success
 nes1988-nes,1613.593808916863,success
