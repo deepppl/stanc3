@@ -90,6 +90,12 @@ let use_file filename =
   let _ = Debugging.ast_logger ast in
   if !pretty_print_program then
     print_endline (Pretty_printing.pretty_print_program ast) ;
+  let typed_ast =
+    try Semantic_check.semantic_check_program ast
+    with Errors.SemanticError err ->
+      Errors.report_semantic_error err ;
+      exit 1
+  in
   let _ =
     if !print_stats then
       let s = Stats.stats_untyped_program ast in
@@ -97,12 +103,6 @@ let use_file filename =
         filename
         (Yojson.Safe.to_string (Stats.stats_to_yojson s));
       exit 0
-  in
-  let typed_ast =
-    try Semantic_check.semantic_check_program ast
-    with Errors.SemanticError err ->
-      Errors.report_semantic_error err ;
-      exit 1
   in
   let _ = Debugging.typed_ast_logger typed_ast in
   if not !pretty_print_program then (
