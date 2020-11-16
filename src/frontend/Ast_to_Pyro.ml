@@ -764,6 +764,14 @@ let var_of_lval lv =
   assert (x <> "");
   x
 
+let split_lval lv =
+  let rec split_lval acc lv =
+    match lv.lval with
+    | LVariable id -> (id, acc)
+    | LIndexed (lv, idx) -> split_lval (idx::acc) lv
+  in
+  split_lval [] lv
+
 let rec free_vars_expr (bv, fv) e =
   let fv =
     match e.expr with
@@ -1331,34 +1339,24 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           fprintf ff "%a = %a"
             trans_id id
             (trans_rhs (expr_of_lval assign_lhs)) assign_rhs
-      | { lval= LIndexed (_, _indices); _ } as assign_lhs ->
+      | { lval= LIndexed _; _ } ->
+          let trans_indices ff l =
+            fprintf ff "%a"
+              (pp_print_list ~pp_sep:(fun _ () -> ())
+                 (fun ff idx ->
+                    fprintf ff "%a" (print_list_comma (trans_idx ctx)) idx))
+              l
+          in
+          let id, indices = split_lval assign_lhs in
           begin match ctx.ctx_backend with
           | Pyro | Pyro_cuda ->
-              let rec trans_lval ff = function
-                | { lval= LVariable id; _ } -> trans_id ff id
-                | { lval= LIndexed (lhs, indices); _ } ->
-                  fprintf ff "%a[%a]" trans_lval lhs
-                    (print_list_comma (trans_idx ctx)) indices
-              in
-              fprintf ff "%a = %a"
-                trans_lval assign_lhs
+              fprintf ff "%a%a = %a"
+                trans_id id trans_indices indices
                 (trans_rhs (expr_of_lval assign_lhs)) assign_rhs
           | Numpyro ->
-              let rec trans_variable ff = function
-                | { lval= LVariable id; _ } -> trans_id ff id
-                | { lval= LIndexed (lhs, _); _ } -> trans_variable ff lhs
-              in
-              let trans_updated ff = function
-                | { lval= LVariable _; _ } -> assert false
-                | { lval= LIndexed ({ lval= LVariable id; _ }, indices); _ } ->
-                  fprintf ff "%a, ops_index[%a]" trans_id id
-                    (print_list_comma (trans_idx ctx)) indices
-                | _ -> assert false (* XXX TODO XXX *)
-              in
-              fprintf ff "%a = ops_index_update(%a, %a)"
-                (* fprintf ff "%a = %a.set(%a)" *)
-                trans_variable assign_lhs
-                trans_updated assign_lhs
+              fprintf ff "%a = ops_index_update(%a, ops_index%a, %a)"
+                trans_id id
+                trans_id id trans_indices indices
                 (trans_rhs (expr_of_lval assign_lhs)) assign_rhs
           end
     end
