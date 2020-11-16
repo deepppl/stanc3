@@ -15,6 +15,7 @@ from torch import (
     LongTensor as Number,
     tensor as array,
 )
+import torch
 
 
 def tsort(x):

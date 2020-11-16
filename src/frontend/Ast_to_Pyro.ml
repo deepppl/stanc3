@@ -1344,7 +1344,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             fprintf ff "%a"
               (pp_print_list ~pp_sep:(fun _ () -> ())
                  (fun ff idx ->
-                    fprintf ff "%a" (print_list_comma (trans_idx ctx)) idx))
+                    fprintf ff "[%a]" (print_list_comma (trans_idx ctx)) idx))
               l
           in
           let id, indices = split_lval assign_lhs in
