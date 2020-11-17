@@ -233,13 +233,13 @@ if __name__ == "__main__":
             # Configurations
             posterior = my_pdb.posterior(name)
             config = parse_config(posterior)
-            if args.iterations:
+            if args.iterations is not None:
                 config.iterations = args.iterations
-            if args.warmups:
+            if args.warmups is not None:
                 config.warmups = args.warmups
-            if args.chains:
+            if args.chains is not None:
                 config.chains = args.chains
-            if args.thin:
+            if args.thin is not None:
                 config.thin = args.thin
             # Run
             with Monitor(name, logfile):
