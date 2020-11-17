@@ -1104,7 +1104,7 @@ let rec trans_expr ctx ff (e: typed_expression) : unit =
   | Variable id ->
       fprintf ff "%a%s"
         trans_id id
-        (if to_clone ctx e then ".clone()" else "")
+        (if is_to_clone ctx e then ".clone()" else "")
   | IntNumeral x -> trans_numeral e.emeta.type_ ff x
   | RealNumeral x -> trans_numeral e.emeta.type_ ff x
   | FunApp (fn_kind, id, args) ->
@@ -1121,7 +1121,7 @@ let rec trans_expr ctx ff (e: typed_expression) : unit =
         (trans_exprs ctx) eles
         dtype_of_unsized_type e.emeta.type_
   | Indexed (lhs, indices) ->
-      if to_clone ctx e then
+      if is_to_clone ctx e then
         let ctx' = unset_to_clone ctx in
         fprintf ff "%a[%a].clone()" (trans_expr ctx') lhs
           (print_list_comma (trans_idx ctx)) indices
@@ -1279,7 +1279,7 @@ and trans_dims ctx ff (t : typed_expression Type.t) =
   | [] -> fprintf ff "[]"
   | l -> fprintf ff "[%a]" (trans_exprs ctx) l
 
-and to_clone ctx e =
+and is_to_clone ctx e =
   let rec can_be_modified e =
     match e.expr with
     | Variable x -> SSet.mem ctx.ctx_to_clone_vars x.name
@@ -1288,11 +1288,14 @@ and to_clone ctx e =
       ((* is_unsized_tensor e.emeta.type_ || *) can_be_modified lhs)
     | TernaryIf (_, ifb, elseb) -> can_be_modified ifb || can_be_modified elseb
     | Paren e -> can_be_modified e
-    | FunApp (_, _, args) -> List.exists ~f:(to_clone ctx) args
+    | FunApp (_, _, args) -> List.exists ~f:(is_to_clone ctx) args
     | _ -> false
   in
   match ctx.ctx_backend with
-  | Pyro | Pyro_cuda -> ctx.ctx_to_clone && can_be_modified e
+  | Pyro | Pyro_cuda ->
+      ctx.ctx_to_clone &&
+      ctx.ctx_block <> Some GeneratedQuantities &&
+      can_be_modified e
   | Numpyro -> false
 
 let trans_expr_opt ctx (type_ : typed_expression Type.t) ff = function
