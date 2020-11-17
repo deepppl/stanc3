@@ -1447,7 +1447,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             (trans_expr ctx) cond
             (trans_stmt ctx) ifb
       | Numpyro ->
-          let name_tt, acc_name, closure_tt, pp_pack, pp_unpack =
+          let name_tt, closure_tt, pp_pack, pp_unpack =
             build_closure ctx "then"
               (free_vars SSet.empty ifb)
               [] ifb
@@ -1459,13 +1459,12 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           in
           ctx.ctx_closures := (to_string pp_closure_ff ()) :: closure_tt
                               :: !(ctx.ctx_closures);
-          fprintf ff "@[<v 0>%a = lax_cond(@[%a,@ %a, %a,@ %a@])@,%a@]"
-            trans_name acc_name
+          fprintf ff "@[<v 0>%a = lax_cond(@[%a,@ %a, %a,@ %a@])@]"
+            pp_unpack ()
             (trans_expr ctx) cond
             trans_name name_tt
             trans_name name_ff
             pp_pack ()
-            (pp_unpack ~eol:false) ()
       end
   | IfThenElse (cond, ifb, Some elseb) ->
       begin match ctx.ctx_backend with
@@ -1478,20 +1477,19 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           let fv_tt = free_vars SSet.empty ifb in
           let fv_ff = free_vars SSet.empty elseb in
           let fv_closure =  SSet.union fv_tt fv_ff in
-          let name_tt, acc_name, closure_tt, pp_pack, pp_unpack =
+          let name_tt, closure_tt, pp_pack, pp_unpack =
             build_closure ctx "then" fv_closure [] ifb
           in
-          let name_ff, _, closure_ff, _, _ =
+          let name_ff, closure_ff, _, _ =
             build_closure ctx "else" fv_closure [] elseb
           in
           ctx.ctx_closures := closure_ff :: closure_tt :: !(ctx.ctx_closures);
-          fprintf ff "@[<v 0>%a = lax_cond(@[%a,@ %a, %a,@ %a@])@,%a@]"
-            trans_name acc_name
+          fprintf ff "@[<v 0>%a = lax_cond(@[%a,@ %a, %a,@ %a@])@]"
+            pp_unpack ()
             (trans_expr ctx) cond
             trans_name name_tt
             trans_name name_ff
             pp_pack ()
-            (pp_unpack ~eol:false) ()
       end
   | While (cond, body) ->
       let ctx' =
@@ -1508,26 +1506,26 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       | Numpyro ->
           let _, fv_cond = free_vars_expr (SSet.empty, SSet.empty) cond in
           let fv_body = free_vars SSet.empty body in
-          let body_name, acc_name, closure, pp_pack, pp_unpack =
+          let body_name, closure, pp_pack, pp_unpack =
             build_closure ctx' "while"
               (SSet.union fv_cond fv_body)
               [] body
           in
           let cond_name = gen_name "cond" in
           let pp_cond ff () =
-            fprintf ff "@[<v 4>def %a(%a):@,%areturn %a@]"
+            let acc_name = gen_name "acc" in
+            fprintf ff "@[<v 4>def %a(%a):@,%a = %a@,return %a@]"
               trans_name cond_name
               trans_name acc_name
-              (pp_unpack ~eol:true) ()
+              pp_unpack () trans_name cond_name
               (trans_expr ctx) cond
           in
           ctx.ctx_closures := closure :: (to_string pp_cond ())
                               :: !(ctx.ctx_closures);
           fprintf ff
-            "@[<v 0>%a = lax_while_loop(@[%a,@ %a,@ %a@])@,%a@]"
-            trans_name acc_name
+            "@[<v 0>%a = lax_while_loop(@[%a,@ %a,@ %a@])@]"
+            pp_unpack ()
             trans_name cond_name trans_name body_name pp_pack ()
-            (pp_unpack ~eol:false) ()
       end
   | For {loop_variable; lower_bound; upper_bound; loop_body} ->
       let ctx' =
@@ -1544,20 +1542,19 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             (trans_expr ctx) upper_bound
             (trans_stmt ctx') loop_body
       | Numpyro ->
-          let body_name, acc_name, closure, pp_pack, pp_unpack =
+          let body_name, closure, pp_pack, pp_unpack =
             build_closure ctx' "fori"
               (free_vars (SSet.singleton loop_variable.name) loop_body)
               [loop_variable.name] loop_body
           in
           ctx.ctx_closures := closure :: !(ctx.ctx_closures);
           fprintf ff
-            "@[<v 0>%a = lax_fori_loop(@[%a,@ %a,@ %a,@ %a@])@,%a@]"
-            trans_name acc_name
+            "@[<v 0>%a = lax_fori_loop(@[%a,@ %a,@ %a,@ %a@])@]"
+            pp_unpack ()
             (trans_expr ctx) lower_bound
             (trans_expr ctx) upper_bound
             trans_name body_name
             pp_pack ()
-            (pp_unpack ~eol:false) ()
       end
   | ForEach (loop_variable, iteratee, body) ->
       let ctx' =
@@ -1573,19 +1570,18 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           (trans_expr ctx) iteratee
           (trans_stmt ctx') body
       | Numpyro ->
-          let body_name, acc_name, closure, pp_pack, pp_unpack =
+          let body_name, closure, pp_pack, pp_unpack =
             build_closure ctx' "for"
               (free_vars (SSet.singleton loop_variable.name) body)
               [loop_variable.name] body
           in
           ctx.ctx_closures := closure :: !(ctx.ctx_closures);
           fprintf ff
-            "@[<v 0>%a = lax_map(@[%a,@ %a,@ %a@])@,%a@]"
-            trans_name acc_name
+            "@[<v 0>%a = lax_map(@[%a,@ %a,@ %a@])@]"
+            pp_unpack ()
             trans_name body_name
             (trans_expr ctx) iteratee
             pp_pack ()
-            (pp_unpack ~eol:false) ()
       end
   | FunDef _ ->
       raise_s
@@ -1632,27 +1628,25 @@ and build_closure ctx fun_name fv args stmt =
     | vars ->
         fprintf ff "(%a)" (print_list_comma trans_name) vars
   in
-  let pp_unpack ~eol ff () =
+  let pp_unpack ff () =
     match fv with
-    | [] | [ _ ] -> ()
+    | [] -> fprintf ff "_"
+    | [ x ] -> fprintf ff "%a" trans_name x
     | vars ->
-        fprintf ff "(%a) = %a%a"
-          (print_list_comma trans_name) vars
-          trans_name acc_name
-          (if eol then pp_print_cut else pp_print_nothing) ()
+        fprintf ff "(%a)" (print_list_comma trans_name) vars
   in
   let pp_closure ff () =
-    fprintf ff "@[<v 4>def %a(%a%s%a):@,%a%a@,return %a@]"
+    fprintf ff "@[<v 4>def %a(%a%s%a):@,%a = %a@,%a@,return %a@]"
       trans_name fun_name
       (print_list_comma pp_print_string) args
       (if args = [] then "" else ", ")
       trans_name acc_name
-      (pp_unpack ~eol:true) ()
+      pp_unpack () trans_name acc_name
       (trans_stmt ctx) stmt
       pp_pack ()
   in
   let closure = to_string pp_closure () in
-  fun_name, acc_name, closure, pp_pack, pp_unpack
+  fun_name, closure, pp_pack, pp_unpack
 
 let trans_stmts ctx ff stmts =
   fprintf ff "%a" (print_list_newline (trans_stmt ctx)) stmts
