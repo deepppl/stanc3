@@ -1,0 +1,47 @@
+,time,status,exception
+eight_schools-eight_schools_noncentered,46.40233212057501,mismatch
+earnings-earn_height,11.71491433493793,success
+kidiq-kidscore_momhs,5.626858025789261,success
+eight_schools-eight_schools_centered,6.850748433731496,success
+dogs-dogs_log,42.105837975628674,success
+kidiq-kidscore_momiq,6.4931351682171226,success
+sblri-blr,5.778525546193123,success
+earnings-logearn_height,11.371277986094356,success
+earnings-logearn_interaction_z,7.6171200182288885,success
+nes1992-nes,18.41971273161471,success
+earnings-log10earn_height,11.945774123072624,mismatch
+nes1980-nes,12.149632061831653,success
+hudson_lynx_hare-lotka_volterra,,error,"ImportError: cannot import name 'integrate_ode_rk45_array_int_array_array_array_array_real_real_real' from 'runtimes.numpyro.stanlib' (/home/baudart/projects/deepstan/stanc3/runtimes/numpyro/stanlib.py) "
+mesquite-mesquite,7.841647149994969,success
+kidiq_with_mom_work-kidscore_interaction_c,6.281160820275545,success
+hmm_example-hmm_example,,error,"ValueError: Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead. "
+kidiq_with_mom_work-kidscore_mom_work,6.6537223774939775,success
+nes1996-nes,16.167101863771677,success
+nes1976-nes,15.560376115143299,success
+nes2000-nes,10.773880185559392,success
+kidiq_with_mom_work-kidscore_interaction_z,6.543177139014006,success
+kidiq_with_mom_work-kidscore_interaction_c2,6.3401218401268125,success
+kilpisjarvi_mod-kilpisjarvi,15.20097843091935,success
+arK-arK,11.795079716481268,mismatch
+mesquite-logmesquite_logva,6.566070318222046,success
+sblrc-blr,6.0090841660276055,success
+mesquite-logmesquite_logvolume,5.431296283379197,success
+nes1984-nes,17.472018350847065,success
+kidiq-kidscore_interaction,10.57740839663893,success
+earnings-logearn_logheight_male,49.16648920811713,success
+arma-arma11,,error,"ValueError: Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead. "
+gp_pois_regr-gp_regr,10.729648305103183,mismatch
+earnings-logearn_height_male,16.80589664541185,success
+bball_drive_event_0-hmm_drive_0,,error,"ValueError: Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead. "
+nes1988-nes,16.401032622903585,success
+bball_drive_event_1-hmm_drive_1,,error,"ValueError: Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead. "
+garch-garch11,,error,"ValueError: Reverse-mode differentiation does not work for lax.while_loop or lax.fori_loop. Try using lax.scan instead. "
+kidiq-kidscore_momhsiq,7.141482128761709,success
+mesquite-logmesquite_logvas,7.328054141253233,success
+gp_pois_regr-gp_pois_regr,199.4801048785448,mismatch
+nes1972-nes,17.837140089832246,success
+mesquite-logmesquite_logvash,7.17050856910646,success
+mesquite-logmesquite,6.865002490580082,success
+dogs-dogs,40.97835789155215,mismatch
+low_dim_gauss_mix-low_dim_gauss_mix,7.878526574932039,mismatch
+earnings-logearn_interaction,26.246809834614396,success
