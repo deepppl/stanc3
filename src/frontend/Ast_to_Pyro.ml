@@ -1367,8 +1367,6 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       let ctx = set_to_clone ctx in
       trans_fun_app ctx fn_kind id ff args
   | IncrementLogProb e | TargetPE e ->
-      if ctx.ctx_mode = Generative then
-        raise_s [%message "Non generative feature"];
       let ctx = set_to_clone ctx in
       fprintf ff "factor(%a, %a)"
         (gen_id ctx.ctx_loops) e
