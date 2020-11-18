@@ -18,7 +18,7 @@ def observe(site_name, dist, obs):
     pyro.sample(site_name, dist, obs = obs)
 
 def factor(site_name, x):
-    pyro.sample(site_name, Exponential(1), obs=-x)
+    pyro.factor(site_name, x)
 
 from jax.ops import index as ops_index
 from jax.ops import index_update as ops_index_update
