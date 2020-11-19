@@ -86,6 +86,9 @@ let distribution =
     "cholesky_factor_cov_constrained_improper_uniform";
     "cov_constrained_improper_uniform";
     "corr_constrained_improper_uniform";
+    "offset_constrained_improper_uniform";
+    "multiplier_constrained_improper_uniform";
+    "offset_multiplier_constrained_improper_uniform";
     (* 19 Continuous Distributions on [0, 1] *)
     (* 19.1 Beta Distribution *)
     "beta";
@@ -1770,10 +1773,19 @@ let trans_prior ctx (decl_type: typed_expression Type.t) ff transformation =
   | Correlation ->
       fprintf ff "corr_constrained_improper_uniform(shape=%a)"
         (trans_dims ctx) decl_type
-  | Offset _
-  | Multiplier _
-  | OffsetMultiplier _ ->
-      raise_s [%message "Unsupported type constraints"]
+  | Offset e ->
+      fprintf ff "offset_constrained_improper_uniform(%a, shape=%a)"
+        (trans_expr ctx) e
+        (trans_dims ctx) decl_type
+  | Multiplier e ->
+      fprintf ff "multiplier_constrained_improper_uniform(%a, shape=%a)"
+        (trans_expr ctx) e
+        (trans_dims ctx) decl_type
+  | OffsetMultiplier (e1, e2) ->
+      fprintf ff "offset_multiplier_constrained_improper_uniform(%a, %a, shape=%a)"
+        (trans_expr ctx) e1
+        (trans_expr ctx) e2
+        (trans_dims ctx) decl_type
 
 let trans_block ?(eol=true) comment ctx ff block =
   Option.iter
