@@ -2015,7 +2015,9 @@ let trans_guideblock ctx networks data tdata parameters
              nn nn trans_name nn trans_nn_base nn))
       nparameters
       ((if nparameters <> [] then ", " else ""))
-      (print_list_comma trans_id) (get_var_decl_names parameters)
+      (print_list_comma
+         (fun ff x -> fprintf ff "'%s': %a" x.name trans_id x))
+      (get_var_decl_names parameters)
   end
 
 let pp_imports lib ff funs =
