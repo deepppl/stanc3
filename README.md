@@ -7,7 +7,7 @@ This is a fork of the [Stanc3 compiler](https://github.com/stan-dev/stanc3) (see
 
 ### Install
 
-Installation instruction can be found in Section _"Getting development on stanc3 up and running locally"_ of the Stanc3 README below.
+Installation instructions can be found in Section _"Getting development on stanc3 up and running locally"_ of the Stanc3 README below.
 
 The compiler can be invoked with:
 ```
@@ -19,28 +19,33 @@ The two new options `--pyro` and `--numpyro` can be used to generate Pyro and Nu
 
 ### Compilation
 
-Let start with a simple example.
-First save the following Stan code, e.g., in a file `coin.stan`:
-```
+Let start with the simple eight schools example from Gelman et al (Bayesian Data Analysis: Sec. 5.5, 2003).
+First save the following Stan code, e.g., in a file `8schools.stan`:
+```stan
 data {
-  int N;
-  int<lower=0, upper=1> x[N]; 
-} 
+  int <lower=0> J; // number of schools
+  real y[J]; // estimated treatment
+  real<lower=0> sigma[J]; // std of estimated effect
+}
 parameters {
-  real<lower=0, upper=1> z; 
-} 
-model { 
-  z ~ beta(1, 1);
-  for (i in 1:N) x[i] ~ bernoulli(z); 
+  real theta[J]; // treatment effect in school j
+  real mu; // hyper-parameter of mean
+  real<lower=0> tau; // hyper-parameter of sdv
+}
+model {
+  tau ~ cauchy(0, 5); // a non-informative prior
+  theta ~ normal(mu, tau);
+  y ~ normal(theta, sigma);
+  mu ~ normal(0, 5);
 }
 ```
 
 To compile this example with both backend:
 ```
-stanc.exe --pyro --o coin_pyro.py coin.stan
-stanc.exe --numpyro --o coin_numpyro.py coin.stan
+dune exec stanc -- --pyro --o 8schools_pyro.py 8schools.stan
+dune exec stanc -- --numpyro --o 8schools_numpyro.py 8schools.stan
 ```
-The compiled code is in the files `coin_pyro.py` and `coin_numpyro.py`
+The compiled code is in the files `8schoolspyro.py` and `8schools_numpyro.py`
 The libraries required to run this examples are located in `runtimes`
 
 ### Inference
@@ -52,13 +57,15 @@ from runtimes.dppl import PyroModel, NumpyroModel
 
 if __name__ == "__main__":
 
-    stanfile = "coin.stan"
+    stanfile = "8schools.stan"
     data = {
-        'N': 10,
-        'x': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        'J': 8,
+        'y': [28.0, 8.0, -3.0, 7.0, -1.0, 1.0, 18.0, 12.0],
+        'sigma': [15.0, 10.0, 16.0, 11.0, 9.0, 11.0, 10.0, 18.0]
     }
 
-    model = PyroModel(stanfile, recompile=True, mode="mixed")
+    # model = PyroModel(stanfile, recompile=True, mode="mixed")
+    model = NumpyroModel(stanfile, recompile=True, mode="mixed")
     mcmc = model.mcmc(
         samples = 1000,
         warmups = 100,
@@ -71,7 +78,7 @@ if __name__ == "__main__":
     print(mcmc.summary())
 ```
 
-The compiled files are stored in the `_tmp` directory.
+The compiled files are then stored in the `_tmp` directory.
 
 -------------------------------------------------------------------------------
 
