@@ -23,6 +23,7 @@ test/*.log
 
 # Visual Studio settings
 .vscode/**
+.vscode
 
 # temporary editor files
 *~
@@ -32,3 +33,9 @@ test/*.log
 
 # Mac OS X hidden files
 *.DS_Store
+
+# Python
+__pycache__
+.ipynb_checkpoints
+.mypy_cache
+_tmp
