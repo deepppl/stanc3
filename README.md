@@ -1,3 +1,81 @@
+# Stan to Pyro and Numpyro Compiler
+
+This is a fork of the [Stanc3 compiler](https://github.com/stan-dev/stanc3) (see the original README below) with two new backends targeting [Pyro](http://pyro.ai/) and [NumPyro](https://github.com/pyro-ppl/numpyro).
+
+
+## Getting Started
+
+### Install
+
+Installation instruction can be found in Section _"Getting development on stanc3 up and running locally"_ of the Stanc3 README below.
+
+The compiler can be invoked with:
+```
+dune exec stanc -- --help
+```
+Alternatively, the executable should be located in `_build/default/src/stanc/stanc.exe`
+
+The two new options `--pyro` and `--numpyro` can be used to generate Pyro and Numpyro code.
+
+### Compilation
+
+Let start with a simple example.
+First save the following Stan code, e.g., in a file `coin.stan`:
+```
+data {
+  int N;
+  int<lower=0, upper=1> x[N]; 
+} 
+parameters {
+  real<lower=0, upper=1> z; 
+} 
+model { 
+  z ~ beta(1, 1);
+  for (i in 1:N) x[i] ~ bernoulli(z); 
+}
+```
+
+To compile this example with both backend:
+```
+stanc.exe --pyro --o coin_pyro.py coin.stan
+stanc.exe --numpyro --o coin_numpyro.py coin.stan
+```
+The compiled code is in the files `coin_pyro.py` and `coin_numpyro.py`
+The libraries required to run this examples are located in `runtimes`
+
+### Inference
+
+To compile and run inference on an example you can also use the Python interface.
+
+```python
+from runtimes.dppl import PyroModel, NumpyroModel
+
+if __name__ == "__main__":
+
+    stanfile = "coin.stan"
+    data = {
+        'N': 10,
+        'x': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    }
+
+    model = PyroModel(stanfile, recompile=True, mode="mixed")
+    mcmc = model.mcmc(
+        samples = 1000,
+        warmups = 100,
+        chains=2,
+        thin=2,
+    )
+
+    inputs = model.module.convert_inputs(data)
+    mcmc.run(**inputs)
+    print(mcmc.summary())
+```
+
+The compiled files are stored in the `_tmp` directory.
+
+-------------------------------------------------------------------------------
+
+
 # A New Stan-to-C++ Compiler, stanc3
 This repo contains a new compiler for Stan, stanc3, written in OCaml. To read more about why we built this, see this [introductory blog post](https://statmodeling.stat.columbia.edu/2019/03/13/stanc3-rewriting-the-stan-compiler/). For some discussion as to how we chose OCaml, see [this accidental flamewar](https://discourse.mc-stan.org/t/choosing-the-new-stan-compilers-implementation-language/6203).
 We're testing [these models](https://jenkins.mc-stan.org/job/stanc3/job/master/)(listed under Test Results) on every pull request and think we are currently up to par and mostly backwards compatible with the previous Stan compiler (see [this wiki](https://github.com/stan-dev/stanc3/wiki/changes-from-stanc2) for a list of minor differences).
