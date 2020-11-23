@@ -45,7 +45,7 @@ To compile this example with both backend:
 dune exec stanc -- --pyro --o 8schools_pyro.py 8schools.stan
 dune exec stanc -- --numpyro --o 8schools_numpyro.py 8schools.stan
 ```
-The compiled code is in the files `8schoolspyro.py` and `8schools_numpyro.py`
+The compiled code is in the files `8schools_pyro.py` and `8schools_numpyro.py`
 The libraries required to run this examples are located in `runtimes`
 
 ### Inference
@@ -64,8 +64,8 @@ if __name__ == "__main__":
         'sigma': [15.0, 10.0, 16.0, 11.0, 9.0, 11.0, 10.0, 18.0]
     }
 
-    # model = PyroModel(stanfile, recompile=True, mode="mixed")
-    model = NumpyroModel(stanfile, recompile=True, mode="mixed")
+    model = PyroModel(stanfile)
+    # model = NumpyroModel(stanfile)
     mcmc = model.mcmc(
         samples = 1000,
         warmups = 100,
@@ -73,8 +73,7 @@ if __name__ == "__main__":
         thin=2,
     )
 
-    inputs = model.module.convert_inputs(data)
-    mcmc.run(**inputs)
+    mcmc.run(**data)
     print(mcmc.summary())
 ```
 
