@@ -28,8 +28,7 @@ type context =
   ; ctx_loops: string list
   ; ctx_params: (string, unit) Hashtbl.t
   ; ctx_to_clone: bool
-  ; ctx_to_clone_vars: SSet.t
-  ; ctx_closures: string list ref }
+  ; ctx_to_clone_vars: SSet.t }
 
 let set_to_clone ctx =
   { ctx with ctx_to_clone = true }
@@ -1470,9 +1469,9 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             fprintf ff "@[<v 4>def %a(acc):@,return acc@]"
               trans_name name_ff
           in
-          ctx.ctx_closures := (to_string pp_closure_ff ()) :: closure_tt
-                              :: !(ctx.ctx_closures);
-          fprintf ff "@[<v 0>%a = lax_cond(@[%a,@ %a, %a,@ %a@])@]"
+          fprintf ff "@[<v 0>%a@,%a@,%a = lax_cond(@[%a,@ %a, %a,@ %a@])@]"
+            closure_tt ()
+            pp_closure_ff ()
             pp_unpack ()
             (trans_expr ctx) cond
             trans_name name_tt
@@ -1502,8 +1501,9 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           let name_ff, closure_ff, _, _ =
             build_closure ctx "else" fv_closure [] elseb
           in
-          ctx.ctx_closures := closure_ff :: closure_tt :: !(ctx.ctx_closures);
-          fprintf ff "@[<v 0>%a = lax_cond(@[%a,@ %a, %a,@ %a@])@]"
+          fprintf ff "@[<v 0>%a@,%a@,%a = lax_cond(@[%a,@ %a, %a,@ %a@])@]"
+            closure_tt ()
+            closure_ff ()
             pp_unpack ()
             (trans_expr ctx) cond
             trans_name name_tt
@@ -1546,10 +1546,10 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
               pp_unpack () trans_name cond_name
               (trans_expr ctx) cond
           in
-          ctx.ctx_closures := closure :: (to_string pp_cond ())
-                              :: !(ctx.ctx_closures);
           fprintf ff
-            "@[<v 0>%a = lax_while_loop(@[%a,@ %a,@ %a@])@]"
+            "@[<v 0>%a@,%a@,%a = lax_while_loop(@[%a,@ %a,@ %a@])@]"
+            pp_cond ()
+            closure ()
             pp_unpack ()
             trans_name cond_name trans_name body_name pp_pack ()
       | CtrlNympyro -> assert false
@@ -1592,9 +1592,9 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             | CtrlNympyro -> "fori_loop"
             | CtrlPython -> assert false
           in
-          ctx.ctx_closures := closure :: !(ctx.ctx_closures);
           fprintf ff
-            "@[<v 0>%a = %s(@[%a,@ %a + 1,@ %a,@ %a@])@]"
+            "@[<v 0>%a@,%a = %s(@[%a,@ %a + 1,@ %a,@ %a@])@]"
+            closure ()
             pp_unpack ()
             fori_loop
             (trans_expr ctx) lower_bound
@@ -1639,9 +1639,9 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             | CtrlNympyro -> "foreach_loop"
             | CtrlPython -> assert false
           in
-          ctx.ctx_closures := closure :: !(ctx.ctx_closures);
           fprintf ff
-            "@[<v 0>%a = %s(@[%a,@ %a,@ %a@])@]"
+            "@[<v 0>%a@,%a = %s(@[%a,@ %a,@ %a@])@]"
+            closure ()
             pp_unpack ()
             foreach_loop
             trans_name body_name
@@ -1710,8 +1710,7 @@ and build_closure ctx fun_name fv args stmt =
       (trans_stmt ctx) stmt
       pp_pack ()
   in
-  let closure = to_string pp_closure () in
-  fun_name, closure, pp_pack, pp_unpack
+  fun_name, pp_closure, pp_pack, pp_unpack
 
 and is_pure stmt =
   let rec is_pure acc s =
@@ -2111,8 +2110,7 @@ let trans_prog backend mode ff (p : typed_program) =
     ; ctx_loops = []
     ; ctx_params = Hashtbl.create (module String)
     ; ctx_to_clone = false
-    ; ctx_to_clone_vars = SSet.empty
-    ; ctx_closures = ref [] }
+    ; ctx_to_clone_vars = SSet.empty }
   in
   let runtime =
     match backend with
@@ -2157,6 +2155,3 @@ let trans_prog backend mode ff (p : typed_program) =
        p.datablock p.transformeddatablock
        p.parametersblock p.transformedparametersblock)
     p.generatedquantitiesblock;
-  fprintf ff "%a"
-    (print_list_newline (fun ff pp -> fprintf ff "@,%s" pp))
-    (List.rev !(ctx.ctx_closures))
