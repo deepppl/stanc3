@@ -140,7 +140,7 @@ class MCMCProxy:
                     res[k].append(v)
         return {k: self.tensor.stack(v) for k, v in res.items()}
 
-    def run(self, **kwargs):
+    def run(self, kwargs):
         self.kwargs = self.module.convert_inputs(kwargs)
         if hasattr(self.module, "transformed_data"):
             self.kwargs.update(self.module.transformed_data(**self.kwargs))

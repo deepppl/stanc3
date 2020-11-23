@@ -64,8 +64,8 @@ if __name__ == "__main__":
         'sigma': [15.0, 10.0, 16.0, 11.0, 9.0, 11.0, 10.0, 18.0]
     }
 
-    model = PyroModel(stanfile)
-    # model = NumpyroModel(stanfile)
+    # model = PyroModel(stanfile)
+    model = NumpyroModel(stanfile)
     mcmc = model.mcmc(
         samples = 1000,
         warmups = 100,
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         thin=2,
     )
 
-    mcmc.run(**data)
+    mcmc.run(data)
     print(mcmc.summary())
 ```
 
