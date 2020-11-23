@@ -21,4 +21,4 @@ def guide(*, N, x):
     beta_q = param('beta_q', array(array(15.0, dtype=dtype_float)))
     # Guide
     theta = sample('theta', beta(alpha_q, beta_q))
-    return { theta }
+    return { 'theta': theta }

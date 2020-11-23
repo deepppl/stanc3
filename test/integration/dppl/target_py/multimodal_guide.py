@@ -32,4 +32,4 @@ def guide():
         theta = sample('theta', normal(mu1, exp_real(log_sigma1)))
     else:
         theta = sample('theta', normal(mu2, exp_real(log_sigma2)))
-    return { cluster, theta }
+    return { 'cluster': cluster, 'theta': theta }

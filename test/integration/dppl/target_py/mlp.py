@@ -1,6 +1,6 @@
 from runtimes.pyro.distributions import *
 from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network, random_module
-from runtimes.pyro.stanlib import log1p_exp_array
+from runtimes.pyro.stanlib import exp_array
 
 def convert_inputs(inputs):
     nx = inputs['nx']
@@ -30,23 +30,23 @@ def model(*, nx, nh, ny, batch_size, imgs, labels, mlp):
     observe('mlp.l1.bias__2', normal(0, 1), mlp_['l1.bias'])
     observe('mlp.l2.weight__3', normal(0, 1), mlp_['l2.weight'])
     observe('mlp.l2.bias__4', normal(0, 1), mlp_['l2.bias'])
-    logits = mlp(imgs)
-    observe('labels__5', categorical_logit(logits), labels - 1)
+    lambda__ = mlp(imgs)
+    observe('labels__5', categorical_logit(lambda__), labels - 1)
 
 def guide(*, nx, nh, ny, batch_size, imgs, labels, mlp):
     # Guide Parameters
-    l1wloc = param('l1wloc', improper_uniform(shape=[nh, nx]).sample())
-    l1wscale = param('l1wscale', improper_uniform(shape=[nh, nx]).sample())
-    l1bloc = param('l1bloc', improper_uniform(shape=[nh]).sample())
-    l1bscale = param('l1bscale', improper_uniform(shape=[nh]).sample())
-    l2wloc = param('l2wloc', improper_uniform(shape=[ny, nh]).sample())
-    l2wscale = param('l2wscale', improper_uniform(shape=[ny, nh]).sample())
-    l2bloc = param('l2bloc', improper_uniform(shape=[ny]).sample())
-    l2bscale = param('l2bscale', improper_uniform(shape=[ny]).sample())
+    w1_mu = param('w1_mu', improper_uniform(shape=[nh, nx]).sample())
+    w1_sgma = param('w1_sgma', improper_uniform(shape=[nh, nx]).sample())
+    b1_mu = param('b1_mu', improper_uniform(shape=[nh]).sample())
+    b1_sgma = param('b1_sgma', improper_uniform(shape=[nh]).sample())
+    w2_mu = param('w2_mu', improper_uniform(shape=[ny, nh]).sample())
+    w2_sgma = param('w2_sgma', improper_uniform(shape=[ny, nh]).sample())
+    b2_mu = param('b2_mu', improper_uniform(shape=[ny]).sample())
+    b2_sgma = param('b2_sgma', improper_uniform(shape=[ny]).sample())
     mlp_ = {}
     # Guide
-    mlp_['l1.weight'] = normal(l1wloc, log1p_exp_array(l1wscale))
-    mlp_['l1.bias'] = normal(l1bloc, log1p_exp_array(l1bscale))
-    mlp_['l2.weight'] = normal(l2wloc, log1p_exp_array(l2wscale))
-    mlp_['l2.bias'] = normal(l2bloc, log1p_exp_array(l2bscale))
+    mlp_['l1.weight'] = normal(w1_mu, exp_array(w1_sgma))
+    mlp_['l1.bias'] = normal(b1_mu, exp_array(b1_sgma))
+    mlp_['l2.weight'] = normal(w2_mu, exp_array(w2_sgma))
+    mlp_['l2.bias'] = normal(b2_mu, exp_array(b2_sgma))
     return { 'mlp': random_module('mlp', mlp, mlp_)(),  }

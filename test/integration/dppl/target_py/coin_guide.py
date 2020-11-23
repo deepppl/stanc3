@@ -19,4 +19,4 @@ def guide(*, N, x):
     beta_q = param('beta_q', lower_constrained_improper_uniform(0, shape=[]).sample())
     # Guide
     z = sample('z', beta(alpha_q, beta_q))
-    return { z }
+    return { 'z': z }

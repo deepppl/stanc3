@@ -14,8 +14,7 @@ def model(*, nz, x, decoder, encoder):
     # Model
     observe('z__1', normal(0, 1), z)
     mu = decoder(z)
-    for i in range(1,28 + 1):
-        observe(f'x__{i}__2', bernoulli(mu[i - 1]), x[i - 1])
+    observe('x__2', bernoulli(mu), x)
 
 def guide(*, nz, x, decoder, encoder):
     # Networks
@@ -25,4 +24,4 @@ def guide(*, nz, x, decoder, encoder):
     mu_z = encoded[1 - 1]
     sigma_z = encoded[2 - 1]
     z = sample('z', normal(mu_z, sigma_z))
-    return { z }
+    return { 'z': z }
