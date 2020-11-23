@@ -24,5 +24,14 @@ from jax.ops import index as ops_index
 from jax.ops import index_update as ops_index_update
 from jax.lax import cond as lax_cond
 from jax.lax import while_loop as lax_while_loop
-from jax.lax import fori_loop as lax_fori_loop
+# from jax.lax import fori_loop as lax_fori_loop
 from jax.lax import map as lax_map
+
+from numpyro.contrib.control_flow import scan
+from jax.numpy import arange
+
+def lax_fori_loop(lower, upper, body, acc):
+    idx = arange(lower, upper)
+    scan_body = lambda acc, i: (body(i, acc), i)
+    (acc, _) = scan(scan_body, acc, idx)
+    return acc
