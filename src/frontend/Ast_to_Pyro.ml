@@ -71,7 +71,9 @@ let numpyro_dppllib =
     "lax_cond";
     "lax_while_loop";
     "lax_fori_loop";
-    "lax_map"; ] @ pyro_dppllib
+    "fori_loop";
+    "foreach_loop";
+    "lax_foreach_loop"; ] @ pyro_dppllib
 let dppllib_networks = [ "register_network"; "random_module"; ]
 
 let distribution =
@@ -1324,6 +1326,11 @@ let trans_printables ctx ff (ps : _ printable list) =
           | PExpr e -> (trans_expr ctx) ff e))
     ps
 
+type control_kind =
+  | CtrlPython
+  | CtrlLax
+  | CtrlNympyro
+
 let rec trans_stmt ctx ff (ts : typed_statement) =
   let stmt_typed = ts.stmt in
   match stmt_typed with
@@ -1442,12 +1449,17 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
   | Print ps -> fprintf ff "print(%a)" (trans_printables ctx) ps
   | Reject ps -> fprintf ff "stanlib.reject(%a)" (trans_printables ctx) ps
   | IfThenElse (cond, ifb, None) ->
-      begin match ctx.ctx_backend with
-      | Pyro | Pyro_cuda ->
+      let kind =
+        match ctx.ctx_backend with
+        | Numpyro -> CtrlLax
+        | Pyro | Pyro_cuda -> CtrlPython
+      in
+      begin match kind with
+      | CtrlPython ->
           fprintf ff "@[<v 0>@[<v 4>if %a:@,%a@]@]"
             (trans_expr ctx) cond
             (trans_stmt ctx) ifb
-      | Numpyro ->
+      | CtrlLax->
           let name_tt, closure_tt, pp_pack, pp_unpack =
             build_closure ctx "then"
               (free_vars SSet.empty ifb)
@@ -1466,15 +1478,21 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             trans_name name_tt
             trans_name name_ff
             pp_pack ()
+      | CtrlNympyro -> assert false
       end
   | IfThenElse (cond, ifb, Some elseb) ->
-      begin match ctx.ctx_backend with
-      | Pyro | Pyro_cuda ->
+      let kind =
+        match ctx.ctx_backend with
+        | Numpyro -> CtrlLax
+        | Pyro | Pyro_cuda -> CtrlPython
+      in
+      begin match kind with
+      | CtrlPython ->
           fprintf ff "@[<v 0>@[<v 4>if %a:@,%a@]@,@[<v 4>else:@,%a@]@]"
             (trans_expr ctx) cond
             (trans_stmt ctx) ifb
             (trans_stmt ctx) elseb
-      | Numpyro ->
+      | CtrlLax ->
           let fv_tt = free_vars SSet.empty ifb in
           let fv_ff = free_vars SSet.empty elseb in
           let fv_closure =  SSet.union fv_tt fv_ff in
@@ -1491,6 +1509,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             trans_name name_tt
             trans_name name_ff
             pp_pack ()
+      | CtrlNympyro -> assert false
       end
   | While (cond, body) ->
       let ctx' =
@@ -1499,12 +1518,18 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           ctx_to_clone_vars =
             get_updated_arrays_stmt ctx.ctx_to_clone_vars body }
       in
-      begin match ctx.ctx_backend with
-      | Pyro | Pyro_cuda ->
+      let kind =
+        match ctx.ctx_backend with
+        | Numpyro when ctx.ctx_block = Some Model -> CtrlLax
+        | Numpyro -> CtrlPython
+        | Pyro | Pyro_cuda -> CtrlPython
+      in
+      begin match kind with
+      | CtrlPython ->
           fprintf ff "@[<v4>while %a:@,%a@]"
             (trans_expr ctx) cond
             (trans_stmt ctx') body
-      | Numpyro ->
+      | CtrlLax ->
           let _, fv_cond = free_vars_expr (SSet.empty, SSet.empty) cond in
           let fv_body = free_vars SSet.empty body in
           let body_name, closure, pp_pack, pp_unpack =
@@ -1527,6 +1552,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             "@[<v 0>%a = lax_while_loop(@[%a,@ %a,@ %a@])@]"
             pp_unpack ()
             trans_name cond_name trans_name body_name pp_pack ()
+      | CtrlNympyro -> assert false
       end
   | For {loop_variable; lower_bound; upper_bound; loop_body} ->
       let ctx' =
@@ -1535,23 +1561,42 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           ctx_to_clone_vars =
             get_updated_arrays_stmt ctx.ctx_to_clone_vars loop_body }
       in
-      begin match ctx.ctx_backend with
-      | Pyro | Pyro_cuda ->
+      let kind =
+        match ctx.ctx_backend with
+        | Numpyro ->
+            begin match ctx.ctx_block, ctx.ctx_loops with
+            | Some Model, [] ->
+               if is_pure loop_body then CtrlLax
+               else CtrlNympyro
+            | Some Model, _ :: _ -> CtrlPython
+            | _ -> CtrlLax
+            end
+        | Pyro | Pyro_cuda -> CtrlPython
+      in
+      begin match kind with
+      | CtrlPython ->
           fprintf ff "@[<v 4>for %a in range(%a,%a + 1):@,%a@]"
             trans_id loop_variable
             (trans_expr ctx) lower_bound
             (trans_expr ctx) upper_bound
             (trans_stmt ctx') loop_body
-      | Numpyro ->
+      | CtrlLax | CtrlNympyro ->
           let body_name, closure, pp_pack, pp_unpack =
             build_closure ctx' "fori"
               (free_vars (SSet.singleton loop_variable.name) loop_body)
               [loop_variable.name] loop_body
           in
+          let fori_loop =
+            match kind with
+            | CtrlLax -> "lax_fori_loop"
+            | CtrlNympyro -> "fori_loop"
+            | CtrlPython -> assert false
+          in
           ctx.ctx_closures := closure :: !(ctx.ctx_closures);
           fprintf ff
-            "@[<v 0>%a = lax_fori_loop(@[%a,@ %a,@ %a,@ %a@])@]"
+            "@[<v 0>%a = %s(@[%a,@ %a + 1,@ %a,@ %a@])@]"
             pp_unpack ()
+            fori_loop
             (trans_expr ctx) lower_bound
             (trans_expr ctx) upper_bound
             trans_name body_name
@@ -1564,22 +1609,41 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           ctx_to_clone_vars =
             get_updated_arrays_stmt ctx.ctx_to_clone_vars body }
       in
-      begin match ctx.ctx_backend with
-      | Pyro | Pyro_cuda ->
+      let kind =
+        match ctx.ctx_backend with
+        | Numpyro ->
+            begin match ctx.ctx_block, ctx.ctx_loops with
+            | Some Model, [] ->
+               if is_pure body then CtrlLax
+               else CtrlNympyro
+            | Some Model, _ :: _ -> CtrlPython
+            | _ -> CtrlLax
+            end
+        | Pyro | Pyro_cuda -> CtrlPython
+      in
+      begin match kind with
+      | CtrlPython ->
         fprintf ff "@[<v4>for %a in %a:@,%a@]"
           trans_id loop_variable
           (trans_expr ctx) iteratee
           (trans_stmt ctx') body
-      | Numpyro ->
+      | CtrlLax | CtrlNympyro ->
           let body_name, closure, pp_pack, pp_unpack =
             build_closure ctx' "for"
               (free_vars (SSet.singleton loop_variable.name) body)
               [loop_variable.name] body
           in
+          let foreach_loop =
+            match kind with
+            | CtrlLax -> "lax_foreach_loop"
+            | CtrlNympyro -> "foreach_loop"
+            | CtrlPython -> assert false
+          in
           ctx.ctx_closures := closure :: !(ctx.ctx_closures);
           fprintf ff
-            "@[<v 0>%a = lax_map(@[%a,@ %a,@ %a@])@]"
+            "@[<v 0>%a = %s(@[%a,@ %a,@ %a@])@]"
             pp_unpack ()
+            foreach_loop
             trans_name body_name
             (trans_expr ctx) iteratee
             pp_pack ()
@@ -1648,6 +1712,16 @@ and build_closure ctx fun_name fv args stmt =
   in
   let closure = to_string pp_closure () in
   fun_name, closure, pp_pack, pp_unpack
+
+and is_pure stmt =
+  let rec is_pure acc s =
+    match s.stmt with
+    | TargetPE _ | IncrementLogProb _ | Tilde _ -> false
+    | _ ->
+      fold_statement (fun b _ -> b)
+        is_pure (fun b _ -> b) (fun b _ -> b) acc s.stmt
+  in
+  is_pure false stmt
 
 let trans_stmts ctx ff stmts =
   fprintf ff "%a" (print_list_newline (trans_stmt ctx)) stmts
