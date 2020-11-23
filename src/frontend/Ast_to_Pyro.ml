@@ -1036,38 +1036,45 @@ let get_stanlib_calls program =
   in
   fold_program get_stanlib_calls_in_stmt SSet.empty program
 
-let get_networks_calls networks stmts =
-  let rec get_networks_calls_in_expr networks acc e =
+let get_functions_calls stmts =
+  let rec get_functions_calls_in_expr acc e =
     let acc =
       match e.expr with
-      | FunApp (_, id, _args) ->
-        if List.exists ~f:(fun n -> n.net_id.name = id.name) networks then
-          id :: acc
-        else acc
+      | FunApp (_, id, _args) -> SSet.add acc id.name
       | _ -> acc
     in
     fold_expression
-      (get_networks_calls_in_expr networks)
+      get_functions_calls_in_expr
       (fun acc _ -> acc)
       acc e.expr
   in
-  let rec get_networks_calls_in_lval networks acc lv =
-    fold_lvalue (get_networks_calls_in_lval networks)
-      (get_networks_calls_in_expr networks)
+  let rec get_functions_calls_in_lval acc lv =
+    fold_lvalue
+      get_functions_calls_in_lval
+      get_functions_calls_in_expr
       acc lv.lval
   in
-  let rec get_networks_calls_in_stmt nets acc s =
+  let rec get_functions_calls_in_stmt acc s =
     fold_statement
-      (get_networks_calls_in_expr nets)
-      (get_networks_calls_in_stmt nets)
-      (get_networks_calls_in_lval nets)
+      get_functions_calls_in_expr
+      get_functions_calls_in_stmt
+      get_functions_calls_in_lval
       (fun acc _ -> acc)
       acc s.stmt
   in
-  match networks with
-  | Some nets ->
-      List.fold_left ~init:[] ~f:(get_networks_calls_in_stmt nets) stmts
-  | _ -> []
+  List.fold_left ~init:SSet.empty ~f:get_functions_calls_in_stmt stmts
+
+let get_networks_calls onetworks stmts =
+  Option.value_map ~default:SSet.empty
+    ~f:(fun networks ->
+        let nets =
+          List.fold_left ~init:SSet.empty
+            ~f:(fun acc n -> SSet.add acc n.net_id.name)
+            networks
+        in
+        let calls = get_functions_calls stmts in
+        SSet.inter nets calls)
+    onetworks
 
 let get_var_decl_type x prog =
   let o =
@@ -1092,8 +1099,10 @@ let rec get_updated_arrays_stmt acc s =
       let k = (fun acc _ -> acc) in
       fold_statement k get_updated_arrays_stmt k k acc stmt
 
-let get_updated_arrays p =
-  fold_program get_updated_arrays_stmt SSet.empty p
+let free_updated bv stmt =
+  let fv = free_vars bv stmt in
+  let arrays = updated_vars_stmt SSet.empty stmt in
+  SSet.inter fv arrays
 
 let rec trans_expr ctx ff (e: typed_expression) : unit =
   match e.expr with
@@ -1461,7 +1470,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       | CtrlLax->
           let name_tt, closure_tt, pp_pack, pp_unpack =
             build_closure ctx "then"
-              (free_vars SSet.empty ifb)
+              (free_updated SSet.empty ifb)
               [] ifb
           in
           let name_ff = gen_name "else" in
@@ -1492,9 +1501,9 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             (trans_stmt ctx) ifb
             (trans_stmt ctx) elseb
       | CtrlLax ->
-          let fv_tt = free_vars SSet.empty ifb in
-          let fv_ff = free_vars SSet.empty elseb in
-          let fv_closure =  SSet.union fv_tt fv_ff in
+          let fv_tt = free_updated SSet.empty ifb in
+          let fv_ff = free_updated SSet.empty elseb in
+          let fv_closure = SSet.union fv_tt fv_ff in
           let name_tt, closure_tt, pp_pack, pp_unpack =
             build_closure ctx "then" fv_closure [] ifb
           in
@@ -1520,8 +1529,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       in
       let kind =
         match ctx.ctx_backend with
-        | Numpyro when ctx.ctx_block = Some Model -> CtrlLax
-        | Numpyro -> CtrlPython
+        | Numpyro -> CtrlLax
         | Pyro | Pyro_cuda -> CtrlPython
       in
       begin match kind with
@@ -1530,11 +1538,9 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             (trans_expr ctx) cond
             (trans_stmt ctx') body
       | CtrlLax ->
-          let _, fv_cond = free_vars_expr (SSet.empty, SSet.empty) cond in
-          let fv_body = free_vars SSet.empty body in
           let body_name, closure, pp_pack, pp_unpack =
             build_closure ctx' "while"
-              (SSet.union fv_cond fv_body)
+              (free_updated SSet.empty body)
               [] body
           in
           let cond_name = gen_name "cond" in
@@ -1543,7 +1549,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             fprintf ff "@[<v 4>def %a(%a):@,%a = %a@,return %a@]"
               trans_name cond_name
               trans_name acc_name
-              pp_unpack () trans_name cond_name
+              pp_unpack () trans_name acc_name
               (trans_expr ctx) cond
           in
           fprintf ff
@@ -1568,7 +1574,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             | Some Model, [] ->
                if is_pure loop_body then CtrlLax
                else CtrlNympyro
-            | Some Model, _ :: _ -> CtrlPython
+            | Some Model, _ :: _ -> CtrlLax
             | _ -> CtrlLax
             end
         | Pyro | Pyro_cuda -> CtrlPython
@@ -1583,7 +1589,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       | CtrlLax | CtrlNympyro ->
           let body_name, closure, pp_pack, pp_unpack =
             build_closure ctx' "fori"
-              (free_vars (SSet.singleton loop_variable.name) loop_body)
+              (free_updated (SSet.singleton loop_variable.name) loop_body)
               [loop_variable.name] loop_body
           in
           let fori_loop =
@@ -1630,7 +1636,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       | CtrlLax | CtrlNympyro ->
           let body_name, closure, pp_pack, pp_unpack =
             build_closure ctx' "for"
-              (free_vars (SSet.singleton loop_variable.name) body)
+              (free_updated (SSet.singleton loop_variable.name) body)
               [loop_variable.name] body
           in
           let foreach_loop =
@@ -1673,19 +1679,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
 and build_closure ctx fun_name fv args stmt =
   let fun_name = gen_name fun_name in
   let fv = SSet.to_list fv in
-  let acc_name =
-    match fv with
-    | [] -> gen_name "acc"
-    | [ x ] -> x
-    | _ -> gen_name "acc"
-       (* let acc = *)
-       (*   to_string *)
-       (*     (pp_print_list ~pp_sep:(fun ff () -> fprintf ff "_") *)
-       (*        pp_print_string) *)
-       (*     fv *)
-       (* in *)
-       (* gen_name acc *)
-  in
+  let acc_name = gen_name "acc" in
   let pp_pack ff () =
     match fv with
     | [] -> fprintf ff "None"
@@ -1962,11 +1956,11 @@ let register_network networks ff ostmts =
   Option.iter
     ~f:(fun stmts ->
         let nets = get_networks_calls networks stmts in
-        if nets <> [] then
+        if not (SSet.is_empty nets) then
           fprintf ff "# Networks@,%a@,"
             (print_list_newline
                (fun ff net -> fprintf ff "register_network('%s', %a)"
-                   net.name trans_id net)) nets)
+                   net trans_name net)) (SSet.to_list nets))
     ostmts
 
 let trans_modelblock ctx networks data tdata parameters tparameters ff model =
