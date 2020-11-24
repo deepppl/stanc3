@@ -869,7 +869,7 @@ let rec updated_vars_stmt acc s =
     match s.stmt with
     | VarDecl { identifier = x; _ } -> SSet.add acc x.name
     | Assignment { assign_lhs = lhs; _ } -> SSet.add acc (var_of_lval lhs)
-    | Tilde { arg = { expr = Variable x; _ }; _ } -> SSet.add acc x.name
+    (* | Tilde { arg = { expr = Variable x; _ }; _ } -> SSet.add acc x.name *)
     | For { loop_variable; _} -> SSet.add acc loop_variable.name
     | ForEach (loop_variable, _, _) -> SSet.add acc loop_variable.name
     | _ -> acc
