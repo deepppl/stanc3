@@ -1698,13 +1698,18 @@ and build_closure ctx fun_name fv args stmt =
     | vars ->
         fprintf ff "(%a)" (print_list_comma trans_name) vars
   in
+  let pp_destruct ff () =
+    match fv with
+    | [] -> pp_print_nothing ff ()
+    | _ :: _ -> fprintf ff "%a = %a@," pp_unpack () trans_name acc_name
+  in
   let pp_closure ff () =
-    fprintf ff "@[<v 4>def %a(%a%s%a):@,%a = %a@,%a@,return %a@]"
+    fprintf ff "@[<v 4>def %a(%a%s%a):@,%a%a@,return %a@]"
       trans_name fun_name
       (print_list_comma pp_print_string) args
       (if args = [] then "" else ", ")
       trans_name acc_name
-      pp_unpack () trans_name acc_name
+      pp_destruct ()
       (trans_stmt ctx) stmt
       pp_pack ()
   in
