@@ -1529,7 +1529,11 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       in
       let kind =
         match ctx.ctx_backend with
-        | Numpyro -> CtrlLax
+        | Numpyro ->
+          begin match ctx.ctx_block with
+          | Some Model -> CtrlLax
+          | _ -> CtrlPython
+          end
         | Pyro | Pyro_cuda -> CtrlPython
       in
       begin match kind with
@@ -1575,7 +1579,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
                if is_pure loop_body then CtrlLax
                else CtrlNympyro
             | Some Model, _ :: _ -> CtrlLax
-            | _ -> CtrlLax
+            | _ -> CtrlPython
             end
         | Pyro | Pyro_cuda -> CtrlPython
       in
@@ -1622,8 +1626,8 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             | Some Model, [] ->
                if is_pure body then CtrlLax
                else CtrlNympyro
-            | Some Model, _ :: _ -> CtrlPython
-            | _ -> CtrlLax
+            | Some Model, _ :: _ -> CtrlLax
+            | _ -> CtrlPython
             end
         | Pyro | Pyro_cuda -> CtrlPython
       in
