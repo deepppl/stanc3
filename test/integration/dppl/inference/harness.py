@@ -101,8 +101,7 @@ class MCMCTest:
                     chains=self.config.chains,
                     thin=self.config.thin,
                 )
-                data = model.module.convert_inputs(self.data)
-                mcmc.run(**data)
+                mcmc.run(self.data)
                 self.pyro_samples = mcmc.get_samples()
         if self.with_numpyro:
             with TimeIt("Numpyro_Compilation", self.timers):
@@ -114,8 +113,7 @@ class MCMCTest:
                     chains=self.config.chains,
                     thin=self.config.thin,
                 )
-                data = model.module.convert_inputs(self.data)
-                mcmc.run(**data)
+                mcmc.run(self.data)
                 self.numpyro_samples = mcmc.get_samples()
 
     def run_naive_pyro(self):
@@ -129,8 +127,7 @@ class MCMCTest:
                     chains=self.config.chains,
                     thin=self.config.thin,
                 )
-                data = model.module.convert_inputs(self.data)
-                mcmc.run(**data)
+                mcmc.run(self.data)
                 self.pyro_naive_samples = mcmc.get_samples()
         if self.with_numpyro:
             model = NumpyroModel(self.model_file, recompile=True, mode="comprehensive")
@@ -141,8 +138,7 @@ class MCMCTest:
                     chains=self.config.chains,
                     thin=self.config.thin,
                 )
-                data = model.module.convert_inputs(self.data)
-                mcmc.run(**data)
+                mcmc.run(self.data)
                 self.numpyro_naive_samples = mcmc.get_samples()
 
     def run_stan(self):
