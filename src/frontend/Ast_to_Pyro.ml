@@ -864,18 +864,20 @@ let push_priors priors stmts =
         | _ -> assert false)
     ~init:([], stmts) priors
 
-let rec updated_vars_stmt acc s =
+let rec updated_vars_stmt ?(tilde_is_update=false) acc s =
   let acc =
     match s.stmt with
     | VarDecl { identifier = x; _ } -> SSet.add acc x.name
     | Assignment { assign_lhs = lhs; _ } -> SSet.add acc (var_of_lval lhs)
-    (* | Tilde { arg = { expr = Variable x; _ }; _ } -> SSet.add acc x.name *)
+    | Tilde { arg = { expr = Variable x; _ }; _ } -> SSet.add acc x.name
     | For { loop_variable; _} -> SSet.add acc loop_variable.name
     | ForEach (loop_variable, _, _) -> SSet.add acc loop_variable.name
     | _ -> acc
   in
   fold_statement
-    (fun acc _ -> acc) updated_vars_stmt (fun acc _ -> acc) (fun acc _ -> acc)
+    (fun acc _ -> acc)
+    (updated_vars_stmt ~tilde_is_update)
+    (fun acc _ -> acc) (fun acc _ -> acc)
     acc s.stmt
 
 let moveup_stmt stmt stmts =
@@ -883,7 +885,9 @@ let moveup_stmt stmt stmts =
     match rev_stmts with
     | [] -> stmt :: acc
     | stmt' :: rev_stmts ->
-      let updated_vars = updated_vars_stmt SSet.empty stmt' in
+      let updated_vars =
+        updated_vars_stmt ~tilde_is_update:true SSet.empty stmt'
+      in
       if SSet.is_empty (SSet.inter deps updated_vars) then
         moveup (deps, stmt) rev_stmts (stmt'::acc)
       else
