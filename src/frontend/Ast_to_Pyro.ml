@@ -1582,8 +1582,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             | Some Model, [] ->
                if is_pure loop_body then CtrlLax
                else CtrlNympyro
-            | Some Model, _ :: _ -> CtrlLax
-            | _ -> CtrlPython
+            | _ -> CtrlLax
             end
         | Pyro | Pyro_cuda -> CtrlPython
       in
@@ -1630,8 +1629,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             | Some Model, [] ->
                if is_pure body then CtrlLax
                else CtrlNympyro
-            | Some Model, _ :: _ -> CtrlLax
-            | _ -> CtrlPython
+            | _ -> CtrlLax
             end
         | Pyro | Pyro_cuda -> CtrlPython
       in
@@ -1727,7 +1725,7 @@ and is_pure stmt =
       fold_statement (fun b _ -> b)
         is_pure (fun b _ -> b) (fun b _ -> b) acc s.stmt
   in
-  is_pure false stmt
+  is_pure true stmt
 
 let trans_stmts ctx ff stmts =
   fprintf ff "%a" (print_list_newline (trans_stmt ctx)) stmts
