@@ -22,6 +22,8 @@ open Fmt
 open Expression_gen
 open Statement_gen
 
+let standalone_functions = ref false
+
 let stanc_args_to_print =
   let sans_model_and_hpp_paths x =
     not String.(is_suffix ~suffix:".stan" x || is_prefix ~prefix:"--o" x)
@@ -51,7 +53,7 @@ let pp_located ppf _ =
 
 (** Detect if argument requires C++ template *)
 let arg_needs_template = function
-  | UnsizedType.DataOnly, _, _ -> false
+  | UnsizedType.DataOnly, _, t -> UnsizedType.is_eigen_type t
   | _, _, t when UnsizedType.contains_int t -> false
   | _ -> true
 
@@ -64,6 +66,13 @@ let maybe_templated_arg_types (args : Program.fun_arg_decl) =
       match arg_needs_template a with
       | true -> Some (sprintf "T%d__" i)
       | false -> None )
+
+let return_arg_types (args : Program.fun_arg_decl) =
+  List.mapi args ~f:(fun i ((_, _, ut) as a) ->
+      if UnsizedType.is_eigen_type ut && arg_needs_template a then
+        Some (sprintf "stan::value_type_t<T%d__>" i)
+      else if arg_needs_template a then Some (sprintf "T%d__" i)
+      else None )
 
 let%expect_test "arg types templated correctly" =
   [(AutoDiffable, "xreal", UReal); (DataOnly, "yint", UInt)]
@@ -90,8 +99,7 @@ let pp_promoted_scalar ppf args =
               tl
       in
       promote_args_chunked ppf
-        List.(
-          chunks_of ~length:5 (filter_opt (maybe_templated_arg_types args)))
+        List.(chunks_of ~length:5 (filter_opt (return_arg_types args)))
 
 (** Pretty-prints a function's return-type, taking into account templated argument
     promotion.*)
@@ -102,6 +110,16 @@ let pp_returntype ppf arg_types rt =
       pf ppf "%a@," pp_unsizedtype_custom_scalar ("int", ut)
   | Some ut -> pf ppf "%a@," pp_unsizedtype_custom_scalar (scalar, ut)
   | None -> pf ppf "void@,"
+
+let pp_eigen_arg_to_ref ppf arg_types =
+  let pp_ref ppf name =
+    pf ppf "@[<hv 8>const auto& %s = to_ref(%s);@]" name (name ^ "_arg__")
+  in
+  pf ppf "@[<v>%a@]@ " (list ~sep:cut pp_ref)
+    (List.filter_map
+       ~f:(fun (_, name, ut) ->
+         if UnsizedType.is_eigen_type ut then Some name else None )
+       arg_types)
 
 (** [pp_located_error ppf (pp_body_block, body_block, err_msg)] surrounds [body_block]
     with a C++ try-catch that will rethrow the error with the proper source location
@@ -127,7 +145,22 @@ let pp_arg ppf (custom_scalar_opt, (_, name, ut)) =
     | Some scalar -> scalar
     | None -> stantype_prim_str ut
   in
-  pf ppf "const %a& %s" pp_unsizedtype_custom_scalar (scalar, ut) name
+  (* we add the _arg suffix for any Eigen types *)
+  pf ppf "const %a& %s" pp_unsizedtype_custom_scalar_eigen_exprs (scalar, ut)
+    name
+
+let pp_arg_eigen_suffix ppf (custom_scalar_opt, (_, name, ut)) =
+  let scalar =
+    match custom_scalar_opt with
+    | Some scalar -> scalar
+    | None -> stantype_prim_str ut
+  in
+  (* we add the _arg suffix for any Eigen types *)
+  let opt_arg_suffix =
+    if UnsizedType.is_eigen_type ut then name ^ "_arg__" else name
+  in
+  pf ppf "const %a& %s" pp_unsizedtype_custom_scalar_eigen_exprs (scalar, ut)
+    opt_arg_suffix
 
 (** [pp_located_error_b] automatically adds a Block wrapper *)
 let pp_located_error_b ppf body_stmts =
@@ -145,6 +178,9 @@ let get_templates_and_args fdargs =
   ( List.filter_opt argtypetemplates
   , List.map
       ~f:(fun a -> strf "%a" pp_arg a)
+      (List.zip_exn argtypetemplates fdargs)
+  , List.map
+      ~f:(fun a -> strf "%a" pp_arg_eigen_suffix a)
       (List.zip_exn argtypetemplates fdargs) )
 
 (** Print the C++ template parameter decleration before a function.
@@ -154,6 +190,9 @@ let pp_template_decorator ppf = function
   | [] -> ()
   | templates ->
       pf ppf "@[<hov>template <%a>@]@ " (list ~sep:comma string) templates
+
+let mk_extra_args templates args =
+  List.map ~f:(fun (t, v) -> t ^ "& " ^ v) (List.zip_exn templates args)
 
 (** Print the C++ function definition.
   @param ppf A pretty printer
@@ -170,13 +209,14 @@ let pp_fun_def ppf Program.({fdrt; fdname; fdargs; fdbody; _})
     else if is_rng then (["base_rng__"], ["RNG"])
     else ([], [])
   in
-  let mk_extra_args templates args =
-    List.map ~f:(fun (t, v) -> t ^ "& " ^ v) (List.zip_exn templates args)
+  let argtypetemplates, args, args_expressions =
+    get_templates_and_args fdargs
   in
-  let argtypetemplates, args = get_templates_and_args fdargs in
   let pp_body ppf (Stmt.Fixed.({pattern; _}) as fdbody) =
     let text = pf ppf "%s@;" in
     pf ppf "@[<hv 8>using local_scalar_t__ = %a;@]@," pp_promoted_scalar fdargs ;
+    if List.exists ~f:(fun (_, _, t) -> UnsizedType.is_eigen_type t) fdargs
+    then pp_eigen_arg_to_ref ppf fdargs ;
     if not (is_dist || is_lp) then (
       text "const static bool propto__ = true;" ;
       text "(void) propto__;" ) ;
@@ -196,47 +236,33 @@ let pp_fun_def ppf Program.({fdrt; fdname; fdargs; fdbody; _})
     (if is_dist || is_lp then ["bool propto__"] else [])
     @ List.(map ~f:typename (argtypetemplates @ extra_templates))
   in
-  let pp_sig ppf name =
-    pp_template_decorator ppf templates ;
-    pp_returntype ppf fdargs fdrt ;
-    let arg_strs =
-      args @ mk_extra_args extra_templates extra @ ["std::ostream* pstream__"]
-    in
-    pf ppf "%s(@[<hov>%a@]) " name (list ~sep:comma string) arg_strs
-  in
-  let pp_sig_rs ppf name =
-    if is_dist then pp_template_decorator ppf (List.tl_exn templates)
+  let pp_sig ppf (name, args, is_reduce_sum_fn, is_variadic_ode_fn) =
+    if (is_reduce_sum_fn || is_variadic_ode_fn) && is_dist then
+      pp_template_decorator ppf (List.tl_exn templates)
     else pp_template_decorator ppf templates ;
     pp_returntype ppf fdargs fdrt ;
-    let first_three, rest = List.split_n args 3 in
+    let args, variadic_args =
+      if is_reduce_sum_fn then List.split_n args 3
+      else if is_variadic_ode_fn then List.split_n args 2
+      else (args, [])
+    in
     let arg_strs =
-      first_three
-      @ ["std::ostream* pstream__"]
-      @ rest
+      args
       @ mk_extra_args extra_templates extra
+      @ ["std::ostream* pstream__"]
+      @ variadic_args
     in
     pf ppf "%s(@[<hov>%a@]) " name (list ~sep:comma string) arg_strs
   in
-  let pp_sig_variadic_ode ppf name =
-    if is_dist then pp_template_decorator ppf (List.tl_exn templates)
-    else pp_template_decorator ppf templates ;
-    pp_returntype ppf fdargs fdrt ;
-    let first_two, rest = List.split_n args 2 in
-    let arg_strs =
-      first_two
-      @ ["std::ostream* pstream__"]
-      @ rest
-      @ mk_extra_args extra_templates extra
-    in
-    pf ppf "%s(@[<hov>%a@]) " name (list ~sep:comma string) arg_strs
-  in
-  pp_sig ppf fdname ;
-  match Stmt.Fixed.(fdbody.pattern) with
-  | Skip -> pf ppf ";@ "
-  | _ ->
+  pp_sig ppf (fdname, args_expressions, false, false) ;
+  match fdbody with
+  | None -> pf ppf ";@ "
+  | Some fdbody ->
       pp_block ppf (pp_body, fdbody) ;
       pf ppf "@,@,struct %s%s {@,%a const @,{@,return %a;@,}@,};@," fdname
-        functor_suffix pp_sig "operator()" pp_call_str
+        functor_suffix pp_sig
+        ("operator()", args, false, false)
+        pp_call_str
         ( (if is_dist || is_lp then fdname ^ "<propto__>" else fdname)
         , List.map ~f:(fun (_, name, _) -> name) fdargs @ extra @ ["pstream__"]
         ) ;
@@ -245,10 +271,15 @@ let pp_fun_def ppf Program.({fdrt; fdname; fdargs; fdbody; _})
         as the third and not last argument *)
         match fdargs with
         | (_, slice, _) :: (_, start, _) :: (_, end_, _) :: rest ->
-            pf ppf "@,@,struct %s%s {@,%a const @,{@,return %a;@,}@,};@,"
-              fdname reduce_sum_functor_suffix pp_sig_rs "operator()"
+            let pp_template_propto ppf name =
+              if is_user_dist name then pf ppf "template <bool propto__>@ "
+              else pf ppf ""
+            in
+            pf ppf "@,@,%astruct %s%s {@,%a const @,{@,return %a;@,}@,};@,"
+              pp_template_propto fdname fdname reduce_sum_functor_suffix pp_sig
+              ("operator()", args, true, false)
               pp_call_str
-              ( (if is_dist then fdname ^ "<false>" else fdname)
+              ( (if is_dist || is_lp then fdname ^ "<propto__>" else fdname)
               , slice :: (start ^ " + 1") :: (end_ ^ " + 1")
                 :: List.map ~f:(fun (_, name, _) -> name) rest
                 @ extra @ ["pstream__"] )
@@ -260,11 +291,53 @@ let pp_fun_def ppf Program.({fdrt; fdname; fdargs; fdbody; _})
         (* Produces the variadic ode functors that has the pstream argument
         as the third and not last argument *)
         pf ppf "@,@,struct %s%s {@,%a const @,{@,return %a;@,}@,};@," fdname
-          variadic_ode_functor_suffix pp_sig_variadic_ode "operator()"
+          variadic_ode_functor_suffix pp_sig
+          ("operator()", args, false, true)
           pp_call_str
           ( fdname
           , List.map ~f:(fun (_, name, _) -> name) fdargs
             @ extra @ ["pstream__"] )
+
+(* Creates functions outside the model namespaces which only call the ones
+   inside the namespaces *)
+let pp_standalone_fun_def namespace_fun ppf
+    Program.({fdname; fdargs; fdbody; fdrt; _}) =
+  let extra, extra_templates =
+    if is_user_lp fdname then
+      (["lp__"; "lp_accum__"], ["double"; "stan::math::accumulator<double>"])
+    else if String.is_suffix fdname ~suffix:"_rng" then
+      (["base_rng__"], ["boost::ecuyer1988"])
+    else ([], [])
+  in
+  let args =
+    List.map
+      ~f:(fun (_, name, ut) ->
+        strf "const %a& %s" pp_unsizedtype_custom_scalar
+          (stantype_prim_str ut, ut)
+          name )
+      fdargs
+  in
+  let pp_sig_standalone ppf _ =
+    let arg_strs =
+      args
+      @ mk_extra_args extra_templates extra
+      @ ["std::ostream* pstream__ = nullptr"]
+    in
+    pf ppf "(@[<hov>%a@]) " (list ~sep:comma string) arg_strs
+  in
+  let mark_function_comment = "// [[stan::function]]" in
+  let return_type = match fdrt with None -> "void" | _ -> "auto" in
+  let return_stmt = match fdrt with None -> "" | _ -> "return " in
+  match fdbody with
+  | None -> pf ppf ";@ "
+  | Some _ ->
+      pf ppf "@,%s@,%s %s%a @,{@, %s%s::%a;@,}@," mark_function_comment
+        return_type fdname pp_sig_standalone "" return_stmt namespace_fun
+        pp_call_str
+        ( ( if is_user_dist fdname || is_user_lp fdname then fdname ^ "<false>"
+          else fdname )
+        , List.map ~f:(fun (_, name, _) -> name) fdargs @ extra @ ["pstream__"]
+        )
 
 let version = "// Code generated by %%NAME%% %%VERSION%%"
 let includes = "#include <stan/model/model_header.hpp>"
@@ -283,7 +356,7 @@ let pp_validate_data ppf (name, st) =
       pp_call
       ("context__.to_vec", pp_expr, SizedType.get_dims st)
 
-(** Print the constructor of the model class. 
+(** Print the constructor of the model class.
  Read in data steps:
    1. context__.validate_dims() to verify the dimensions are correct at runtime.
    1. find vals_%s__ from context__.vals_%s(vident)
@@ -360,7 +433,7 @@ let pp_model_private ppf {Program.prepare_data; _} =
   @param intro Anything that needs printed before the method body.
   @param outro Anything that needs printed after the method body.
   @param cv_attr Optional parameter to add method attributes.
-  @param ppbody (?A pretty printer of the method's body) 
+  @param ppbody (?A pretty printer of the method's body)
  *)
 let pp_method ppf rt name params intro ?(outro = []) ?(cv_attr = ["const"])
     ppbody =
@@ -438,8 +511,8 @@ let pp_write_array ppf {Program.prog_name; generate_quantities; _} =
   in
   pp_method_b ppf "void" "write_array" params intro generate_quantities
 
-(** Prints the for loop for `constrained_param_names` 
-    and `unconstrained_param_names` 
+(** Prints the for loop for `constrained_param_names`
+    and `unconstrained_param_names`
   @param index_ids Optional named parameter of a SizedType's dimensions
   @param ppf A pretty printer
   @param dims A list of the dimensions of a SizedType
@@ -501,7 +574,7 @@ let pp_constrained_param_names ppf {Program.output_vars; _} =
         (list ~sep:cut pp_param_names, gqvars) )
     ~cv_attr
 
-(* Print the `unconstrained_param_names` method of the model class. 
+(* Print the `unconstrained_param_names` method of the model class.
   This is just a copy of constrained, I need to figure out which one is wrong
    and fix it eventually. From Bob,
 
@@ -589,7 +662,7 @@ let pp_log_prob ppf Program.({prog_name; log_prob; _}) =
   let cv_attr = ["const"] in
   pp_method_b ppf "T__" "log_prob" params intro log_prob ~outro ~cv_attr
 
-(** Print the body of the constrained and unconstrained sizedtype methods 
+(** Print the body of the constrained and unconstrained sizedtype methods
  in the model class
  @param ppf A pretty printer
  @param method_name The name of the method to wrap the body in.
@@ -724,10 +797,11 @@ using stan::model::index_min_max;
 using stan::model::index_multi;
 using stan::model::index_omni;
 using stan::model::nil_index_list;
-using namespace stan::math; |}
+using namespace stan::math;
+using stan::math::pow; |}
 
 (** Functions needed in the model class not defined yet in stan math.
- FIXME: Move these to the Stan repo when these repos are joined. 
+ FIXME: Move these to the Stan repo when these repos are joined.
 *)
 let custom_functions =
   {|
@@ -782,7 +856,7 @@ let is_fun_used_with_variadic_fn variadic_fn_test p =
       ( match pattern with
       | FunApp (StanLib, x, {pattern= Var f; _} :: _) when variadic_fn_test x
         ->
-          String.Set.of_list [f]
+          String.Set.of_list [Utils.stdlib_distribution_name f]
       | x -> Expr.Fixed.Pattern.fold find_functors_expr accum x )
   in
   let rec find_functors_stmt accum stmt =
@@ -800,19 +874,31 @@ let pp_prog ppf (p : Program.Typed.t) =
       (is_fun_used_with_variadic_fn Stan_math_signatures.is_reduce_sum_fn p)
       (is_fun_used_with_variadic_fn Stan_math_signatures.is_variadic_ode_fn p)
   in
-  let reduce_sum_struct_decl =
+  let reduce_sum_struct_decls =
     String.Set.map
-      ~f:(fun x -> "struct " ^ x ^ reduce_sum_functor_suffix ^ ";")
+      ~f:(fun x ->
+        if Utils.is_distribution_name x then
+          "template <bool propto__>\nstruct " ^ x ^ reduce_sum_functor_suffix
+          ^ ";"
+        else "struct " ^ x ^ reduce_sum_functor_suffix ^ ";" )
       (is_fun_used_with_variadic_fn Stan_math_signatures.is_reduce_sum_fn p)
+    |> Set.elements |> String.concat ~sep:"\n"
   in
   pf ppf "@[<v>@ %s@ %s@ namespace %s {@ %s@ %s@ %a@ %s@ %a@ %a@ }@ @]" version
     includes (namespace p) custom_functions usings Locations.pp_globals s
-    (String.concat ~sep:"\n" (String.Set.elements reduce_sum_struct_decl))
+    reduce_sum_struct_decls
     (list ~sep:cut pp_fun_def_with_variadic_fn_list)
-    p.functions_block pp_model p ;
-  pf ppf "@,using stan_model = %s_namespace::%s;@," p.prog_name p.prog_name ;
-  pf ppf
-    {|
+    p.functions_block
+    (if !standalone_functions then fun _ _ -> () else pp_model)
+    p ;
+  if !standalone_functions then
+    pf ppf "@[<v>%a@ @]"
+      (list ~sep:cut (pp_standalone_fun_def (namespace p)))
+      p.functions_block
+  else (
+    pf ppf "@,using stan_model = %s_namespace::%s;@," p.prog_name p.prog_name ;
+    pf ppf
+      {|
 #ifndef USING_R
 
 // Boilerplate
@@ -826,4 +912,4 @@ stan::model::model_base& new_model(
 
 #endif
 |} ;
-  pf ppf "@[<v>%a@]" pp_register_map_rect_functors p
+    pf ppf "@[<v>%a@]" pp_register_map_rect_functors p )
