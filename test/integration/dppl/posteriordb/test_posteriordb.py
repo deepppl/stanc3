@@ -42,8 +42,7 @@ def test(posterior, config):
                                thin=config.thin,
                                # init_strategy=init_to_sample
                                )
-        inputs = pyro_model.module.convert_inputs(data.values())
-        mcmc.run(**inputs)
+        mcmc.run(data.values())
     except Exception as e:
     # except torch.Tensor as e:
         return { 'code': 2, 'msg': f'Inference error ({posterior.name}): {model.name}({data.name})', 'exn': e }
