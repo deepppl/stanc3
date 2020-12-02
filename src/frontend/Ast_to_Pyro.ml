@@ -72,7 +72,8 @@ let numpyro_dppllib =
     "lax_fori_loop";
     "fori_loop";
     "foreach_loop";
-    "lax_foreach_loop"; ] @ pyro_dppllib
+    "lax_foreach_loop";
+    "jit"; ] @ pyro_dppllib
 let dppllib_networks = [ "register_network"; "random_module"; ]
 
 let distribution =
@@ -1478,13 +1479,14 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
               [] ifb
           in
           let name_ff = gen_name "else" in
-          let pp_closure_ff ff () =
-            fprintf ff "@[<v 4>def %a(acc):@,return acc@]"
+          let pp_closure_ff ff kind =
+            fprintf ff "%a@[<v 4>def %a(acc):@,return acc@]"
+              print_jit kind
               trans_name name_ff
           in
           fprintf ff "@[<v 0>%a@,%a@,%a = lax_cond(@[%a,@ %a, %a,@ %a@])@]"
-            closure_tt ()
-            pp_closure_ff ()
+            closure_tt kind
+            pp_closure_ff kind
             pp_unpack ()
             (trans_expr ctx) cond
             trans_name name_tt
@@ -1515,8 +1517,8 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             build_closure ctx "else" fv_closure [] elseb
           in
           fprintf ff "@[<v 0>%a@,%a@,%a = lax_cond(@[%a,@ %a, %a,@ %a@])@]"
-            closure_tt ()
-            closure_ff ()
+            closure_tt kind
+            closure_ff kind
             pp_unpack ()
             (trans_expr ctx) cond
             trans_name name_tt
@@ -1552,9 +1554,10 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
               [] body
           in
           let cond_name = gen_name "cond" in
-          let pp_cond ff () =
+          let pp_cond ff kind =
             let acc_name = gen_name "acc" in
-            fprintf ff "@[<v 4>def %a(%a):@,%a = %a@,return %a@]"
+            fprintf ff "%a@[<v 4>def %a(%a):@,%a = %a@,return %a@]"
+              print_jit kind
               trans_name cond_name
               trans_name acc_name
               pp_unpack () trans_name acc_name
@@ -1562,8 +1565,8 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           in
           fprintf ff
             "@[<v 0>%a@,%a@,%a = lax_while_loop(@[%a,@ %a,@ %a@])@]"
-            pp_cond ()
-            closure ()
+            pp_cond kind
+            closure kind
             pp_unpack ()
             trans_name cond_name trans_name body_name pp_pack ()
       | CtrlNympyro -> assert false
@@ -1607,7 +1610,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           in
           fprintf ff
             "@[<v 0>%a@,%a = %s(@[%a,@ %a + 1,@ %a,@ %a@])@]"
-            closure ()
+            closure kind
             pp_unpack ()
             fori_loop
             (trans_expr ctx) lower_bound
@@ -1653,7 +1656,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           in
           fprintf ff
             "@[<v 0>%a@,%a = %s(@[%a,@ %a,@ %a@])@]"
-            closure ()
+            closure kind
             pp_unpack ()
             foreach_loop
             trans_name body_name
@@ -1705,8 +1708,9 @@ and build_closure ctx fun_name fv args stmt =
     | [] -> pp_print_nothing ff ()
     | _ :: _ -> fprintf ff "%a = %a@," pp_unpack () trans_name acc_name
   in
-  let pp_closure ff () =
-    fprintf ff "@[<v 4>def %a(%a%s%a):@,%a%a@,return %a@]"
+  let pp_closure ff kind =
+    fprintf ff "@[<v 0>%a@[<v 4>def %a(%a%s%a):@,%a%a@,return %a@]@]"
+      print_jit kind
       trans_name fun_name
       (print_list_comma pp_print_string) args
       (if args = [] then "" else ", ")
@@ -1726,6 +1730,11 @@ and is_pure stmt =
         is_pure (fun b _ -> b) (fun b _ -> b) acc s.stmt
   in
   is_pure true stmt
+
+and print_jit ff kind =
+  match kind with
+  | CtrlLax -> fprintf ff "%s@," "@jit"
+  | _ -> ()
 
 let trans_stmts ctx ff stmts =
   fprintf ff "%a" (print_list_newline (trans_stmt ctx)) stmts

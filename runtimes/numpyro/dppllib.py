@@ -5,6 +5,7 @@ from pyro import module as register_network
 from pyro import random_module
 from jax.numpy import array
 from jax.numpy import zeros, ones, matmul, true_divide, floor_divide, transpose, empty
+from jax import jit
 dtype_float=tensor.dtype('float32')
 dtype_long=tensor.dtype('int32')
 
