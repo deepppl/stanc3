@@ -26,9 +26,13 @@ type context =
   ; ctx_mode: mode
   ; ctx_block: block option
   ; ctx_loops: string list
+  ; ctx_mutation: bool
   ; ctx_params: (string, unit) Hashtbl.t
   ; ctx_to_clone: bool
   ; ctx_to_clone_vars: SSet.t }
+
+let set_ctx_mutation ctx =
+  { ctx with ctx_mutation = true }
 
 let set_to_clone ctx =
   { ctx with ctx_to_clone = true }
@@ -1126,6 +1130,7 @@ let rec trans_expr ctx ff (e: typed_expression) : unit =
   | IntNumeral x -> trans_numeral e.emeta.type_ ff x
   | RealNumeral x -> trans_numeral e.emeta.type_ ff x
   | FunApp (fn_kind, id, args) ->
+      let ctx = set_ctx_mutation ctx in
       trans_fun_app ctx fn_kind id ff args
   | CondDistApp (fn_kind, id, args) ->
       trans_cond_dist_app ctx fn_kind id ff args
@@ -1164,6 +1169,7 @@ and trans_binop ctx e1 e2 ff op =
     | Minus ->
         fprintf ff "%a - %a" (trans_expr ctx) e1 (trans_expr ctx) e2
     | Times ->
+        let ctx = set_ctx_mutation ctx in
         begin match e1.emeta.type_, e2.emeta.type_ with
         | ((UInt | UReal), _) | (_, (UInt | UReal)) ->
             fprintf ff "%a * %a" (trans_expr ctx) e1 (trans_expr ctx) e2
@@ -1301,9 +1307,7 @@ and is_to_clone ctx e =
   let rec can_be_modified e =
     match e.expr with
     | Variable x -> SSet.mem ctx.ctx_to_clone_vars x.name
-    | Indexed (lhs, _) ->
-      not (SSet.is_empty ctx.ctx_to_clone_vars) &&
-      ((* is_unsized_tensor e.emeta.type_ || *) can_be_modified lhs)
+    | Indexed (lhs, _) -> can_be_modified lhs
     | TernaryIf (_, ifb, elseb) -> can_be_modified ifb || can_be_modified elseb
     | Paren e -> can_be_modified e
     | FunApp (_, _, args) -> List.exists ~f:(is_to_clone ctx) args
@@ -1311,7 +1315,7 @@ and is_to_clone ctx e =
   in
   match ctx.ctx_backend with
   | Pyro | Pyro_cuda ->
-      ctx.ctx_to_clone &&
+      ctx.ctx_to_clone && ctx.ctx_mutation &&
       ctx.ctx_block <> Some GeneratedQuantities &&
       can_be_modified e
   | Numpyro -> false
@@ -1387,7 +1391,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           end
     end
   | NRFunApp (fn_kind, id, args) ->
-      let ctx = set_to_clone ctx in
+      let ctx = set_ctx_mutation (set_to_clone ctx) in
       trans_fun_app ctx fn_kind id ff args
   | IncrementLogProb e | TargetPE e ->
       let ctx = set_to_clone ctx in
@@ -1527,12 +1531,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       | CtrlNympyro -> assert false
       end
   | While (cond, body) ->
-      let ctx' =
-        { ctx with
-          ctx_loops = "genid()"::ctx.ctx_loops;
-          ctx_to_clone_vars =
-            get_updated_arrays_stmt ctx.ctx_to_clone_vars body }
-      in
+      let ctx' = ctx_enter_loop ctx "genid()" body in
       let kind =
         match ctx.ctx_backend with
         | Numpyro ->
@@ -1572,12 +1571,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       | CtrlNympyro -> assert false
       end
   | For {loop_variable; lower_bound; upper_bound; loop_body} ->
-      let ctx' =
-        { ctx with
-          ctx_loops = loop_variable.name::ctx.ctx_loops;
-          ctx_to_clone_vars =
-            get_updated_arrays_stmt ctx.ctx_to_clone_vars loop_body }
-      in
+      let ctx' = ctx_enter_loop ctx loop_variable.name loop_body in
       let kind =
         match ctx.ctx_backend with
         | Numpyro ->
@@ -1619,12 +1613,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             pp_pack ()
       end
   | ForEach (loop_variable, iteratee, body) ->
-      let ctx' =
-        { ctx with
-          ctx_loops = loop_variable.name::ctx.ctx_loops;
-          ctx_to_clone_vars =
-            get_updated_arrays_stmt ctx.ctx_to_clone_vars body }
-      in
+      let ctx' = ctx_enter_loop ctx loop_variable.name body in
       let kind =
         match ctx.ctx_backend with
         | Numpyro ->
@@ -1684,6 +1673,11 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       fprintf ff "continue"
   | Skip ->
       fprintf ff "pass"
+
+and ctx_enter_loop ctx i body =
+  { ctx with
+    ctx_loops = i::ctx.ctx_loops;
+    ctx_to_clone_vars = get_updated_arrays_stmt ctx.ctx_to_clone_vars body }
 
 and build_closure ctx fun_name fv args stmt =
   let fun_name = gen_name fun_name in
@@ -2122,6 +2116,7 @@ let trans_prog backend mode ff (p : typed_program) =
     ; ctx_mode = mode
     ; ctx_block = None
     ; ctx_loops = []
+    ; ctx_mutation = false
     ; ctx_params = Hashtbl.create (module String)
     ; ctx_to_clone = false
     ; ctx_to_clone_vars = SSet.empty }
