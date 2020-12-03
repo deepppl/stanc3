@@ -3,7 +3,7 @@ import torch
 import torch.nn
 from torch import ones
 from torch import tensor
-from torch.cuda import long as dtype_long
+from torch import long as dtype_long
 from torch import float as dtype_float
 
 def _cuda(f):
