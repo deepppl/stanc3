@@ -31,6 +31,8 @@ type context =
   ; ctx_to_clone: bool
   ; ctx_to_clone_vars: SSet.t }
 
+type clone_type = Tclone | Tnoclone
+
 let set_ctx_mutation ctx =
   { ctx with ctx_mutation = true }
 
@@ -81,552 +83,645 @@ let numpyro_dppllib =
 let dppllib_networks = [ "register_network"; "random_module"; ]
 
 let distribution =
-  [ "improper_uniform";
-    "lower_constrained_improper_uniform";
-    "upper_constrained_improper_uniform";
-    "simplex_constrained_improper_uniform";
-    "unit_constrained_improper_uniform";
-    "ordered_constrained_improper_uniform";
-    "positive_ordered_constrained_improper_uniform";
-    "cholesky_factor_corr_constrained_improper_uniform";
-    "cholesky_factor_cov_constrained_improper_uniform";
-    "cov_constrained_improper_uniform";
-    "corr_constrained_improper_uniform";
-    "offset_constrained_improper_uniform";
-    "multiplier_constrained_improper_uniform";
-    "offset_multiplier_constrained_improper_uniform";
+  [ "improper_uniform", Tnoclone;
+    "lower_constrained_improper_uniform", Tnoclone;
+    "upper_constrained_improper_uniform", Tnoclone;
+    "simplex_constrained_improper_uniform", Tnoclone;
+    "unit_constrained_improper_uniform", Tnoclone;
+    "ordered_constrained_improper_uniform", Tnoclone;
+    "positive_ordered_constrained_improper_uniform", Tnoclone;
+    "cholesky_factor_corr_constrained_improper_uniform", Tnoclone;
+    "cholesky_factor_cov_constrained_improper_uniform", Tnoclone;
+    "cov_constrained_improper_uniform", Tnoclone;
+    "corr_constrained_improper_uniform", Tnoclone;
+    "offset_constrained_improper_uniform", Tnoclone;
+    "multiplier_constrained_improper_uniform", Tnoclone;
+    "offset_multiplier_constrained_improper_uniform", Tnoclone;
     (* 19 Continuous Distributions on [0, 1] *)
     (* 19.1 Beta Distribution *)
-    "beta";
-    "beta_lpdf";
-    "beta_cdf";
-    "beta_lcdf";
-    "beta_lccdf";
-    "beta_rng";
+    "beta", Tnoclone;
+    "beta_lpdf", Tnoclone;
+    "beta_cdf", Tnoclone;
+    "beta_lcdf", Tnoclone;
+    "beta_lccdf", Tnoclone;
+    "beta_rng", Tnoclone;
     (* 12 Binary Distributions *)
     (* 12.1 Bernoulli Distribution *)
-    "bernoulli";
-    "bernoulli_lpmf";
-    "bernoulli_cdf";
-    "bernoulli_lcdf";
-    "bernoulli_lccdf";
-    "bernoulli_rng";
+    "bernoulli", Tnoclone;
+    "bernoulli_lpmf", Tnoclone;
+    "bernoulli_cdf", Tnoclone;
+    "bernoulli_lcdf", Tnoclone;
+    "bernoulli_lccdf", Tnoclone;
+    "bernoulli_rng", Tnoclone;
     (* 12.2 Bernoulli Distribution, Logit Parameterization *)
-    "bernoulli_logit";
-    "bernoulli_logit_lpmf";
+    "bernoulli_logit", Tnoclone;
+    "bernoulli_logit_lpmf", Tnoclone;
     (* 13 Bounded Discrete Distributions *)
     (* 13.2 Binomial Distribution, Logit Parameterization *)
-    "binomial_logit";
-    "binomial_logit_lpmf";
+    "binomial_logit", Tnoclone;
+    "binomial_logit_lpmf", Tnoclone;
     (* 13.5 Categorical Distribution *)
-    "categorical";
-    "categorical_lpmf";
-    "categorical_rng";
-    "categorical_logit";
-    "categorical_logit_lpmf";
-    "categorical_logit_rng";
+    "categorical", Tnoclone;
+    "categorical_lpmf", Tnoclone;
+    "categorical_rng", Tnoclone;
+    "categorical_logit", Tnoclone;
+    "categorical_logit_lpmf", Tnoclone;
+    "categorical_logit_rng", Tnoclone;
     (* 14 Unbounded Discrete Distributions *)
     (* 14.2 Negative Binomial Distribution (alternative parameterization) *)
-    "neg_binomial_2";
-    "neg_binomial_2_lpmf";
-    "neg_binomial_2_cdf";
-    "neg_binomial_2_lcdf";
-    "neg_binomial_2_lccdf";
-    "neg_binomial_2_rng";
+    "neg_binomial_2", Tnoclone;
+    "neg_binomial_2_lpmf", Tnoclone;
+    "neg_binomial_2_cdf", Tnoclone;
+    "neg_binomial_2_lcdf", Tnoclone;
+    "neg_binomial_2_lccdf", Tnoclone;
+    "neg_binomial_2_rng", Tnoclone;
     (* 14.5 Poisson Distribution *)
-    "poisson";
-    "poisson_lpmf";
-    "poisson_cdf";
-    "poisson_lcdf";
-    "poisson_lccdf";
-    "poisson_rng";
+    "poisson", Tnoclone;
+    "poisson_lpmf", Tnoclone;
+    "poisson_cdf", Tnoclone;
+    "poisson_lcdf", Tnoclone;
+    "poisson_lccdf", Tnoclone;
+    "poisson_rng", Tnoclone;
     (* 14.6 Poisson Distribution, Log Parameterization *)
-    "poisson_log";
-    "poisson_log_lpmf";
-    "poisson_log_rng";
+    "poisson_log", Tnoclone;
+    "poisson_log_lpmf", Tnoclone;
+    "poisson_log_rng", Tnoclone;
     (* 16 Unbounded Continuous Distributions *)
     (* 16.1 Normal Distribution *)
-    "normal";
-    "normal_lpdf";
-    "normal_cdf";
-    "normal_lcdf";
-    "normal_lccdf";
-    "normal_rng";
-    "std_normal";
-    "std_normal_lpdf";
-    "std_normal_cdf";
-    "std_normal_lcdf";
-    "std_normal_lccdf";
-    "std_normal_rng";
+    "normal", Tnoclone;
+    "normal_lpdf", Tnoclone;
+    "normal_cdf", Tnoclone;
+    "normal_lcdf", Tnoclone;
+    "normal_lccdf", Tnoclone;
+    "normal_rng", Tnoclone;
+    "std_normal", Tnoclone;
+    "std_normal_lpdf", Tnoclone;
+    "std_normal_cdf", Tnoclone;
+    "std_normal_lcdf", Tnoclone;
+    "std_normal_lccdf", Tnoclone;
+    "std_normal_rng", Tnoclone;
     (* 16.5 Student-T Distribution *)
-    "student_t";
-    "student_t_lpdf";
-    "student_t_cdf";
-    "student_t_lcdf";
-    "student_t_lccdf";
-    "student_t_rng";
+    "student_t", Tnoclone;
+    "student_t_lpdf", Tnoclone;
+    "student_t_cdf", Tnoclone;
+    "student_t_lcdf", Tnoclone;
+    "student_t_lccdf", Tnoclone;
+    "student_t_rng", Tnoclone;
     (* 16.6 Cauchy Distribution *)
-    "cauchy";
-    "cauchy_lpdf";
-    "cauchy_cdf";
-    "cauchy_lcdf";
-    "cauchy_lccdf";
-    "cauchy_rng";
+    "cauchy", Tnoclone;
+    "cauchy_lpdf", Tnoclone;
+    "cauchy_cdf", Tnoclone;
+    "cauchy_lcdf", Tnoclone;
+    "cauchy_lccdf", Tnoclone;
+    "cauchy_rng", Tnoclone;
     (* 16.7 Double Exponential (Laplace) Distribution *)
-    "double_exponential";
-    "double_exponential_lpdf";
-    "double_exponential_cdf";
-    "double_exponential_lcdf";
-    "double_exponential_lccdf";
-    "double_exponential_rng";
+    "double_exponential", Tnoclone;
+    "double_exponential_lpdf", Tnoclone;
+    "double_exponential_cdf", Tnoclone;
+    "double_exponential_lcdf", Tnoclone;
+    "double_exponential_lccdf", Tnoclone;
+    "double_exponential_rng", Tnoclone;
     (* 16.8 Logistic Distribution *)
-    "logistic";
-    "logistic_lpdf";
-    "logistic_cdf";
-    "logistic_lcdf";
-    "logistic_lccdf";
-    "logistic_rng";
+    "logistic", Tnoclone;
+    "logistic_lpdf", Tnoclone;
+    "logistic_cdf", Tnoclone;
+    "logistic_lcdf", Tnoclone;
+    "logistic_lccdf", Tnoclone;
+    "logistic_rng", Tnoclone;
     (* 17 Positive Continuous Distributions *)
     (* 17.1 Lognormal Distribution *)
-    "lognormal";
-    "lognormal_lpdf";
-    "lognormal_cdf";
-    "lognormal_lcdf";
-    "lognormal_lccdf";
-    "lognormal_rng";
+    "lognormal", Tnoclone;
+    "lognormal_lpdf", Tnoclone;
+    "lognormal_cdf", Tnoclone;
+    "lognormal_lcdf", Tnoclone;
+    "lognormal_lccdf", Tnoclone;
+    "lognormal_rng", Tnoclone;
     (* 17.5 Exponential Distribution *)
-    "exponential";
-    "exponential_lpdf";
-    "exponential_cdf";
-    "exponential_lcdf";
-    "exponential_lccdf";
-    "exponential_rng";
+    "exponential", Tnoclone;
+    "exponential_lpdf", Tnoclone;
+    "exponential_cdf", Tnoclone;
+    "exponential_lcdf", Tnoclone;
+    "exponential_lccdf", Tnoclone;
+    "exponential_rng", Tnoclone;
     (* 17.6 Gamma Distribution *)
-    "gamma";
-    "gamma_lpdf";
-    "gamma_cdf";
-    "gamma_lcdf";
-    "gamma_lccdf";
-    "gamma_rng";
+    "gamma", Tnoclone;
+    "gamma_lpdf", Tnoclone;
+    "gamma_cdf", Tnoclone;
+    "gamma_lcdf", Tnoclone;
+    "gamma_lccdf", Tnoclone;
+    "gamma_rng", Tnoclone;
     (* 17.7 Inverse Gamma Distribution *)
-    "inv_gamma";
-    "inv_gamma_lpdf";
-    "inv_gamma_cdf";
-    "inv_gamma_lcdf";
-    "inv_gamma_lccdf";
-    "inv_gamma_rng";
+    "inv_gamma", Tnoclone;
+    "inv_gamma_lpdf", Tnoclone;
+    "inv_gamma_cdf", Tnoclone;
+    "inv_gamma_lcdf", Tnoclone;
+    "inv_gamma_lccdf", Tnoclone;
+    "inv_gamma_rng", Tnoclone;
     (* 18 Positive Lower-Bounded Distributions *)
     (* 18.1 Pareto Distribution *)
-    "pareto";
-    "pareto_lpdf";
-    "pareto_cdf";
-    "pareto_lcdf";
-    "pareto_lccdf";
-    "pareto_rng";
+    "pareto", Tnoclone;
+    "pareto_lpdf", Tnoclone;
+    "pareto_cdf", Tnoclone;
+    "pareto_lcdf", Tnoclone;
+    "pareto_lccdf", Tnoclone;
+    "pareto_rng", Tnoclone;
     (* 21 Bounded Continuous Probabilities *)
     (* 21.1 Uniform Distribution *)
-    "uniform";
-    "uniform_lpdf";
-    "uniform_cdf";
-    "uniform_lcdf";
-    "uniform_lccdf";
-    "uniform_rng";
+    "uniform", Tnoclone;
+    "uniform_lpdf", Tnoclone;
+    "uniform_cdf", Tnoclone;
+    "uniform_lcdf", Tnoclone;
+    "uniform_lccdf", Tnoclone;
+    "uniform_rng", Tnoclone;
     (* 22 Distributions over Unbounded Vectors *)
     (* 22.1 Multivariate Normal Distribution *)
-    "multi_normal";
-    "multi_normal_lpdf";
-    "multi_normal_rng";
+    "multi_normal", Tnoclone;
+    "multi_normal_lpdf", Tnoclone;
+    "multi_normal_rng", Tnoclone;
     (* 23 Simplex Distributions *)
     (* 23.1 Dirichlet Distribution *)
-    "dirichlet";
-    "dirichlet_lpdf";
-    "dirichlet_rng";
+    "dirichlet", Tnoclone;
+    "dirichlet_lpdf", Tnoclone;
+    "dirichlet_rng", Tnoclone;
   ]
 
 let stanlib =
   [ (* 3.2 Mathematical Constants *)
-    "pi";
-    "e";
-    "sqrt2";
-    "log2";
-    "log10";
+    "pi", Tnoclone;
+    "e", Tnoclone;
+    "sqrt2", Tnoclone;
+    "log2", Tnoclone;
+    "log10", Tnoclone;
     (* 3.3 Special Values *)
-    "not_a_number";
-    "positive_infinity";
-    "negative_infinity";
-    "machine_precision";
+    "not_a_number", Tnoclone;
+    "positive_infinity", Tnoclone;
+    "negative_infinity", Tnoclone;
+    "machine_precision", Tnoclone;
     (* 3.7 Step-like Functions *)
-    "abs_int";
-    "abs_real";
-    "abs_vector";
-    "abs_rowvector";
-    "abs_matrix";
-    "abs_array";
-    "fdim_real_real";
-    "fmin_real_real";
-    "fmin_int_real";
-    "fmin_real_int";
-    "fmin_int_int";
-    "fmax_real_real";
-    "fmax_int_real";
-    "fmax_real_int";
-    "fmax_int_int";
-    "floor_int";
-    "floor_real";
-    "floor_vector";
-    "floor_rowvector";
-    "floor_matrix";
-    "floor_array";
-    "ceil_int";
-    "ceil_real";
-    "ceil_vector";
-    "ceil_rowvector";
-    "ceil_matrix";
-    "ceil_array";
-    "round_int";
-    "round_real";
-    "round_vector";
-    "round_rowvector";
-    "round_matrix";
-    "round_array";
-    "trunc_int";
-    "trunc_real";
-    "trunc_vector";
-    "trunc_rowvector";
-    "trunc_matrix";
-    "trunc_array";
+    "abs_int", Tnoclone;
+    "abs_real", Tnoclone;
+    "abs_vector", Tnoclone;
+    "abs_rowvector", Tnoclone;
+    "abs_matrix", Tnoclone;
+    "abs_array", Tnoclone;
+    "fdim_real_real", Tnoclone;
+    "fmin_real_real", Tnoclone;
+    "fmin_int_real", Tnoclone;
+    "fmin_real_int", Tnoclone;
+    "fmin_int_int", Tnoclone;
+    "fmax_real_real", Tnoclone;
+    "fmax_int_real", Tnoclone;
+    "fmax_real_int", Tnoclone;
+    "fmax_int_int", Tnoclone;
+    "floor_int", Tnoclone;
+    "floor_real", Tnoclone;
+    "floor_vector", Tnoclone;
+    "floor_rowvector", Tnoclone;
+    "floor_matrix", Tnoclone;
+    "floor_array", Tnoclone;
+    "ceil_int", Tnoclone;
+    "ceil_real", Tnoclone;
+    "ceil_vector", Tnoclone;
+    "ceil_rowvector", Tnoclone;
+    "ceil_matrix", Tnoclone;
+    "ceil_array", Tnoclone;
+    "round_int", Tnoclone;
+    "round_real", Tnoclone;
+    "round_vector", Tnoclone;
+    "round_rowvector", Tnoclone;
+    "round_matrix", Tnoclone;
+    "round_array", Tnoclone;
+    "trunc_int", Tnoclone;
+    "trunc_real", Tnoclone;
+    "trunc_vector", Tnoclone;
+    "trunc_rowvector", Tnoclone;
+    "trunc_matrix", Tnoclone;
+    "trunc_array", Tnoclone;
     (* 3.8 Power and Logarithm Functions *)
-    "sqrt_int"; "sqrt_real"; "sqrt_vector"; "sqrt_rowvector";
-    "sqrt_matrix"; "sqrt_array";
-    "cbrt_int"; "cbrt_real"; "cbrt_vector"; "cbrt_rowvector";
-    "cbrt_matrix"; "cbrt_array";
-    "square_int"; "square_real"; "square_vector"; "square_rowvector";
-    "square_matrix"; "square_array";
-    "exp_int"; "exp_real"; "exp_vector"; "exp_rowvector";
-    "exp_matrix"; "exp_array";
-    "exp2_int"; "exp2_real"; "exp2_vector"; "exp2_rowvector";
-    "exp2_matrix"; "exp2_array";
-    "log_int"; "log_real"; "log_vector"; "log_rowvector";
-    "log_matrix"; "log_array";
-    "log2_int"; "log2_real"; "log2_vector"; "log2_rowvector";
-    "log2_matrix"; "log2_array";
-    "log10_int"; "log10_real"; "log10_vector"; "log10_rowvector";
-    "log10_matrix"; "log10_array";
-    "pow_int_int"; "pow_int_real"; "pow_real_int"; "pow_real_real";
-    "inv_int"; "inv_real"; "inv_vector"; "inv_rowvector";
-    "inv_matrix"; "inv_array";
-    "inv_sqrt_int"; "inv_sqrt_real"; "inv_sqrt_vector"; "inv_sqrt_rowvector";
-    "inv_sqrt_matrix"; "inv_sqrt_array";
-    "inv_square_int"; "inv_square_real"; "inv_square_vector";
-    "inv_square_rowvector"; "inv_square_matrix"; "inv_square_array";
-    "min_array"; "max_array";
-    "sum_array"; "prod_array"; "log_sum_exp_array";
-    "mean_array"; "variance_array"; "sd_array";
-    "distance_vector_vector"; "distance_vector_rowvector";
-    "distance_rowvector_vector"; "distance_rowvector_rowvector";
-    "squared_distance_vector_vector"; "squared_distance_vector_rowvector";
-    "squared_distance_rowvector_vector";
-    "squared_distance_rowvector_rowvector";
+    "sqrt_int", Tnoclone;
+    "sqrt_real", Tnoclone;
+    "sqrt_vector", Tnoclone;
+    "sqrt_rowvector", Tnoclone;
+    "sqrt_matrix", Tnoclone;
+    "sqrt_array", Tnoclone;
+    "cbrt_int", Tnoclone;
+    "cbrt_real", Tnoclone;
+    "cbrt_vector", Tnoclone;
+    "cbrt_rowvector", Tnoclone;
+    "cbrt_matrix", Tnoclone;
+    "cbrt_array", Tnoclone;
+    "square_int", Tnoclone;
+    "square_real", Tnoclone;
+    "square_vector", Tnoclone;
+    "square_rowvector", Tnoclone;
+    "square_matrix", Tnoclone;
+    "square_array", Tnoclone;
+    "exp_int", Tnoclone;
+    "exp_real", Tnoclone;
+    "exp_vector", Tnoclone;
+    "exp_rowvector", Tnoclone;
+    "exp_matrix", Tnoclone;
+    "exp_array", Tnoclone;
+    "exp2_int", Tnoclone;
+    "exp2_real", Tnoclone;
+    "exp2_vector", Tnoclone;
+    "exp2_rowvector", Tnoclone;
+    "exp2_matrix", Tnoclone;
+    "exp2_array", Tnoclone;
+    "log_int", Tnoclone;
+    "log_real", Tnoclone;
+    "log_vector", Tnoclone;
+    "log_rowvector", Tnoclone;
+    "log_matrix", Tnoclone;
+    "log_array", Tnoclone;
+    "log2_int", Tnoclone;
+    "log2_real", Tnoclone;
+    "log2_vector", Tnoclone;
+    "log2_rowvector", Tnoclone;
+    "log2_matrix", Tnoclone;
+    "log2_array", Tnoclone;
+    "log10_int", Tnoclone;
+    "log10_real", Tnoclone;
+    "log10_vector", Tnoclone;
+    "log10_rowvector", Tnoclone;
+    "log10_matrix", Tnoclone;
+    "log10_array", Tnoclone;
+    "pow_int_int", Tnoclone;
+    "pow_int_real", Tnoclone;
+    "pow_real_int", Tnoclone;
+    "pow_real_real", Tnoclone;
+    "inv_int", Tnoclone;
+    "inv_real", Tnoclone;
+    "inv_vector", Tnoclone;
+    "inv_rowvector", Tnoclone;
+    "inv_matrix", Tnoclone;
+    "inv_array", Tnoclone;
+    "inv_sqrt_int", Tnoclone;
+    "inv_sqrt_real", Tnoclone;
+    "inv_sqrt_vector", Tnoclone;
+    "inv_sqrt_rowvector", Tnoclone;
+    "inv_sqrt_matrix", Tnoclone;
+    "inv_sqrt_array", Tnoclone;
+    "inv_square_int", Tnoclone;
+    "inv_square_real", Tnoclone;
+    "inv_square_vector", Tnoclone;
+    "inv_square_rowvector", Tnoclone;
+    "inv_square_matrix", Tnoclone;
+    "inv_square_array", Tnoclone;
+    "min_array", Tnoclone;
+    "max_array", Tnoclone;
+    "sum_array", Tnoclone;
+    "prod_array", Tnoclone;
+    "log_sum_exp_array", Tclone;
+    "mean_array", Tnoclone;
+    "variance_array", Tnoclone;
+    "sd_array", Tnoclone;
+    "distance_vector_vector", Tnoclone;
+    "distance_vector_rowvector", Tnoclone;
+    "distance_rowvector_vector", Tnoclone;
+    "distance_rowvector_rowvector", Tnoclone;
+    "squared_distance_vector_vector", Tnoclone;
+    "squared_distance_vector_rowvector", Tnoclone;
+    "squared_distance_rowvector_vector", Tnoclone;
+    "squared_distance_rowvector_rowvector", Tnoclone;
     (* 3.9 Trigonometric Functions *)
-    "hypot_real_real";
-    "cos_int";
-    "cos_real";
-    "cos_vector";
-    "cos_rowvector";
-    "cos_matrix";
-    "cos_array";
-    "sin_int";
-    "sin_real";
-    "sin_vector";
-    "sin_rowvector";
-    "sin_matrix";
-    "sin_array";
-    "tan_int";
-    "tan_real";
-    "tan_vector";
-    "tan_rowvector";
-    "tan_matrix";
-    "tan_array";
-    "acos_int";
-    "acos_real";
-    "acos_vector";
-    "acos_rowvector";
-    "acos_matrix";
-    "acos_array";
-    "asin_int";
-    "asin_real";
-    "asin_vector";
-    "asin_rowvector";
-    "asin_matrix";
-    "asin_array";
-    "atan_int";
-    "atan_real";
-    "atan_vector";
-    "atan_rowvector";
-    "atan_matrix";
-    "atan_array";
-    "atan2_real_real";
+    "hypot_real_real", Tnoclone;
+    "cos_int", Tnoclone;
+    "cos_real", Tnoclone;
+    "cos_vector", Tnoclone;
+    "cos_rowvector", Tnoclone;
+    "cos_matrix", Tnoclone;
+    "cos_array", Tnoclone;
+    "sin_int", Tnoclone;
+    "sin_real", Tnoclone;
+    "sin_vector", Tnoclone;
+    "sin_rowvector", Tnoclone;
+    "sin_matrix", Tnoclone;
+    "sin_array", Tnoclone;
+    "tan_int", Tnoclone;
+    "tan_real", Tnoclone;
+    "tan_vector", Tnoclone;
+    "tan_rowvector", Tnoclone;
+    "tan_matrix", Tnoclone;
+    "tan_array", Tnoclone;
+    "acos_int", Tnoclone;
+    "acos_real", Tnoclone;
+    "acos_vector", Tnoclone;
+    "acos_rowvector", Tnoclone;
+    "acos_matrix", Tnoclone;
+    "acos_array", Tnoclone;
+    "asin_int", Tnoclone;
+    "asin_real", Tnoclone;
+    "asin_vector", Tnoclone;
+    "asin_rowvector", Tnoclone;
+    "asin_matrix", Tnoclone;
+    "asin_array", Tnoclone;
+    "atan_int", Tnoclone;
+    "atan_real", Tnoclone;
+    "atan_vector", Tnoclone;
+    "atan_rowvector", Tnoclone;
+    "atan_matrix", Tnoclone;
+    "atan_array", Tnoclone;
+    "atan2_real_real", Tnoclone;
     (* 3.10 Hyperbolic Trigonometric Functions *)
-    "cosh_int";
-    "cosh_real";
-    "cosh_vector";
-    "cosh_rowvector";
-    "cosh_matrix";
-    "cosh_array";
-    "sinh_int";
-    "sinh_real";
-    "sinh_vector";
-    "sinh_rowvector";
-    "sinh_matrix";
-    "sinh_array";
-    "tanh_int";
-    "tanh_real";
-    "tanh_vector";
-    "tanh_rowvector";
-    "tanh_matrix";
-    "tanh_array";
-    "acosh_int";
-    "acosh_real";
-    "acosh_vector";
-    "acosh_rowvector";
-    "acosh_matrix";
-    "acosh_array";
-    "asinh_int";
-    "asinh_real";
-    "asinh_vector";
-    "asinh_rowvector";
-    "asinh_matrix";
-    "asinh_array";
-    "atanh_int";
-    "atanh_real";
-    "atanh_vector";
-    "atanh_rowvector";
-    "atanh_matrix";
-    "atanh_array";
+    "cosh_int", Tnoclone;
+    "cosh_real", Tnoclone;
+    "cosh_vector", Tnoclone;
+    "cosh_rowvector", Tnoclone;
+    "cosh_matrix", Tnoclone;
+    "cosh_array", Tnoclone;
+    "sinh_int", Tnoclone;
+    "sinh_real", Tnoclone;
+    "sinh_vector", Tnoclone;
+    "sinh_rowvector", Tnoclone;
+    "sinh_matrix", Tnoclone;
+    "sinh_array", Tnoclone;
+    "tanh_int", Tnoclone;
+    "tanh_real", Tnoclone;
+    "tanh_vector", Tnoclone;
+    "tanh_rowvector", Tnoclone;
+    "tanh_matrix", Tnoclone;
+    "tanh_array", Tnoclone;
+    "acosh_int", Tnoclone;
+    "acosh_real", Tnoclone;
+    "acosh_vector", Tnoclone;
+    "acosh_rowvector", Tnoclone;
+    "acosh_matrix", Tnoclone;
+    "acosh_array", Tnoclone;
+    "asinh_int", Tnoclone;
+    "asinh_real", Tnoclone;
+    "asinh_vector", Tnoclone;
+    "asinh_rowvector", Tnoclone;
+    "asinh_matrix", Tnoclone;
+    "asinh_array", Tnoclone;
+    "atanh_int", Tnoclone;
+    "atanh_real", Tnoclone;
+    "atanh_vector", Tnoclone;
+    "atanh_rowvector", Tnoclone;
+    "atanh_matrix", Tnoclone;
+    "atanh_array", Tnoclone;
     (* 3.11 Link Functions *)
-    "logit_int";
-    "logit_real";
-    "logit_vector";
-    "logit_rowvector";
-    "logit_matrix";
-    "logit_array";
-    "inv_logit_int";
-    "inv_logit_real";
-    "inv_logit_vector";
-    "inv_logit_rowvector";
-    "inv_logit_matrix";
-    "inv_logit_array";
-    "inv_cloglog_int";
-    "inv_cloglog_real";
-    "inv_cloglog_vector";
-    "inv_cloglog_rowvector";
-    "inv_cloglog_matrix";
-    "inv_cloglog_array";
+    "logit_int", Tnoclone;
+    "logit_real", Tnoclone;
+    "logit_vector", Tnoclone;
+    "logit_rowvector", Tnoclone;
+    "logit_matrix", Tnoclone;
+    "logit_array", Tnoclone;
+    "inv_logit_int", Tnoclone;
+    "inv_logit_real", Tnoclone;
+    "inv_logit_vector", Tnoclone;
+    "inv_logit_rowvector", Tnoclone;
+    "inv_logit_matrix", Tnoclone;
+    "inv_logit_array", Tnoclone;
+    "inv_cloglog_int", Tnoclone;
+    "inv_cloglog_real", Tnoclone;
+    "inv_cloglog_vector", Tnoclone;
+    "inv_cloglog_rowvector", Tnoclone;
+    "inv_cloglog_matrix", Tnoclone;
+    "inv_cloglog_array", Tnoclone;
     (* 3.14 Composed Functions *)
-    "expm1_int";
-    "expm1_real";
-    "expm1_vector";
-    "expm1_rowvector";
-    "expm1_matrix";
-    "expm1_array";
-    "fma_real_real_real";
-    "multiply_log_real_real";
-    "lmultiply_real_real";
-    "log1p_int";
-    "log1p_real";
-    "log1p_vector";
-    "log1p_rowvector";
-    "log1p_matrix";
-    "log1p_array";
-    "log1m_int";
-    "log1m_real";
-    "log1m_vector";
-    "log1m_rowvector";
-    "log1m_matrix";
-    "log1m_array";
-    "log1p_exp_int";
-    "log1p_exp_real";
-    "log1p_exp_vector";
-    "log1p_exp_rowvector";
-    "log1p_exp_matrix";
-    "log1p_exp_array";
-    "log1m_exp_int";
-    "log1m_exp_real";
-    "log1m_exp_vector";
-    "log1m_exp_rowvector";
-    "log1m_exp_matrix";
-    "log1m_exp_array";
-    "log_diff_exp_real_real";
-    "log_mix_real_real_real";
-    "log_sum_exp_real_real";
-    "log_inv_logit_int";
-    "log_inv_logit_real";
-    "log_inv_logit_vector";
-    "log_inv_logit_rowvector";
-    "log_inv_logit_matrix";
-    "log_inv_logit_array";
-    "log1m_inv_logit_int";
-    "log1m_inv_logit_real";
-    "log1m_inv_logit_vector";
-    "log1m_inv_logit_rowvector";
-    "log1m_inv_logit_matrix";
-    "log1m_inv_logit_array";
+    "expm1_int", Tnoclone;
+    "expm1_real", Tnoclone;
+    "expm1_vector", Tnoclone;
+    "expm1_rowvector", Tnoclone;
+    "expm1_matrix", Tnoclone;
+    "expm1_array", Tnoclone;
+    "fma_real_real_real", Tnoclone;
+    "multiply_log_real_real", Tnoclone;
+    "lmultiply_real_real", Tnoclone;
+    "log1p_int", Tnoclone;
+    "log1p_real", Tnoclone;
+    "log1p_vector", Tnoclone;
+    "log1p_rowvector", Tnoclone;
+    "log1p_matrix", Tnoclone;
+    "log1p_array", Tnoclone;
+    "log1m_int", Tnoclone;
+    "log1m_real", Tnoclone;
+    "log1m_vector", Tnoclone;
+    "log1m_rowvector", Tnoclone;
+    "log1m_matrix", Tnoclone;
+    "log1m_array", Tnoclone;
+    "log1p_exp_int", Tnoclone;
+    "log1p_exp_real", Tnoclone;
+    "log1p_exp_vector", Tnoclone;
+    "log1p_exp_rowvector", Tnoclone;
+    "log1p_exp_matrix", Tnoclone;
+    "log1p_exp_array", Tnoclone;
+    "log1m_exp_int", Tnoclone;
+    "log1m_exp_real", Tnoclone;
+    "log1m_exp_vector", Tnoclone;
+    "log1m_exp_rowvector", Tnoclone;
+    "log1m_exp_matrix", Tnoclone;
+    "log1m_exp_array", Tnoclone;
+    "log_diff_exp_real_real", Tnoclone;
+    "log_mix_real_real_real", Tnoclone;
+    "log_sum_exp_real_real", Tnoclone;
+    "log_inv_logit_int", Tnoclone;
+    "log_inv_logit_real", Tnoclone;
+    "log_inv_logit_vector", Tnoclone;
+    "log_inv_logit_rowvector", Tnoclone;
+    "log_inv_logit_matrix", Tnoclone;
+    "log_inv_logit_array", Tnoclone;
+    "log1m_inv_logit_int", Tnoclone;
+    "log1m_inv_logit_real", Tnoclone;
+    "log1m_inv_logit_vector", Tnoclone;
+    "log1m_inv_logit_rowvector", Tnoclone;
+    "log1m_inv_logit_matrix", Tnoclone;
+    "log1m_inv_logit_array", Tnoclone;
     (* 4.1 Reductions *)
-    "min_array";
-    "max_array";
-    "sum_array";
-    "prod_array";
-    "log_sum_exp_array";
-    "mean_array";
-    "variance_array";
-    "sd_array";
-    "distance_vector_vector";
-    "distance_vector_rowvector";
-    "distance_rowvector_vector";
-    "distance_rowvector_rowvector";
-    "squared_distance_vector_vector";
-    "squared_distance_vector_rowvector";
-    "squared_distance_rowvector_vector";
-    "squared_distance_rowvector_rowvector";
+    "min_array", Tnoclone;
+    "max_array", Tnoclone;
+    "sum_array", Tnoclone;
+    "prod_array", Tnoclone;
+    "log_sum_exp_array", Tnoclone;
+    "mean_array", Tnoclone;
+    "variance_array", Tnoclone;
+    "sd_array", Tnoclone;
+    "distance_vector_vector", Tnoclone;
+    "distance_vector_rowvector", Tnoclone;
+    "distance_rowvector_vector", Tnoclone;
+    "distance_rowvector_rowvector", Tnoclone;
+    "squared_distance_vector_vector", Tnoclone;
+    "squared_distance_vector_rowvector", Tnoclone;
+    "squared_distance_rowvector_vector", Tnoclone;
+    "squared_distance_rowvector_rowvector", Tnoclone;
     (* 4.2 Array Size and Dimension Function *)
-    "dims_int"; "dims_real"; "dims_vector"; "dims_rowvector";
-    "dims_matrix"; "dims_array";
-    "num_elements_array";
-    "size_array";
+    "dims_int", Tnoclone;
+    "dims_real", Tnoclone;
+    "dims_vector", Tnoclone;
+    "dims_rowvector", Tnoclone;
+    "dims_matrix", Tnoclone;
+    "dims_array", Tnoclone;
+    "num_elements_array", Tnoclone;
+    "size_array", Tnoclone;
     (* 4.3 Array Broadcasting *)
-    "rep_array_int_int";
-    "rep_array_real_int";
-    "rep_array_int_int_int";
-    "rep_array_real_int_int";
-    "rep_array_int_int_int_int";
-    "rep_array_real_int_int_int";
+    "rep_array_int_int", Tnoclone;
+    "rep_array_real_int", Tnoclone;
+    "rep_array_int_int_int", Tnoclone;
+    "rep_array_real_int_int", Tnoclone;
+    "rep_array_int_int_int_int", Tnoclone;
+    "rep_array_real_int_int_int", Tnoclone;
     (* 5.1 Integer-Valued Matrix Size Functions *)
-    "num_elements_vector";
-    "num_elements_rowvector";
-    "num_elements_matrix";
-    "rows_vector";
-    "rows_rowvector";
-    "rows_matrix";
-    "cols_vector";
-    "cols_rowvector";
-    "cols_matrix";
+    "num_elements_vector", Tnoclone;
+    "num_elements_rowvector", Tnoclone;
+    "num_elements_matrix", Tnoclone;
+    "rows_vector", Tnoclone;
+    "rows_rowvector", Tnoclone;
+    "rows_matrix", Tnoclone;
+    "cols_vector", Tnoclone;
+    "cols_rowvector", Tnoclone;
+    "cols_matrix", Tnoclone;
     (* 5.5 Dot Products and Specialized Products *)
-    "dot_product_vector_vector";
-    "dot_product_vector_rowvector";
-    "dot_product_rowvector_vector";
-    "dot_product_rowvector_rowvector";
-    "columns_dot_product_vector_vector";
-    "columns_dot_product_rowvector_rowvector";
-    "columns_dot_product_matrix_matrix";
-    "rows_dot_product_vector_vector";
-    "rows_dot_product_rowvector_rowvector";
-    "rows_dot_product_matrix_matrix";
-    "dot_self_vector";
-    "dot_self_rowvector";
-    "columns_dot_self_vector";
-    "columns_dot_self_rowvector";
-    "columns_dot_self_matrix";
-    "rows_dot_self_vector";
-    "rows_dot_self_rowvector";
-    "rows_dot_self_matrix";
-    "tcrossprod_matrix";
-    "crossprod_matrix";
-    "quad_form_matrix_matrix";
-    "quad_form_matrix_vector";
-    "quad_form_diag_matrix_vector";
-    "quad_form_diag_matrix_row_vector ";
-    "quad_form_sym_matrix_matrix";
-    "quad_form_sym_matrix_vector";
-    "trace_quad_form_matrix_matrix";
-    "trace_gen_quad_form_matrix_matrix_matrix";
-    "multiply_lower_tri_self_matrix";
-    "diag_pre_multiply_vector_matrix";
-    "diag_pre_multiply_rowvector_matrix";
-    "diag_post_multiply_matrix_vector";
-    "diag_post_multiply_matrix_rowvector";
+    "dot_product_vector_vector", Tnoclone;
+    "dot_product_vector_rowvector", Tnoclone;
+    "dot_product_rowvector_vector", Tnoclone;
+    "dot_product_rowvector_rowvector", Tnoclone;
+    "columns_dot_product_vector_vector", Tnoclone;
+    "columns_dot_product_rowvector_rowvector", Tnoclone;
+    "columns_dot_product_matrix_matrix", Tnoclone;
+    "rows_dot_product_vector_vector", Tnoclone;
+    "rows_dot_product_rowvector_rowvector", Tnoclone;
+    "rows_dot_product_matrix_matrix", Tnoclone;
+    "dot_self_vector", Tnoclone;
+    "dot_self_rowvector", Tnoclone;
+    "columns_dot_self_vector", Tnoclone;
+    "columns_dot_self_rowvector", Tnoclone;
+    "columns_dot_self_matrix", Tnoclone;
+    "rows_dot_self_vector", Tnoclone;
+    "rows_dot_self_rowvector", Tnoclone;
+    "rows_dot_self_matrix", Tnoclone;
+    "tcrossprod_matrix", Tnoclone;
+    "crossprod_matrix", Tnoclone;
+    "quad_form_matrix_matrix", Tnoclone;
+    "quad_form_matrix_vector", Tnoclone;
+    "quad_form_diag_matrix_vector", Tnoclone;
+    "quad_form_diag_matrix_row_vector ", Tnoclone;
+    "quad_form_sym_matrix_matrix", Tnoclone;
+    "quad_form_sym_matrix_vector", Tnoclone;
+    "trace_quad_form_matrix_matrix", Tnoclone;
+    "trace_gen_quad_form_matrix_matrix_matrix", Tnoclone;
+    "multiply_lower_tri_self_matrix", Tnoclone;
+    "diag_pre_multiply_vector_matrix", Tnoclone;
+    "diag_pre_multiply_rowvector_matrix", Tnoclone;
+    "diag_post_multiply_matrix_vector", Tnoclone;
+    "diag_post_multiply_matrix_rowvector", Tnoclone;
     (* 5.6 Reductions *)
-    "log_sum_exp_vector"; "log_sum_exp_rowvector"; "log_sum_exp_matrix";
-    "min_vector"; "min_rowvector"; "min_matrix";
-    "max_vector"; "max_rowvector"; "max_matrix";
-    "sum_vector"; "sum_rowvector"; "sum_matrix";
-    "prod_vector"; "prod_rowvector"; "prod_matrix";
-    "mean_vector"; "mean_rowvector"; "mean_matrix";
-    "variance_vector"; "variance_rowvector"; "variance_matrix";
-    "sd_vector"; "sd_rowvector"; "sd_matrix";
-    "rep_vector_real_int"; "rep_vector_int_int";
-    "rep_row_vector_real_int"; "rep_row_vector_int_int";
-    "rep_matrix_real_int_int"; "rep_matrix_int_int_int";
-    "rep_matrix_vector_int";
-    "rep_matrix_rowvector_int";
-    "col_matrix_int"; "row_matrix_int";
-    "block_matrix_int_int_int_int"; "sub_col_matrix_int_int_int";
-    "sub_row_matrix_int_int_int";
-    "head_vector_int"; "head_rowvector_int"; "head_array_int";
-    "tail_vector_int"; "tail_rowvector_int"; "tail_array_int";
-    "segment_vector_int_int"; "segment_rowvector_int_int";
-    "segment_array_int_int";
-    "append_col_matrix_matrix"; "append_col_matrix_vector";
-    "append_col_vector_matrix"; "append_col_vector_vector";
-    "append_col_rowvector_rowvector"; "append_col_real_rowvector";
-    "append_col_int_rowvector"; "append_col_rowvector_real";
-    "append_col_rowvector_int";
-    "append_row_matrix_matrix"; "append_row_matrix_rowvector";
-    "append_row_rowvector_matrix"; "append_row_rowvector_rowvector";
-    "append_row_vector_vector"; "append_row_real_vector";
-    "append_row_int_vector"; "append_row_vector_real";
-    "append_row_vector_int";
+    "log_sum_exp_vector", Tnoclone;
+    "log_sum_exp_rowvector", Tnoclone;
+    "log_sum_exp_matrix", Tnoclone;
+    "min_vector", Tnoclone;
+    "min_rowvector", Tnoclone;
+    "min_matrix", Tnoclone;
+    "max_vector", Tnoclone;
+    "max_rowvector", Tnoclone;
+    "max_matrix", Tnoclone;
+    "sum_vector", Tnoclone;
+    "sum_rowvector", Tnoclone;
+    "sum_matrix", Tnoclone;
+    "prod_vector", Tnoclone;
+    "prod_rowvector", Tnoclone;
+    "prod_matrix", Tnoclone;
+    "mean_vector", Tnoclone;
+    "mean_rowvector", Tnoclone;
+    "mean_matrix", Tnoclone;
+    "variance_vector", Tnoclone;
+    "variance_rowvector", Tnoclone;
+    "variance_matrix", Tnoclone;
+    "sd_vector", Tnoclone;
+    "sd_rowvector", Tnoclone;
+    "sd_matrix", Tnoclone;
+    "rep_vector_real_int", Tnoclone;
+    "rep_vector_int_int", Tnoclone;
+    "rep_row_vector_real_int", Tnoclone;
+    "rep_row_vector_int_int", Tnoclone;
+    "rep_matrix_real_int_int", Tnoclone;
+    "rep_matrix_int_int_int", Tnoclone;
+    "rep_matrix_vector_int", Tnoclone;
+    "rep_matrix_rowvector_int", Tnoclone;
+    "col_matrix_int", Tnoclone;
+    "row_matrix_int", Tnoclone;
+    "block_matrix_int_int_int_int", Tnoclone;
+    "sub_col_matrix_int_int_int", Tnoclone;
+    "sub_row_matrix_int_int_int", Tnoclone;
+    "head_vector_int", Tnoclone;
+    "head_rowvector_int", Tnoclone;
+    "head_array_int", Tnoclone;
+    "tail_vector_int", Tnoclone;
+    "tail_rowvector_int", Tnoclone;
+    "tail_array_int", Tnoclone;
+    "segment_vector_int_int", Tnoclone;
+    "segment_rowvector_int_int", Tnoclone;
+    "segment_array_int_int", Tnoclone;
+    "append_col_matrix_matrix", Tnoclone;
+    "append_col_matrix_vector", Tnoclone;
+    "append_col_vector_matrix", Tnoclone;
+    "append_col_vector_vector", Tnoclone;
+    "append_col_rowvector_rowvector", Tnoclone;
+    "append_col_real_rowvector", Tnoclone;
+    "append_col_int_rowvector", Tnoclone;
+    "append_col_rowvector_real", Tnoclone;
+    "append_col_rowvector_int", Tnoclone;
+    "append_row_matrix_matrix", Tnoclone;
+    "append_row_matrix_rowvector", Tnoclone;
+    "append_row_rowvector_matrix", Tnoclone;
+    "append_row_rowvector_rowvector", Tnoclone;
+    "append_row_vector_vector", Tnoclone;
+    "append_row_real_vector", Tnoclone;
+    "append_row_int_vector", Tnoclone;
+    "append_row_vector_real", Tnoclone;
+    "append_row_vector_int", Tnoclone;
     (* 5.8 Diagonal Matrix Functions *)
-    "add_diag_matrix_rowvector";
-    "add_diag_matrix_vector";
-    "add_diag_matrix_real";
-    "diagonal_matrix";
-    "diag_matrix_vector";
+    "add_diag_matrix_rowvector", Tnoclone;
+    "add_diag_matrix_vector", Tnoclone;
+    "add_diag_matrix_real", Tnoclone;
+    "diagonal_matrix", Tnoclone;
+    "diag_matrix_vector", Tnoclone;
     (* 5.11 Special Matrix Functions *)
-    "softmax_vector";
-    "softmax_vector";
-    "cumulative_sum_array";
-    "cumulative_sum_vector";
-    "cumulative_sum_rowvector";
+    "softmax_vector", Tnoclone;
+    "softmax_vector", Tnoclone;
+    "cumulative_sum_array", Tnoclone;
+    "cumulative_sum_vector", Tnoclone;
+    "cumulative_sum_rowvector", Tnoclone;
     (* 5.12 Covariance Functions *)
-    "cov_exp_quad_rowvector_real_real";
-    "cov_exp_quad_vector_real_real";
-    "cov_exp_quad_array_real_real";
-    "cov_exp_quad_rowvector_rowvector_real_real";
-    "cov_exp_quad_vector_vector_real_real";
-    "cov_exp_quad_array_array_real_real";
+    "cov_exp_quad_rowvector_real_real", Tnoclone;
+    "cov_exp_quad_vector_real_real", Tnoclone;
+    "cov_exp_quad_array_real_real", Tnoclone;
+    "cov_exp_quad_rowvector_rowvector_real_real", Tnoclone;
+    "cov_exp_quad_vector_vector_real_real", Tnoclone;
+    "cov_exp_quad_array_array_real_real", Tnoclone;
     (* 5.13 Linear Algebra Functions and Solvers *)
-    "cholesky_decompose_matrix";
+    "cholesky_decompose_matrix", Tnoclone;
     (* 7. Mixed Operations *)
-    "to_matrix_matrix";
-    "to_matrix_vector";
-    "to_matrix_rowvector";
-    "to_matrix_matrix_int_int";
-    "to_matrix_vector_int_int";
-    "to_matrix_rowvector_int_int";
-    "to_matrix_matrix_int_int_int";
-    "to_matrix_vector_int_int_int";
-    "to_matrix_rowvector_int_int_int";
-    "to_matrix_array_int_int";
-    "to_matrix_array_int_int_int";
-    "to_matrix_array";
-    "to_vector_matrix";
-    "to_vector_vector";
-    "to_vector_rowvector";
-    "to_vector_array";
-    "to_row_vector_matrix";
-    "to_row_vector_vector";
-    "to_row_vector_rowvector";
-    "to_row_vector_array";
-    "to_array_2d_matrix";
-    "to_array_1d_vector";
-    "to_array_1d_rowvector";
-    "to_array_1d_matrix";
-    "to_array_1d_array";
+    "to_matrix_matrix", Tnoclone;
+    "to_matrix_vector", Tnoclone;
+    "to_matrix_rowvector", Tnoclone;
+    "to_matrix_matrix_int_int", Tnoclone;
+    "to_matrix_vector_int_int", Tnoclone;
+    "to_matrix_rowvector_int_int", Tnoclone;
+    "to_matrix_matrix_int_int_int", Tnoclone;
+    "to_matrix_vector_int_int_int", Tnoclone;
+    "to_matrix_rowvector_int_int_int", Tnoclone;
+    "to_matrix_array_int_int", Tnoclone;
+    "to_matrix_array_int_int_int", Tnoclone;
+    "to_matrix_array", Tnoclone;
+    "to_vector_matrix", Tnoclone;
+    "to_vector_vector", Tnoclone;
+    "to_vector_rowvector", Tnoclone;
+    "to_vector_array", Tnoclone;
+    "to_row_vector_matrix", Tnoclone;
+    "to_row_vector_vector", Tnoclone;
+    "to_row_vector_rowvector", Tnoclone;
+    "to_row_vector_array", Tnoclone;
+    "to_array_2d_matrix", Tnoclone;
+    "to_array_1d_vector", Tnoclone;
+    "to_array_1d_rowvector", Tnoclone;
+    "to_array_1d_matrix", Tnoclone;
+    "to_array_1d_array", Tnoclone;
     (* 9.2 Ordinary Differential Equation (ODE) Solvers *)
-    "integrate_ode_rk45_array_real_array_array_array_array";
-    "integrate_ode_rk45_array_int_array_array_array_array";
-    "integrate_ode_rk45_array_real_array_array_array_array_real_real_int";
-    "integrate_ode_rk45_array_int_array_array_array_array_real_real_real";
+    "integrate_ode_rk45_array_real_array_array_array_array", Tnoclone;
+    "integrate_ode_rk45_array_int_array_array_array_array", Tnoclone;
+    "integrate_ode_rk45_array_real_array_array_array_array_real_real_int", Tnoclone;
+    "integrate_ode_rk45_array_int_array_array_array_array_real_real_real", Tnoclone;
   ]
 
 
@@ -635,7 +730,7 @@ let keywords =
 
 let avoid =
   keywords @ pyro_dppllib @ numpyro_dppllib @ dppllib_networks @
-  distribution @ stanlib
+  (List.map ~f:fst distribution) @ (List.map ~f:fst stanlib)
 
 let trans_name ff name =
   let x =
@@ -678,6 +773,10 @@ let stanlib_id id args =
      ~f:(fun acc arg -> acc ^ (arg_type arg))
      args
 
+let function_id fn_kind id args =
+  match fn_kind with
+  | StanLib -> stanlib_id id args
+  | UserDefined -> to_string trans_id id
 
 let gen_id, gen_name =
   let cpt = ref 0 in
@@ -1024,7 +1123,7 @@ let get_stanlib_calls program =
       match e.expr with
       | FunApp (StanLib, id, args) | CondDistApp (StanLib, id, args) ->
         let sid = stanlib_id id args in
-        if List.mem ~equal:(=) stanlib sid then SSet.add acc sid
+        if List.Assoc.mem ~equal:(=) stanlib sid then SSet.add acc sid
         else acc
       | _ -> acc
     in
@@ -1130,9 +1229,20 @@ let rec trans_expr ctx ff (e: typed_expression) : unit =
   | IntNumeral x -> trans_numeral e.emeta.type_ ff x
   | RealNumeral x -> trans_numeral e.emeta.type_ ff x
   | FunApp (fn_kind, id, args) ->
-      let ctx = set_ctx_mutation ctx in
+      let ctx =
+        match List.Assoc.find ~equal:(=) stanlib
+                (function_id fn_kind id args) with
+        | Some Tclone -> set_ctx_mutation (set_to_clone ctx)
+        | Some Tnoclone | None -> ctx
+      in
       trans_fun_app ctx fn_kind id ff args
   | CondDistApp (fn_kind, id, args) ->
+      let ctx =
+        match List.Assoc.find ~equal:(=) distribution
+                (function_id fn_kind id args) with
+        | Some Tclone -> set_ctx_mutation (set_to_clone ctx)
+        | Some Tnoclone | None -> ctx
+      in
       trans_cond_dist_app ctx fn_kind id ff args
   | GetLP | GetTarget -> fprintf ff "stanlib.target()" (* XXX TODO XXX *)
   | ArrayExpr eles ->
@@ -1391,7 +1501,12 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
           end
     end
   | NRFunApp (fn_kind, id, args) ->
-      let ctx = set_ctx_mutation (set_to_clone ctx) in
+      let ctx =
+        match List.Assoc.find ~equal:(=) stanlib
+                (function_id fn_kind id args) with
+        | Some Tclone -> set_ctx_mutation (set_to_clone ctx)
+        | Some Tnoclone | None -> ctx
+      in
       trans_fun_app ctx fn_kind id ff args
   | IncrementLogProb e | TargetPE e ->
       let ctx = set_to_clone ctx in
