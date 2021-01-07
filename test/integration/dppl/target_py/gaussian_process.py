@@ -16,7 +16,7 @@ def transformed_data(*, N, x):
         for j in range((i + 1),N + 1):
             K[i - 1, j - 1] = exp_real(- array(0.5, dtype=dtype_float) * square_real(
                                        x[i - 1] - x[j - 1]))
-            K[j - 1, i - 1] = K[i - 1, j - 1].clone()
+            K[j - 1, i - 1] = K[i - 1, j - 1]
     K[N - 1, N - 1] = 1 + array(0.1, dtype=dtype_float)
     return { 'mu': mu, 'K': K }
 

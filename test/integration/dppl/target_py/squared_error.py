@@ -21,7 +21,6 @@ def model(*, N, y, K, x):
 def generated_quantities(__inputs__):
     N = __inputs__['N']
     y = __inputs__['y']
-    K = __inputs__['K']
     x = __inputs__['x']
     beta__ = __inputs__['beta']
     # Transformed parameters

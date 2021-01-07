@@ -31,12 +31,7 @@ def model(*, N, y, s, mu_loc, mu_scale, tau_scale, tau_df):
 
 def generated_quantities(__inputs__):
     N = __inputs__['N']
-    y = __inputs__['y']
     s = __inputs__['s']
-    mu_loc = __inputs__['mu_loc']
-    mu_scale = __inputs__['mu_scale']
-    tau_scale = __inputs__['tau_scale']
-    tau_df = __inputs__['tau_df']
     theta_raw = __inputs__['theta_raw']
     mu = __inputs__['mu']
     tau = __inputs__['tau']

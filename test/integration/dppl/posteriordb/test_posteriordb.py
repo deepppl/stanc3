@@ -131,6 +131,7 @@ constraints = [
 # posterior = my_pdb.posterior('arK-arK')
 # posterior = my_pdb.posterior('bball_drive_event_0-hmm_drive_0')
 # posterior = my_pdb.posterior('radon_all-radon_county_intercept')
+# posterior = my_pdb.posterior('eight_schools-eight_schools_noncentered')
 
 # config = Config()
 # res = test(posterior, config)

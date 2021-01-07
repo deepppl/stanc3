@@ -39,18 +39,7 @@ def model(*, I, n, N, x1, x2, x1x2):
 
 
 def generated_quantities(__inputs__):
-    I = __inputs__['I']
-    n = __inputs__['n']
-    N = __inputs__['N']
-    x1 = __inputs__['x1']
-    x2 = __inputs__['x2']
-    x1x2 = __inputs__['x1x2']
-    alpha0 = __inputs__['alpha0']
-    alpha1 = __inputs__['alpha1']
-    alpha12 = __inputs__['alpha12']
-    alpha2 = __inputs__['alpha2']
     tau = __inputs__['tau']
-    b = __inputs__['b']
     # Transformed parameters
     sigma = true_divide(array(1.0, dtype=dtype_float), sqrt_real(tau))
     return { 'sigma': sigma }

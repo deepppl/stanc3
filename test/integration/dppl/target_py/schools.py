@@ -25,11 +25,8 @@ def model(*, N, y, sigma_y):
 
 def generated_quantities(__inputs__):
     N = __inputs__['N']
-    y = __inputs__['y']
-    sigma_y = __inputs__['sigma_y']
     eta = __inputs__['eta']
     mu_theta = __inputs__['mu_theta']
-    sigma_eta = __inputs__['sigma_eta']
     xi = __inputs__['xi']
     # Transformed parameters
     theta = mu_theta + xi * eta

@@ -33,7 +33,6 @@ def model(*, K, N, D, y, neg_log_K):
 def generated_quantities(__inputs__):
     K = __inputs__['K']
     N = __inputs__['N']
-    D = __inputs__['D']
     y = __inputs__['y']
     neg_log_K = __inputs__['neg_log_K']
     mu = __inputs__['mu']
