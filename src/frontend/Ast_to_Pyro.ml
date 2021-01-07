@@ -1649,11 +1649,7 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       let ctx' = ctx_enter_loop ctx "genid()" body in
       let kind =
         match ctx.ctx_backend with
-        | Numpyro ->
-          begin match ctx.ctx_block with
-          | Some Model -> CtrlLax
-          | _ -> CtrlPython
-          end
+        | Numpyro -> CtrlLax
         | Pyro | Pyro_cuda -> CtrlPython
       in
       begin match kind with
