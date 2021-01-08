@@ -139,9 +139,9 @@ class MCMCProxy:
 
     def _sample_generated(self, samples):
         kwargs = self.kwargs
-        kwargs.update({k: v.T for k, v in samples.items()})
+        kwargs.update({k: self.tensor.moveaxis(v, 0, -1) for k, v in samples.items()})
         res = self.module.generated_quantities(**kwargs)
-        return {k: v.T for k, v in res.items()}
+        return {k: self.tensor.moveaxis(v, 0, -1) for k, v in res.items()}
 
     def run(self, kwargs):
         self.kwargs = self.module.convert_inputs(kwargs)
