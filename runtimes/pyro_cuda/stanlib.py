@@ -6,10 +6,13 @@ from torch import tensor
 from torch import long as dtype_long
 from torch import float as dtype_float
 
+
 def _cuda(f):
     def inner(*args, **kwargs):
         return f(*args, **kwargs).cuda()
+
     return inner
+
 
 ones = _cuda(ones)
 array = _cuda(tensor)

@@ -14,14 +14,18 @@ from torch import (
 from torch import long as dtype_long
 from torch import float as dtype_float
 
+
 def _cuda(f):
     def inner(*args, **kwargs):
         return f(*args, **kwargs).cuda()
+
     return inner
+
 
 tones = _cuda(tones)
 tzeros = _cuda(tzeros)
 array = _cuda(tensor)
+
 
 def tsort(x):
     return torch.sort(x).values
@@ -123,20 +127,26 @@ class lower_constrained_improper_uniform(improper_uniform):
         s = super().sample(*args, **kwargs)
         return transform(self.support)(s)
 
+
 class _LessThanEq(Constraint):
     """
     Constrain to a real half line `[-inf, upper_bound]`.
     """
+
     def __init__(self, upper_bound):
         self.upper_bound = upper_bound
+
     def check(self, value):
         return value <= self.upper_bound
+
     def __repr__(self):
         fmt_string = self.__class__.__name__[1:]
-        fmt_string += '(upper_bound={})'.format(self.upper_bound)
+        fmt_string += "(upper_bound={})".format(self.upper_bound)
         return fmt_string
 
+
 less_than_eq = _LessThanEq
+
 
 class upper_constrained_improper_uniform(improper_uniform):
     def __init__(self, upper_bound=0, shape=[]):
@@ -201,7 +211,9 @@ class cholesky_factor_cov_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
         super().__init__(shape[0])
         self.support = "XXX TODO XXX"
-        assert False, 'cholesky_factor_cov_constrained_improper_uniform: not yet implemented'
+        assert (
+            False
+        ), "cholesky_factor_cov_constrained_improper_uniform: not yet implemented"
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
@@ -212,7 +224,7 @@ class cov_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
         super().__init__(shape[0])
         self.support = "XXX TODO XXX"
-        assert False, 'cov_constrained_improper_uniform: not yet implemented'
+        assert False, "cov_constrained_improper_uniform: not yet implemented"
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
@@ -223,7 +235,7 @@ class corr_constrained_improper_uniform(improper_uniform):
     def __init__(self, shape=[]):
         super().__init__(shape[0])
         self.support = "XXX TODO XXX"
-        assert False, 'corr_constrained_improper_uniform: not yet implemented'
+        assert False, "corr_constrained_improper_uniform: not yet implemented"
 
     def sample(self, *args, **kwargs):
         s = super().sample(*args, **kwargs)
@@ -511,7 +523,9 @@ multi_normal_rng = _rng(multi_normal)
 # real multi_normal_cholesky_lpdf(vectors y | vectors mu, matrix L)
 # The log of the multivariate normal density of vector(s) y given location vector(s) mu and lower-triangular Cholesky factor of the covariance matrix L
 
-multi_normal_cholesky = _distrib(lambda mu, l: d.MultivariateNormal(mu, tmatmul(l, l.t())), 2, dtype_float)
+multi_normal_cholesky = _distrib(
+    lambda mu, l: d.MultivariateNormal(mu, tmatmul(l, l.t())), 2, dtype_float
+)
 multi_normal_cholesky_lpdf = _lpdf(multi_normal_cholesky)
 multi_normal_cholesky_rng = _rng(multi_normal_cholesky)
 
