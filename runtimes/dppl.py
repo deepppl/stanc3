@@ -41,8 +41,9 @@ def _exec(cmd):
 
 
 def compile(backend, mode, stanfile, pyfile, compiler):
-    _exec(compiler +
-        [
+    _exec(
+        compiler
+        + [
             f"--{backend}",
             "--mode",
             mode,
@@ -54,7 +55,15 @@ def compile(backend, mode, stanfile, pyfile, compiler):
 
 
 class Model:
-    def __init__(self, pyro, tensor, stanfile, recompile=True, mode="mixed", compiler=["dune","exec","stanc","--"]):
+    def __init__(
+        self,
+        pyro,
+        tensor,
+        stanfile,
+        recompile=True,
+        mode="mixed",
+        compiler=["dune", "exec", "stanc", "--"],
+    ):
         self.pyro = pyro
         self.tensor = tensor
         self.pyro_backend = pyro.__name__
@@ -130,15 +139,9 @@ class MCMCProxy:
 
     def _sample_generated(self, samples):
         kwargs = self.kwargs
-        res = defaultdict(list)
-        num_samples = len(list(samples.values())[0])
-        for i in range(num_samples):
-            kwargs.update({x: samples[x][i] for x in samples})
-            if hasattr(self.module, "generated_quantities"):
-                d = self.module.generated_quantities(kwargs)
-                for k, v in d.items():
-                    res[k].append(v)
-        return {k: self.tensor.stack(v) for k, v in res.items()}
+        kwargs.update({k: v.T for k, v in samples.items()})
+        res = self.module.generated_quantities(**kwargs)
+        return {k: v.T for k, v in res.items()}
 
     def run(self, kwargs):
         self.kwargs = self.module.convert_inputs(kwargs)
