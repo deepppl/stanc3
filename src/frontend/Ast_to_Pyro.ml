@@ -2138,20 +2138,15 @@ let trans_modelblock ctx networks data tdata parameters tparameters ff model =
         (nparameters, rem_parameters)
         (trans_block ~eol:false "Model" ctx) model_ext
 
-let trans_generatedquantitiesblock ctx data tdata params tparams ff
+let trans_generatedquantitiesblock ctx networks data tdata params tparams ff
     genquantities =
   let ctx = { ctx with ctx_block = Some GeneratedQuantities } in
   if tparams <> None || genquantities <> None then begin
-    let fvs =
-      Option.value_map ~default:SSet.empty
-        ~f:(List.fold_left ~init:SSet.empty
-              ~f:(fun acc s -> SSet.union (free_vars SSet.empty s) acc))
-        (Option.merge ~f:(@) tparams genquantities)
-    in
     fprintf ff
-      "@[<v 0>@,@[<v 4>def generated_quantities(__inputs__):@,%a%a%a%a"
-      (trans_block_as_unpack "__inputs__" fvs)
+      "@[<v 0>@,@[<v 4>def generated_quantities(%a%a):@,%a%a%a"
+      trans_block_as_args
       Option.(merge ~f:(@) data (merge ~f:(@) tdata params))
+      trans_networks_as_arg networks
       (trans_block "Transformed parameters" ctx) tparams
       (trans_block "Generated quantities" ctx) genquantities
       (trans_block_as_return ~with_rename:false)
@@ -2276,6 +2271,6 @@ let trans_prog backend mode ff (p : typed_program) =
     p.guideblock;
   fprintf ff "%a"
     (trans_generatedquantitiesblock ctx
-       p.datablock p.transformeddatablock
+       p.networksblock p.datablock p.transformeddatablock
        p.parametersblock p.transformedparametersblock)
     p.generatedquantitiesblock;
