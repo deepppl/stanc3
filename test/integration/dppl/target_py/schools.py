@@ -23,11 +23,15 @@ def model(*, N, y, sigma_y):
     observe('y__5', normal(theta, sigma_y), y)
 
 
-def generated_quantities(__inputs__):
-    N = __inputs__['N']
-    eta = __inputs__['eta']
-    mu_theta = __inputs__['mu_theta']
-    xi = __inputs__['xi']
+def generated_quantities(*, N, y, sigma_y, eta, mu_theta, sigma_eta, xi):
     # Transformed parameters
     theta = mu_theta + xi * eta
     return { 'theta': theta }
+
+def map_generated_quantities(_samples, *, N, y, sigma_y):
+    def _generated_quantities(eta, mu_theta, sigma_eta, xi):
+        return generated_quantities(N=N, y=y, sigma_y=sigma_y, eta=eta,
+                                    mu_theta=mu_theta, sigma_eta=sigma_eta,
+                                    xi=xi)
+    return vmap(_generated_quantities)(_samples['eta'], _samples['mu_theta'],
+                                       _samples['sigma_eta'], _samples['xi'])

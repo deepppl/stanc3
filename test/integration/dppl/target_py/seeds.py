@@ -38,8 +38,20 @@ def model(*, I, n, N, x1, x2, x1x2):
 
 
 
-def generated_quantities(__inputs__):
-    tau = __inputs__['tau']
+def generated_quantities(*, I, n, N, x1, x2, x1x2, alpha0, alpha1, alpha12,
+                            alpha2, tau, b):
     # Transformed parameters
     sigma = true_divide(array(1.0, dtype=dtype_float), sqrt_real(tau))
     return { 'sigma': sigma }
+
+def map_generated_quantities(_samples, *, I, n, N, x1, x2, x1x2):
+    def _generated_quantities(alpha0, alpha1, alpha12, alpha2, tau, b):
+        return generated_quantities(I=I, n=n, N=N, x1=x1, x2=x2, x1x2=x1x2,
+                                    alpha0=alpha0, alpha1=alpha1,
+                                    alpha12=alpha12, alpha2=alpha2, tau=tau,
+                                    b=b)
+    return vmap(_generated_quantities)(_samples['alpha0'],
+                                       _samples['alpha1'],
+                                       _samples['alpha12'],
+                                       _samples['alpha2'], _samples['tau'],
+                                       _samples['b'])

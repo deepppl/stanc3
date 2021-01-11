@@ -18,13 +18,14 @@ def model(*, N, y, K, x):
     factor('expr__1', - squared_error)
 
 
-def generated_quantities(__inputs__):
-    N = __inputs__['N']
-    y = __inputs__['y']
-    x = __inputs__['x']
-    beta__ = __inputs__['beta']
+def generated_quantities(*, N, y, K, x, beta__):
     # Transformed parameters
     squared_error = dot_self_vector(y - matmul(x, beta__))
     # Generated quantities
     sigma_squared = true_divide(squared_error, N)
     return { 'squared_error': squared_error, 'sigma_squared': sigma_squared }
+
+def map_generated_quantities(_samples, *, N, y, K, x):
+    def _generated_quantities(beta__):
+        return generated_quantities(N=N, y=y, K=K, x=x, beta__=beta__)
+    return vmap(_generated_quantities)(_samples['beta'])

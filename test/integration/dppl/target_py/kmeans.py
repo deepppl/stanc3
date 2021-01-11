@@ -30,12 +30,7 @@ def model(*, K, N, D, y, neg_log_K):
         factor(f'expr__{n}__2', log_sum_exp_array(soft_z[n - 1]))
 
 
-def generated_quantities(__inputs__):
-    K = __inputs__['K']
-    N = __inputs__['N']
-    y = __inputs__['y']
-    neg_log_K = __inputs__['neg_log_K']
-    mu = __inputs__['mu']
+def generated_quantities(*, K, N, D, y, neg_log_K, mu):
     # Transformed parameters
     soft_z = empty([N, K], dtype=dtype_float)
     for n in range(1,N + 1):
@@ -43,3 +38,9 @@ def generated_quantities(__inputs__):
             soft_z[n - 1, k - 1] = neg_log_K - array(0.5, dtype=dtype_float) * dot_self_vector(
             mu[k - 1] - y[n - 1])
     return { 'soft_z': soft_z }
+
+def map_generated_quantities(_samples, *, K, N, D, y, neg_log_K):
+    def _generated_quantities(mu):
+        return generated_quantities(K=K, N=N, D=D, y=y, neg_log_K=neg_log_K,
+                                    mu=mu)
+    return vmap(_generated_quantities)(_samples['mu'])

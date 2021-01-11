@@ -121,6 +121,7 @@ constraints = [
 # posterior = my_pdb.posterior('diamonds-diamonds')
 # posterior = my_pdb.posterior('butterfly-multi_occupancy')
 # posterior = my_pdb.posterior('hmm_example-hmm_example')
+# posterior = my_pdb.posterior('bball_drive_event_1-hmm_drive_1')
 # posterior = my_pdb.posterior('sat-hier_2pl')
 # posterior = my_pdb.posterior('normal_5-normal_mixture_k')
 # posterior = my_pdb.posterior('mcycle_splines-accel_splines')
@@ -132,12 +133,17 @@ constraints = [
 # posterior = my_pdb.posterior('bball_drive_event_0-hmm_drive_0')
 # posterior = my_pdb.posterior('radon_all-radon_county_intercept')
 # posterior = my_pdb.posterior('eight_schools-eight_schools_noncentered')
+# posterior = my_pdb.posterior('rstan_downloads-prophet')
+# posterior = my_pdb.posterior('radon_mn-radon_hierarchical_intercept_noncentered')
+
 
 # config = Config()
 # res = test(posterior, config)
+
 # print(res['code'])
 # print(res['msg'])
 # print(res['exn'])
+# exit(0)
 
 success = 0
 compile_error = 0

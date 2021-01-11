@@ -29,12 +29,8 @@ def model(*, N, y, s, mu_loc, mu_scale, tau_scale, tau_df):
     observe('y__4', normal(theta, s), y)
 
 
-def generated_quantities(__inputs__):
-    N = __inputs__['N']
-    s = __inputs__['s']
-    theta_raw = __inputs__['theta_raw']
-    mu = __inputs__['mu']
-    tau = __inputs__['tau']
+def generated_quantities(*, N, y, s, mu_loc, mu_scale, tau_scale, tau_df,
+                            theta_raw, mu, tau):
     # Transformed parameters
     theta = tau * theta_raw + mu
     # Generated quantities
@@ -44,3 +40,13 @@ def generated_quantities(__inputs__):
         v = pow_real_int(s[i - 1], 2)
         shrinkage[i - 1] = true_divide(v, (v + tau2))
     return { 'theta': theta, 'tau2': tau2, 'shrinkage': shrinkage }
+
+def map_generated_quantities(_samples, *, N, y, s, mu_loc, mu_scale,
+                                          tau_scale, tau_df):
+    def _generated_quantities(theta_raw, mu, tau):
+        return generated_quantities(N=N, y=y, s=s, mu_loc=mu_loc,
+                                    mu_scale=mu_scale, tau_scale=tau_scale,
+                                    tau_df=tau_df, theta_raw=theta_raw,
+                                    mu=mu, tau=tau)
+    return vmap(_generated_quantities)(_samples['theta_raw'], _samples['mu'],
+                                       _samples['tau'])
