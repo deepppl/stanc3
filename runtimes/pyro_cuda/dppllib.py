@@ -12,9 +12,11 @@ from torch import (
     floor_divide,
     transpose,
     empty,
+    stack,
 )
 from torch import long as dtype_long
 from torch import float as dtype_float
+from collections import defaultdict
 
 import torch
 
@@ -33,10 +35,12 @@ empty = _cuda(empty)
 def vmap(f):
     def vmap(*args):
         n = len(args[0])
-        res = []
+        res = defaultdict(list)
         for i in range(n):
-            res.append(f(*[ x[i] for x in args ]))
-        return res
+            d = f(*[ x[i] for x in args ])
+            for k, v in d.items():
+                res[k].append(v)
+        return {k: stack(v) for k, v in res.items()}
     return vmap
 
 def sample(site_name, dist, *args, **kwargs):

@@ -70,7 +70,8 @@ let print_list_newline ?(eol=false) printer ff l =
 let pyro_dppllib =
   [ "sample"; "param"; "observe"; "factor"; "array"; "zeros"; "ones"; "empty";
     "matmul"; "true_divide"; "floor_divide"; "transpose";
-    "dtype_long"; "dtype_float"; ]
+    "dtype_long"; "dtype_float";
+    "vmap"; ]
 let numpyro_dppllib =
   [ "ops_index"; "ops_index_update";
     "lax_cond";
@@ -79,8 +80,7 @@ let numpyro_dppllib =
     "fori_loop";
     "foreach_loop";
     "lax_foreach_loop";
-    "jit";
-    "vmap"; ] @ pyro_dppllib
+    "jit"; ] @ pyro_dppllib
 let dppllib_networks = [ "register_network"; "random_module"; ]
 
 let distribution =
