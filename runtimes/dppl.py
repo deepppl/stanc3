@@ -138,10 +138,7 @@ class MCMCProxy:
         return {x: samples[x][:: self.mcmc.thin] for x in samples}
 
     def _sample_generated(self, samples):
-        kwargs = self.kwargs
-        kwargs.update({k: self.tensor.moveaxis(v, 0, -1) for k, v in samples.items()})
-        res = self.module.generated_quantities(**kwargs)
-        return {k: self.tensor.moveaxis(v, 0, -1) for k, v in res.items()}
+        return self.module.map_generated_quantities(samples, **self.kwargs)
 
     def run(self, kwargs):
         self.kwargs = self.module.convert_inputs(kwargs)

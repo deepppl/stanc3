@@ -79,7 +79,8 @@ let numpyro_dppllib =
     "fori_loop";
     "foreach_loop";
     "lax_foreach_loop";
-    "jit"; ] @ pyro_dppllib
+    "jit";
+    "vmap"; ] @ pyro_dppllib
 let dppllib_networks = [ "register_network"; "random_module"; ]
 
 let distribution =
@@ -723,7 +724,6 @@ let stanlib =
     "integrate_ode_rk45_array_real_array_array_array_array_real_real_int", Tnoclone;
     "integrate_ode_rk45_array_int_array_array_array_array_real_real_real", Tnoclone;
   ]
-
 
 let keywords =
   [ "lambda"; "def"; ]
@@ -1857,10 +1857,18 @@ let trans_functionblock ctx ff functionblock =
   fprintf ff "@[<v 0>%a@,@]"
     (print_list_newline (trans_fun_def ctx)) functionblock
 
-let trans_block_as_args ff block =
+let trans_block_as_args ?(named=true) ff block =
   match get_var_decl_names_block block with
   | [] -> ()
-  | args -> fprintf ff "*, %a" (print_list_comma trans_id) args
+  | args -> fprintf ff "%s%a" (if named then "*, " else "")
+              (print_list_comma trans_id) args
+
+let trans_block_as_kwargs ff block =
+  match get_var_decl_names_block block with
+  | [] -> ()
+  | args -> fprintf ff "%a"
+              (print_list_comma
+                 (fun ff x -> fprintf ff "%a=%a" trans_id x trans_id x)) args
 
 let trans_block_as_return ?(with_rename=false) ff block =
   fprintf ff "return { %a }"
@@ -1872,11 +1880,10 @@ let trans_block_as_return ?(with_rename=false) ff block =
             fprintf ff "'%s': %a" x.name trans_id x))
     (get_var_decl_names_block block)
 
-let trans_block_as_unpack name fvs ff block =
-  let unpack ff x = fprintf ff "%a = %s['%s']" trans_id x name x.name in
+let trans_block_as_unpack name ff block =
+  let unpack ff x = fprintf ff "%s['%s']" name x.name in
   let args = get_var_decl_names_block block in
-  let used_args = List.filter ~f:(fun x -> SSet.mem fvs x.name) args in
-  fprintf ff "%a" (print_list_newline ~eol:true unpack) used_args
+  fprintf ff "%a" (print_list_comma unpack) args
 
 let convert_input ff stmt =
   match stmt.stmt with
@@ -1989,7 +1996,7 @@ let trans_transformeddatablock ctx data ff transformeddata =
   if transformeddata <> None then begin
     fprintf ff
       "@[<v 0>@[<v 4>def transformed_data(%a):@,%a%a@]@,@,@]"
-      trans_block_as_args data
+      (trans_block_as_args ~named:true) data
       (trans_block "Transformed data" ctx) transformeddata
       (trans_block_as_return ~with_rename:true) transformeddata
   end
@@ -2024,7 +2031,7 @@ let trans_networks_priors ctx networks data tdata ff parameters =
   let trans_nn_prior ctx network_name args ff network_parameters =
     fprintf ff "@[<v 4>def prior_%s(%a%a):@,"
       network_name
-      trans_block_as_args args
+      (trans_block_as_args ~named:true) args
       trans_networks_as_arg networks;
     fprintf ff "%a = {}@,%a" trans_nn_base network_name
       (print_list_newline ~eol:true (trans_nn_parameter ctx))
@@ -2094,7 +2101,7 @@ let trans_modelblock ctx networks data tdata parameters tparameters ff model =
   match ctx.ctx_mode with
   | Comprehensive ->
       fprintf ff "@[<v 4>def model(%a%a):@,%a%a%a%a@]@,@,@."
-        trans_block_as_args (Option.merge ~f:(@) data tdata)
+        (trans_block_as_args ~named:true) (Option.merge ~f:(@) data tdata)
         trans_networks_as_arg networks
         (register_network rnetworks) model
         (trans_parametersblock ctx networks data tdata)
@@ -2113,7 +2120,7 @@ let trans_modelblock ctx networks data tdata parameters tparameters ff model =
           parameters, Some model
       in
       fprintf ff "@[<v 4>def model(%a%a):@,%a%a%a@]@,@,@."
-        trans_block_as_args (Option.merge ~f:(@) data tdata)
+        (trans_block_as_args ~named:true) (Option.merge ~f:(@) data tdata)
         trans_networks_as_arg networks
         (register_network rnetworks) model
         (trans_parametersblock ctx networks data tdata)
@@ -2131,7 +2138,7 @@ let trans_modelblock ctx networks data tdata parameters tparameters ff model =
           parameters, Some model
       in
       fprintf ff "@[<v 4>def model(%a%a):@,%a%a%a@]@,@,@."
-        trans_block_as_args (Option.merge ~f:(@) data tdata)
+        (trans_block_as_args ~named:true) (Option.merge ~f:(@) data tdata)
         trans_networks_as_arg networks
         (register_network rnetworks) model
         (trans_parametersblock ctx networks data tdata)
@@ -2144,14 +2151,26 @@ let trans_generatedquantitiesblock ctx networks data tdata params tparams ff
   if tparams <> None || genquantities <> None then begin
     fprintf ff
       "@[<v 0>@,@[<v 4>def generated_quantities(%a%a):@,%a%a%a"
-      trans_block_as_args
+      (trans_block_as_args ~named:true)
       Option.(merge ~f:(@) data (merge ~f:(@) tdata params))
       trans_networks_as_arg networks
       (trans_block "Transformed parameters" ctx) tparams
       (trans_block "Generated quantities" ctx) genquantities
       (trans_block_as_return ~with_rename:false)
       (Option.merge ~f:(@) tparams genquantities);
-    fprintf ff "@]@,@]"
+    fprintf ff "@]@,@]";
+    fprintf ff
+      "@[<v 0>@,@[<v 4>def map_generated_quantities(_samples, %a%a):@,"
+      (trans_block_as_args ~named:true) (Option.merge ~f:(@) data tdata)
+      trans_networks_as_arg networks;
+    fprintf ff "@[<v 4>def _generated_quantities(%a):@,return generated_quantities(%a%a)@]@,"
+      (trans_block_as_args ~named:false) params
+      trans_block_as_kwargs
+      Option.(merge ~f:(@) data (merge ~f:(@) tdata params))
+      trans_networks_as_arg networks;
+    fprintf ff "return vmap(_generated_quantities)(%a)"
+      (trans_block_as_unpack "_samples") params;
+    fprintf ff "@]@,@]";
   end
 
 let trans_guide_parameter ctx ff p =
@@ -2193,7 +2212,7 @@ let trans_guideblock ctx networks data tdata parameters
   in
   if guide_parameters <> None || guide <> None then begin
     fprintf ff "@[<v 4>def guide(%a%a):@,%a%a%a%areturn { %a%s%a }@]@,"
-      trans_block_as_args (Option.merge ~f:(@) data tdata)
+      (trans_block_as_args ~named:true) (Option.merge ~f:(@) data tdata)
       trans_networks_as_arg networks
       (register_network rnetworks) guide
       (trans_guideparametersblock ctx) guide_parameters

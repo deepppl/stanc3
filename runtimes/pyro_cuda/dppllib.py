@@ -18,7 +18,6 @@ from torch import float as dtype_float
 
 import torch
 
-
 def _cuda(f):
     def inner(*args, **kwargs):
         return f(*args, **kwargs).cuda()
@@ -31,6 +30,14 @@ ones = _cuda(ones)
 array = _cuda(tensor)
 empty = _cuda(empty)
 
+def vmap(f):
+    def vmap(*args):
+        n = len(args[0])
+        res = []
+        for i in range(n):
+            res.append(f(*[ x[i] for x in args ]))
+        return res
+    return vmap
 
 def sample(site_name, dist, *args, **kwargs):
     return pyro.sample(site_name, dist, *args, **kwargs)
