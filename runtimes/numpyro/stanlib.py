@@ -588,7 +588,7 @@ min_array = tmin
 # The maximum value in x, or error if x is size 0.
 from jax.numpy import max as tmax
 
-max_array = max
+max_array = tmax
 
 
 ## 4.1.2 Sum, Product, and Log Sum of Exp
