@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap
 from runtimes.pyro.stanlib import exp_real
 
 def convert_inputs(inputs):
@@ -11,13 +11,13 @@ def model():
     cluster = sample('cluster', improper_uniform(shape=[]))
     theta = sample('theta', improper_uniform(shape=[]))
     # Model
-    observe('cluster__1', normal(0, 1), cluster)
+    observe('_cluster__1', normal(0, 1), cluster)
     mu = None
     if cluster > 0:
         mu = 2
     else:
         mu = 0
-    observe('theta__2', normal(mu, 1), theta)
+    observe('_theta__2', normal(mu, 1), theta)
 
 def guide():
     # Guide Parameters

@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap
 
 def convert_inputs(inputs):
     N_mis = inputs['N_mis']
@@ -13,6 +13,6 @@ def model(*, N_mis, N_obs, y_obs):
     sigma = sample('sigma', lower_constrained_improper_uniform(0, shape=[]))
     y_mis = sample('y_mis', improper_uniform(shape=[N_mis]))
     # Model
-    observe('y_obs__1', normal(mu, sigma), y_obs)
-    observe('y_mis__2', normal(mu, sigma), y_mis)
+    observe('_y_obs__1', normal(mu, sigma), y_obs)
+    observe('_y_mis__2', normal(mu, sigma), y_mis)
 

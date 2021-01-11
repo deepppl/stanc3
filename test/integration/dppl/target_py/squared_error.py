@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap
 from runtimes.pyro.stanlib import dot_self_vector
 
 def convert_inputs(inputs):
@@ -15,7 +15,7 @@ def model(*, N, y, K, x):
     # Transformed parameters
     squared_error = dot_self_vector(y - matmul(x, beta__))
     # Model
-    factor('expr__1', - squared_error)
+    factor('_expr__1', - squared_error)
 
 
 def generated_quantities(*, N, y, K, x, beta__):

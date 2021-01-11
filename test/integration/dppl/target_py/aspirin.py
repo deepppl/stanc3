@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap
 from runtimes.pyro.stanlib import pow_real_int, pow_real_real
 
 def convert_inputs(inputs):
@@ -21,12 +21,12 @@ def model(*, N, y, s, mu_loc, mu_scale, tau_scale, tau_df):
     # Transformed parameters
     theta = tau * theta_raw + mu
     # Model
-    observe('mu__1', normal(mu_loc, mu_scale), mu)
-    observe('tau__2', student_t(tau_df, array(0., dtype=dtype_float),
-                                tau_scale), tau)
-    observe('theta_raw__3', normal(array(0., dtype=dtype_float),
-                                   array(1., dtype=dtype_float)), theta_raw)
-    observe('y__4', normal(theta, s), y)
+    observe('_mu__1', normal(mu_loc, mu_scale), mu)
+    observe('_tau__2', student_t(tau_df, array(0., dtype=dtype_float),
+                                 tau_scale), tau)
+    observe('_theta_raw__3', normal(array(0., dtype=dtype_float),
+                                    array(1., dtype=dtype_float)), theta_raw)
+    observe('_y__4', normal(theta, s), y)
 
 
 def generated_quantities(*, N, y, s, mu_loc, mu_scale, tau_scale, tau_df,

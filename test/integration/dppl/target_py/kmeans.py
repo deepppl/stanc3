@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap
 from runtimes.pyro.stanlib import dot_self_vector, log_int, log_sum_exp_array
 
 def convert_inputs(inputs):
@@ -25,9 +25,9 @@ def model(*, K, N, D, y, neg_log_K):
             mu[k - 1] - y[n - 1])
     # Model
     for k in range(1,K + 1):
-        observe(f'mu__{k}__1', normal(0, 1), mu[k - 1])
+        observe(f'_mu__{k}__1', normal(0, 1), mu[k - 1])
     for n in range(1,N + 1):
-        factor(f'expr__{n}__2', log_sum_exp_array(soft_z[n - 1]))
+        factor(f'_expr__{n}__2', log_sum_exp_array(soft_z[n - 1]))
 
 
 def generated_quantities(*, K, N, D, y, neg_log_K, mu):

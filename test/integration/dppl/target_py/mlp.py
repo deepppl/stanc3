@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, register_network, random_module
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap, register_network, random_module
 from runtimes.pyro.stanlib import exp_array
 
 def convert_inputs(inputs):
@@ -26,12 +26,12 @@ def model(*, nx, nh, ny, batch_size, imgs, labels, mlp):
                     labels=labels, mlp=mlp)
     mlp_ = dict(mlp.named_parameters())
     # Model
-    observe('mlp.l1.weight__1', normal(0, 1), mlp_['l1.weight'])
-    observe('mlp.l1.bias__2', normal(0, 1), mlp_['l1.bias'])
-    observe('mlp.l2.weight__3', normal(0, 1), mlp_['l2.weight'])
-    observe('mlp.l2.bias__4', normal(0, 1), mlp_['l2.bias'])
+    observe('_mlp.l1.weight__1', normal(0, 1), mlp_['l1.weight'])
+    observe('_mlp.l1.bias__2', normal(0, 1), mlp_['l1.bias'])
+    observe('_mlp.l2.weight__3', normal(0, 1), mlp_['l2.weight'])
+    observe('_mlp.l2.bias__4', normal(0, 1), mlp_['l2.bias'])
     lambda__ = mlp(imgs)
-    observe('labels__5', categorical_logit(lambda__), labels - 1)
+    observe('_labels__5', categorical_logit(lambda__), labels - 1)
 
 def guide(*, nx, nh, ny, batch_size, imgs, labels, mlp):
     # Guide Parameters

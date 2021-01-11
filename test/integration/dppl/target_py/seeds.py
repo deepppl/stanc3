@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap
 from runtimes.pyro.stanlib import sqrt_real
 
 def convert_inputs(inputs):
@@ -26,15 +26,15 @@ def model(*, I, n, N, x1, x2, x1x2):
     # Transformed parameters
     sigma = true_divide(array(1.0, dtype=dtype_float), sqrt_real(tau))
     # Model
-    observe('alpha0__1', normal(array(0.0, dtype=dtype_float), 1000), alpha0)
-    observe('alpha1__2', normal(array(0.0, dtype=dtype_float), 1000), alpha1)
-    observe('alpha2__3', normal(array(0.0, dtype=dtype_float), 1000), alpha2)
-    observe('alpha12__4', normal(array(0.0, dtype=dtype_float), 1000), alpha12)
-    observe('tau__5', gamma(array(0.001, dtype=dtype_float),
-                            array(0.001, dtype=dtype_float)), tau)
-    observe('b__6', normal(array(0.0, dtype=dtype_float), sigma), b)
-    observe('n__7', binomial_logit(N,
-                                   alpha0 + alpha1 * x1 + alpha2 * x2 + alpha12 * x1x2 + b), n)
+    observe('_alpha0__1', normal(array(0.0, dtype=dtype_float), 1000), alpha0)
+    observe('_alpha1__2', normal(array(0.0, dtype=dtype_float), 1000), alpha1)
+    observe('_alpha2__3', normal(array(0.0, dtype=dtype_float), 1000), alpha2)
+    observe('_alpha12__4', normal(array(0.0, dtype=dtype_float), 1000), alpha12)
+    observe('_tau__5', gamma(array(0.001, dtype=dtype_float),
+                             array(0.001, dtype=dtype_float)), tau)
+    observe('_b__6', normal(array(0.0, dtype=dtype_float), sigma), b)
+    observe('_n__7', binomial_logit(N,
+                                    alpha0 + alpha1 * x1 + alpha2 * x2 + alpha12 * x1x2 + b), n)
 
 
 

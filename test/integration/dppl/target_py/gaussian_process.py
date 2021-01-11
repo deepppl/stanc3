@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap
 from runtimes.pyro.stanlib import exp_real, rep_vector_int_int, square_real
 
 def convert_inputs(inputs):
@@ -24,5 +24,5 @@ def model(*, N, x, mu, K):
     # Parameters
     y = sample('y', improper_uniform(shape=[N]))
     # Model
-    observe('y__1', multi_normal(mu, K), y)
+    observe('_y__1', multi_normal(mu, K), y)
 

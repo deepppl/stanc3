@@ -1,5 +1,5 @@
 from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float
+from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap
 from runtimes.pyro.stanlib import log_vector, sqrt_vector
 
 def convert_inputs(inputs):
@@ -25,10 +25,10 @@ def model(*, N, exposure2, roach1, senior, treatment, y, log_expo, sqrt_roach):
     beta_3 = sample('beta_3', improper_uniform(shape=[]))
     beta_4 = sample('beta_4', improper_uniform(shape=[]))
     # Model
-    observe('beta_1__1', normal(0, 5), beta_1)
-    observe('beta_2__2', normal(0, array(2.5, dtype=dtype_float)), beta_2)
-    observe('beta_3__3', normal(0, array(2.5, dtype=dtype_float)), beta_3)
-    observe('beta_4__4', normal(0, array(2.5, dtype=dtype_float)), beta_4)
-    observe('y__5', poisson_log(log_expo + beta_1 + beta_2 * sqrt_roach + beta_3 * treatment + beta_4 * senior), y)
+    observe('_beta_1__1', normal(0, 5), beta_1)
+    observe('_beta_2__2', normal(0, array(2.5, dtype=dtype_float)), beta_2)
+    observe('_beta_3__3', normal(0, array(2.5, dtype=dtype_float)), beta_3)
+    observe('_beta_4__4', normal(0, array(2.5, dtype=dtype_float)), beta_4)
+    observe('_y__5', poisson_log(log_expo + beta_1 + beta_2 * sqrt_roach + beta_3 * treatment + beta_4 * senior), y)
 
 
