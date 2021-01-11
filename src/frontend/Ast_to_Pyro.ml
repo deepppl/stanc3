@@ -793,9 +793,9 @@ let gen_id, gen_name =
     in
     if fresh then
       match l with
-      | [] -> fprintf ff "'%s__%d'" s !cpt
+      | [] -> fprintf ff "'_%s__%d'" s !cpt
       | _ ->
-          fprintf ff "f'%s%a__%d'" s
+          fprintf ff "f'_%s%a__%d'" s
             (pp_print_list ~pp_sep:(fun _ _ ->())
                (fun ff x -> fprintf ff "__{%s}" x)) l !cpt
     else
@@ -803,7 +803,7 @@ let gen_id, gen_name =
   in
   let gen_name s =
     incr cpt;
-    s ^ "__" ^ (string_of_int !cpt)
+    "_" ^ s ^ "__" ^ (string_of_int !cpt)
   in
   (gen_id, gen_name)
 
