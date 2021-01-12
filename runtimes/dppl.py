@@ -40,7 +40,9 @@ def _exec(cmd):
         assert False
 
 
-def compile(backend, mode, stanfile, pyfile, compiler):
+def compile(backend, mode, stanfile, compiler, build_dir="_tmp"):
+    name = splitext(basename(stanfile))[0]
+    pyfile = f"{build_dir}/{name}.py"
     _exec(
         compiler
         + [
@@ -73,10 +75,9 @@ class Model:
             pathlib.Path("_tmp/__init__.py").touch()
 
         self.name = splitext(basename(stanfile))[0]
-        self.pyfile = f"_tmp/{self.name}.py"
 
         if recompile:
-            compile(self.pyro_backend, mode, stanfile, self.pyfile, compiler)
+            compile(self.pyro_backend, mode, stanfile, compiler)
 
         modname = f"_tmp.{self.name}"
         self.module = importlib.import_module(modname)
