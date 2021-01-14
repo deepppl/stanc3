@@ -14,7 +14,7 @@ let reducearray (sbt, l) =
 
 let build_id id loc =
   grammar_logger ("identifier " ^ id);
-  {name=id; id_loc=Location_span.of_positions_exn loc; path=None}
+  {name=id; id_loc=Location_span.of_positions_exn loc}
 
 let rec iterate_n f x = function
   | 0 -> x
@@ -23,12 +23,10 @@ let nest_unsized_array basic_type n =
   iterate_n (fun t -> UnsizedType.UArray t) basic_type n
 %}
 
-%token NETWORKSBLOCK
-       FUNCTIONBLOCK DATABLOCK TRANSFORMEDDATABLOCK PARAMETERSBLOCK
+%token FUNCTIONBLOCK DATABLOCK TRANSFORMEDDATABLOCK PARAMETERSBLOCK
        TRANSFORMEDPARAMETERSBLOCK MODELBLOCK GENERATEDQUANTITIESBLOCK
-       GUIDEBLOCK GUIDEPARAMETERSBLOCK
 %token LBRACE RBRACE LPAREN RPAREN LBRACK RBRACK LABRACK RABRACK COMMA SEMICOLON
-       BAR DOT
+       BAR
 %token RETURN IF ELSE WHILE FOR IN BREAK CONTINUE
 %token VOID INT REAL VECTOR ROWVECTOR ARRAY MATRIX ORDERED POSITIVEORDERED SIMPLEX
        UNITVECTOR CHOLESKYFACTORCORR CHOLESKYFACTORCOV CORRMATRIX COVMATRIX
@@ -81,39 +79,29 @@ let nest_unsized_array basic_type n =
 
 (* program *)
 program:
-  | onb=option(networks_block)
-    ofb=option(function_block)
+  | ofb=option(function_block)
     odb=option(data_block)
     otdb=option(transformed_data_block)
     opb=option(parameters_block)
     otpb=option(transformed_parameters_block)
     omb=option(model_block)
     ogb=option(generated_quantities_block)
-    odgpb=option(guide_parameters_block)
-    odgb=option(guide_block)
     EOF
     {
       grammar_logger "program" ;
-      { networksblock= onb
-      ; functionblock= ofb
+      { functionblock= ofb
       ; datablock= odb
       ; transformeddatablock= otdb
       ; parametersblock= opb
       ; transformedparametersblock= otpb
       ; modelblock= omb
-      ; generatedquantitiesblock= ogb
-      ; guideblock =odgb
-      ; guideparametersblock = odgpb }
+      ; generatedquantitiesblock= ogb }
     }
 
 (* blocks *)
-networks_block:
-  | NETWORKSBLOCK LBRACE nd=list(network_decl) RBRACE
-    { grammar_logger "networks_block" ; nd }
-
 function_block:
   | FUNCTIONBLOCK LBRACE fd=list(function_def) RBRACE
-    {  grammar_logger "function_block" ; fd }
+    {  grammar_logger "function_block" ; fd}
 
 data_block:
   | DATABLOCK LBRACE tvd=list(top_var_decl_no_assign) RBRACE
@@ -140,36 +128,9 @@ generated_quantities_block:
   | GENERATEDQUANTITIESBLOCK LBRACE tvds=list(top_vardecl_or_statement) RBRACE
     { grammar_logger "generated_quantities_block" ; tvds }
 
-guide_block:
-  | GUIDEBLOCK LBRACE vds=list(vardecl_or_statement) RBRACE
-    { grammar_logger "guide_block"; vds }
-
-guide_parameters_block:
-  | GUIDEPARAMETERSBLOCK LBRACE tvd=list(top_var_decl) RBRACE
-    {grammar_logger "guide_parameters_block" ; tvd }
-
-(* network declarations *)
-network_decl:
-  | rt=return_type name=decl_identifier LPAREN args=separated_list(COMMA, arg_decl)
-    RPAREN SEMICOLON
-    {
-      grammar_logger "network_decl";
-      { net_id = name; net_returntype = rt; net_arguments = args; }
-    }
-
 (* function definitions *)
 identifier:
-  (* | id=IDENTIFIER { build_id id $loc } *)
-  | p=separated_nonempty_list(DOT, IDENTIFIER)
-    {
-      match p with
-      | [] -> assert false
-      | [id] -> build_id id $loc
-      | hd :: tl ->
-          let s = List.fold_left ~f:(fun acc x -> acc ^ "." ^ x) ~init:hd tl in
-          let id = build_id s $loc in
-          { id with path = Some (List.map ~f:(fun x -> x) p) }
-    }
+  | id=IDENTIFIER { build_id id $loc }
   | TRUNCATE { build_id "T" $loc}
   | OFFSET { build_id "offset" $loc}
   | MULTIPLIER { build_id "multiplier" $loc}
@@ -181,12 +142,10 @@ decl_identifier:
   | id=identifier { id }
   (* Keywords cannot be identifiers but
      semantic check produces a better error message. *)
-  | NETWORKSBLOCK { build_id "networks" $loc }
   | FUNCTIONBLOCK { build_id "functions" $loc }
   | DATABLOCK { build_id "data" $loc }
   | PARAMETERSBLOCK { build_id "parameters" $loc }
   | MODELBLOCK { build_id "model" $loc }
-  | GUIDEBLOCK { build_id "guide" $loc }
   | RETURN { build_id "return" $loc }
   | IF { build_id "if" $loc }
   | ELSE { build_id "else" $loc }

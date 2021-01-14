@@ -370,12 +370,6 @@ and pp_args ppf (at, ut, id) =
 and pp_list_of_statements ppf l =
   with_vbox ppf 0 (fun () -> Format.pp_print_list pp_statement ppf l)
 
-and pp_network_decl ppf { net_returntype=rt; net_id=id; net_arguments=args} =
-  Fmt.pf ppf "%a %a(" pp_returntype rt pp_identifier id ;
-  with_box ppf 0 (fun () ->
-      Fmt.pf ppf "%a" (Fmt.list ~sep:Fmt.comma pp_args) args ) ;
-  Fmt.pf ppf ");"
-
 let pp_block block_name ppf block_stmts =
   Fmt.pf ppf "%s {" block_name ;
   Format.pp_print_cut ppf () ;
@@ -391,35 +385,15 @@ let pp_block block_name ppf block_stmts =
 let pp_opt_block ppf block_name opt_block =
   Fmt.option ~none:Fmt.nop (pp_block block_name) ppf opt_block
 
-let pp_network_block ppf networkblock =
-  Fmt.pf ppf "networks {" ;
-  Format.pp_print_cut ppf () ;
-  if List.length networkblock > 0 then (
-    with_indented_box ppf 2 0 (fun () ->
-        with_vbox ppf 0
-          (fun () -> Format.pp_print_list pp_network_decl ppf networkblock)) ;
-    Format.pp_print_cut ppf () )
-  else Format.pp_print_cut ppf () ;
-  Fmt.pf ppf "}" ;
-  Format.pp_print_cut ppf ()
-
-
-let pp_opt_network_block ppf opt_networkblock =
-  Fmt.option ~none:Fmt.nop pp_network_block ppf opt_networkblock
-
 let pp_program ppf
-    { networksblock= nb
-    ; functionblock= bf
+    { functionblock= bf
     ; datablock= bd
     ; transformeddatablock= btd
     ; parametersblock= bp
     ; transformedparametersblock= btp
     ; modelblock= bm
-    ; generatedquantitiesblock= bgq
-    ; guideparametersblock = bdgp
-    ; guideblock = bdg } =
+    ; generatedquantitiesblock= bgq } =
   Format.pp_open_vbox ppf 0 ;
-  pp_opt_network_block ppf nb ;
   pp_opt_block ppf "functions" bf ;
   pp_opt_block ppf "data" bd ;
   pp_opt_block ppf "transformed data" btd ;
@@ -427,8 +401,6 @@ let pp_program ppf
   pp_opt_block ppf "transformed parameters" btp ;
   pp_opt_block ppf "model" bm ;
   pp_opt_block ppf "generated quantities" bgq ;
-  pp_opt_block ppf "guide parameters" bdgp ;
-  pp_opt_block ppf "guide" bdg ;
   Format.pp_close_box ppf ()
 
 let check_correctness prog pretty =

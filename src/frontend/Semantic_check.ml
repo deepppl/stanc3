@@ -40,8 +40,6 @@ type originblock =
   | TParam
   | Model
   | GQuant
-  | GuideParam
-  | Guide
 
 (** Print all the signatures of a stan math operator, for the purposes of error messages. *)
 let check_that_all_functions_have_definition = ref true
@@ -86,7 +84,7 @@ let probability_distribution_name_variants id =
   let name = id.name in
   let open String in
   List.map
-    ~f:(fun n -> {name= n; id_loc= id.id_loc; path= None})
+    ~f:(fun n -> {name= n; id_loc= id.id_loc})
     ( if name = "multiply_log" || name = "binomial_coefficient_log" then [name]
     else if is_suffix ~suffix:"_lpmf" name then
       [name; drop_suffix name 5 ^ "_lpdf"; drop_suffix name 5 ^ "_log"]
@@ -1142,8 +1140,7 @@ let semantic_check_sampling_cdf_ccdf ~loc id =
 (* Target+= can only be used in model and functions with right suffix (same for tilde etc) *)
 let semantic_check_valid_sampling_pos ~loc ~cf =
   Validate.(
-    if not (cf.in_lp_fun_def || cf.current_block = Model ||
-            cf.current_block = Guide) then
+    if not (cf.in_lp_fun_def || cf.current_block = Model) then
       error @@ Semantic_error.target_plusequals_outisde_model_or_logprob loc
     else ok ())
 
@@ -1798,25 +1795,6 @@ let semantic_check_ostatements_in_block ~cf block stmts_opt =
       |> List.rev |> Validate.sequence
       |> Validate.map ~f:Option.some )
 
-let semantic_check_onetworks ~cf nb =
-  Option.value_map nb ~default:(Validate.ok None) ~f:(fun nets ->
-    List.fold ~init:[] nets ~f:(fun accu net ->
-          let { net_returntype=rt; net_id=id; net_arguments=args } = net in
-          let body = { stmt = Skip; smeta = { loc = Location_span.empty }  } in
-          let loc = id.id_loc in
-          let vnet = semantic_check_fundef ~loc ~cf rt id args body in
-          let unet =
-            Validate.map vnet ~f:(function
-                | { stmt = FunDef {returntype= urt; funname= id; arguments= uargs; _}; _ } ->
-                  Symbol_table.set_is_assigned vm id.name;
-                  { net_id=id; net_returntype=urt; net_arguments=uargs}
-                | _ -> assert false)
-          in
-          unet :: accu
-        )
-    |> List.rev |> Validate.sequence
-    |> Validate.map ~f:Option.some)
-
 let check_fun_def_body_in_block = function
   | {stmt= FunDef {body= {stmt= Block _; _}; _}; _}
    |{stmt= FunDef {body= {stmt= Skip; _}; _}; _} ->
@@ -1846,16 +1824,13 @@ let semantic_check_functions_have_defn function_block_stmts_opt =
 
 (* The actual semantic checks for all AST nodes! *)
 let semantic_check_program
-    { networksblock= nb
-    ; functionblock= fb
+    { functionblock= fb
     ; datablock= db
     ; transformeddatablock= tdb
     ; parametersblock= pb
     ; transformedparametersblock= tpb
     ; modelblock= mb
-    ; generatedquantitiesblock= gb
-    ; guideparametersblock = dgpb
-    ; guideblock = dgb } =
+    ; generatedquantitiesblock= gb } =
   (* NB: We always want to make sure we start with an empty symbol table, in
      case we are processing multiple files in one run. *)
   unsafe_clear_symbol_table vm ;
@@ -1869,7 +1844,6 @@ let semantic_check_program
     ; in_udf_dist_def= false
     ; loop_depth= 0 }
   in
-  let unb = semantic_check_onetworks ~cf nb in
   let ufb =
     Validate.(
       semantic_check_ostatements_in_block ~cf Functions fb
@@ -1885,35 +1859,27 @@ let semantic_check_program
   let umb = semantic_check_ostatements_in_block ~cf Model mb in
   Symbol_table.end_scope vm ;
   let ugb = semantic_check_ostatements_in_block ~cf GQuant gb in
-  let udgpb = semantic_check_ostatements_in_block ~cf GuideParam dgpb in
-  let udgb = semantic_check_ostatements_in_block ~cf Guide dgb in
-  let mk_typed_prog unb ufb udb utdb upb utpb umb ugb udgpb udgb : Ast.typed_program =
-    { networksblock= unb
-    ; functionblock= ufb
+  let mk_typed_prog ufb udb utdb upb utpb umb ugb : Ast.typed_program =
+    { functionblock= ufb
     ; datablock= udb
     ; transformeddatablock= utdb
     ; parametersblock= upb
     ; transformedparametersblock= utpb
     ; modelblock= umb
-    ; generatedquantitiesblock= ugb
-    ; guideparametersblock = udgpb
-    ; guideblock = udgb }
+    ; generatedquantitiesblock= ugb }
   in
   let apply_to x f = Validate.apply ~f x in
   let check_correctness_invariant (decorated_ast : typed_program) :
       typed_program =
     if
       compare_untyped_program
-        { networksblock= nb
-        ; functionblock= fb
+        { functionblock= fb
         ; datablock= db
         ; transformeddatablock= tdb
         ; parametersblock= pb
         ; transformedparametersblock= tpb
         ; modelblock= mb
-        ; generatedquantitiesblock= gb
-        ; guideparametersblock = dgpb
-        ; guideblock = dgb }
+        ; generatedquantitiesblock= gb }
         (untyped_program_of_typed_program decorated_ast)
       = 0
     then decorated_ast
@@ -1927,9 +1893,8 @@ let semantic_check_program
     Validate.map ~f:check_correctness_invariant
   in
   Validate.(
-    ok mk_typed_prog |> apply_to unb |> apply_to ufb |> apply_to udb |> apply_to utdb
+    ok mk_typed_prog |> apply_to ufb |> apply_to udb |> apply_to utdb
     |> apply_to upb |> apply_to utpb |> apply_to umb |> apply_to ugb
-    |> apply_to udgpb |> apply_to udgb
     |> check_correctness_invariant_validate
     |> get_with
          ~with_ok:(fun ok -> Result.Ok ok)

@@ -14,7 +14,6 @@ let name = "%%NAME%%"
 (** The usage message. *)
 let usage = "Usage: " ^ name ^ " [option] ... <model_file.stan>"
 
-
 let model_file = ref ""
 let pretty_print_program = ref false
 let canonicalize_program = ref false
