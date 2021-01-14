@@ -157,6 +157,7 @@ return simple_SIR(t, y, theta, x_r, x_i, pstream__);
 class ad_level_failing_model final : public model_base_crtp<ad_level_failing_model> {
 
  private:
+  profile_map profiles__;
   int N_t;
   std::vector<double> t;
   std::vector<double> y0;
@@ -171,7 +172,10 @@ class ad_level_failing_model final : public model_base_crtp<ad_level_failing_mod
   ~ad_level_failing_model() { }
   
   inline std::string model_name() const final { return "ad_level_failing_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -1328,6 +1332,7 @@ return prob_uncaptured(nind, n_occasions, p, phi, pstream__);
 class copy_fail_model final : public model_base_crtp<copy_fail_model> {
 
  private:
+  profile_map profiles__;
   int lcm_sym193__;
   int lcm_sym192__;
   int lcm_sym191__;
@@ -1372,7 +1377,10 @@ class copy_fail_model final : public model_base_crtp<copy_fail_model> {
   ~copy_fail_model() { }
   
   inline std::string model_name() const final { return "copy_fail_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -3659,6 +3667,7 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class dce_fail_model final : public model_base_crtp<dce_fail_model> {
 
  private:
+  profile_map profiles__;
   int lcm_sym86__;
   int lcm_sym85__;
   double lcm_sym84__;
@@ -3696,7 +3705,10 @@ class dce_fail_model final : public model_base_crtp<dce_fail_model> {
   ~dce_fail_model() { }
   
   inline std::string model_name() const final { return "dce_fail_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -5278,6 +5290,7 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class expr_prop_experiment_model final : public model_base_crtp<expr_prop_experiment_model> {
 
  private:
+  profile_map profiles__;
   double lcm_sym4__;
   int j;
   double z;
@@ -5289,7 +5302,10 @@ class expr_prop_experiment_model final : public model_base_crtp<expr_prop_experi
   ~expr_prop_experiment_model() { }
   
   inline std::string model_name() const final { return "expr_prop_experiment_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -5655,6 +5671,7 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class expr_prop_experiment2_model final : public model_base_crtp<expr_prop_experiment2_model> {
 
  private:
+  profile_map profiles__;
   double lcm_sym4__;
   int j;
   double z;
@@ -5664,7 +5681,10 @@ class expr_prop_experiment2_model final : public model_base_crtp<expr_prop_exper
   ~expr_prop_experiment2_model() { }
   
   inline std::string model_name() const final { return "expr_prop_experiment2_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -6033,6 +6053,7 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class expr_prop_fail_model final : public model_base_crtp<expr_prop_fail_model> {
 
  private:
+  profile_map profiles__;
   double lcm_sym31__;
   double lcm_sym30__;
   int lcm_sym29__;
@@ -6044,7 +6065,10 @@ class expr_prop_fail_model final : public model_base_crtp<expr_prop_fail_model> 
   ~expr_prop_fail_model() { }
   
   inline std::string model_name() const final { return "expr_prop_fail_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -6696,6 +6720,7 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class expr_prop_fail2_model final : public model_base_crtp<expr_prop_fail2_model> {
 
  private:
+  profile_map profiles__;
   double lcm_sym14__;
   double lcm_sym13__;
   int lcm_sym12__;
@@ -6707,7 +6732,10 @@ class expr_prop_fail2_model final : public model_base_crtp<expr_prop_fail2_model
   ~expr_prop_fail2_model() { }
   
   inline std::string model_name() const final { return "expr_prop_fail2_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -7256,6 +7284,7 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class expr_prop_fail3_model final : public model_base_crtp<expr_prop_fail3_model> {
 
  private:
+  profile_map profiles__;
   int lcm_sym88__;
   int lcm_sym87__;
   double lcm_sym86__;
@@ -7300,7 +7329,10 @@ class expr_prop_fail3_model final : public model_base_crtp<expr_prop_fail3_model
   ~expr_prop_fail3_model() { }
   
   inline std::string model_name() const final { return "expr_prop_fail3_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -8842,6 +8874,7 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class expr_prop_fail4_model final : public model_base_crtp<expr_prop_fail4_model> {
 
  private:
+  profile_map profiles__;
   int lcm_sym52__;
   int lcm_sym51__;
   int lcm_sym50__;
@@ -8867,7 +8900,10 @@ class expr_prop_fail4_model final : public model_base_crtp<expr_prop_fail4_model
   ~expr_prop_fail4_model() { }
   
   inline std::string model_name() const final { return "expr_prop_fail4_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -10112,6 +10148,7 @@ return prob_uncaptured(nind, n_occasions, p, phi, pstream__);
 class expr_prop_fail5_model final : public model_base_crtp<expr_prop_fail5_model> {
 
  private:
+  profile_map profiles__;
   int lcm_sym176__;
   int lcm_sym175__;
   int lcm_sym174__;
@@ -10147,7 +10184,10 @@ class expr_prop_fail5_model final : public model_base_crtp<expr_prop_fail5_model
   ~expr_prop_fail5_model() { }
   
   inline std::string model_name() const final { return "expr_prop_fail5_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -13308,6 +13348,7 @@ return js_super_lp<propto__>(y, first, last, p, phi, psi, nu, chi, lp__,
 class expr_prop_fail6_model final : public model_base_crtp<expr_prop_fail6_model> {
 
  private:
+  profile_map profiles__;
   int lcm_sym338__;
   int lcm_sym337__;
   int lcm_sym336__;
@@ -13343,7 +13384,10 @@ class expr_prop_fail6_model final : public model_base_crtp<expr_prop_fail6_model
   ~expr_prop_fail6_model() { }
   
   inline std::string model_name() const final { return "expr_prop_fail6_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -16613,6 +16657,7 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class expr_prop_fail7_model final : public model_base_crtp<expr_prop_fail7_model> {
 
  private:
+  profile_map profiles__;
   int lcm_sym96__;
   int lcm_sym95__;
   int lcm_sym94__;
@@ -16644,7 +16689,10 @@ class expr_prop_fail7_model final : public model_base_crtp<expr_prop_fail7_model
   ~expr_prop_fail7_model() { }
   
   inline std::string model_name() const final { return "expr_prop_fail7_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -18135,6 +18183,7 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class expr_prop_fail8_model final : public model_base_crtp<expr_prop_fail8_model> {
 
  private:
+  profile_map profiles__;
   int lcm_sym35__;
   int lcm_sym34__;
   double lcm_sym33__;
@@ -18157,7 +18206,10 @@ class expr_prop_fail8_model final : public model_base_crtp<expr_prop_fail8_model
   ~expr_prop_fail8_model() { }
   
   inline std::string model_name() const final { return "expr_prop_fail8_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -19338,6 +19390,7 @@ return prob_uncaptured(nind, n_occasions, p, phi, pstream__);
 class fails_test_model final : public model_base_crtp<fails_test_model> {
 
  private:
+  profile_map profiles__;
   int lcm_sym193__;
   int lcm_sym192__;
   int lcm_sym191__;
@@ -19382,7 +19435,10 @@ class fails_test_model final : public model_base_crtp<fails_test_model> {
   ~fails_test_model() { }
   
   inline std::string model_name() const final { return "fails_test_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -22689,6 +22745,7 @@ return seq_cprob(gamma, pstream__);
 class inlining_fail2_model final : public model_base_crtp<inlining_fail2_model> {
 
  private:
+  profile_map profiles__;
   int lcm_sym345__;
   int lcm_sym344__;
   int lcm_sym343__;
@@ -22725,7 +22782,10 @@ class inlining_fail2_model final : public model_base_crtp<inlining_fail2_model> 
   ~inlining_fail2_model() { }
   
   inline std::string model_name() const final { return "inlining_fail2_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -25784,6 +25844,7 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class lcm_experiment_model final : public model_base_crtp<lcm_experiment_model> {
 
  private:
+  profile_map profiles__;
   double lcm_sym3__;
   int j;
   double z;
@@ -25794,7 +25855,10 @@ class lcm_experiment_model final : public model_base_crtp<lcm_experiment_model> 
   ~lcm_experiment_model() { }
   
   inline std::string model_name() const final { return "lcm_experiment_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -26156,13 +26220,17 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class lcm_experiment2_model final : public model_base_crtp<lcm_experiment2_model> {
 
  private:
+  profile_map profiles__;
   
  
  public:
   ~lcm_experiment2_model() { }
   
   inline std::string model_name() const final { return "lcm_experiment2_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -26532,6 +26600,7 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class lcm_fails_model final : public model_base_crtp<lcm_fails_model> {
 
  private:
+  profile_map profiles__;
   int J;
   std::vector<double> y;
  
@@ -26539,7 +26608,10 @@ class lcm_fails_model final : public model_base_crtp<lcm_fails_model> {
   ~lcm_fails_model() { }
   
   inline std::string model_name() const final { return "lcm_fails_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -27316,6 +27388,7 @@ return prob_uncaptured(nind, n_occasions, p, phi, pstream__);
 class lcm_fails2_model final : public model_base_crtp<lcm_fails2_model> {
 
  private:
+  profile_map profiles__;
   int lcm_sym160__;
   int lcm_sym159__;
   int lcm_sym158__;
@@ -27351,7 +27424,10 @@ class lcm_fails2_model final : public model_base_crtp<lcm_fails2_model> {
   ~lcm_fails2_model() { }
   
   inline std::string model_name() const final { return "lcm_fails2_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -29440,13 +29516,17 @@ return baz_lpdf<propto__>(x, pstream__);
 class lupdf_inlining_model final : public model_base_crtp<lupdf_inlining_model> {
 
  private:
+  profile_map profiles__;
   int n;
  
  public:
   ~lupdf_inlining_model() { }
   
   inline std::string model_name() const final { return "lupdf_inlining_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -29957,6 +30037,7 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class off_dce_model final : public model_base_crtp<off_dce_model> {
 
  private:
+  profile_map profiles__;
   int lcm_sym57__;
   int lcm_sym56__;
   int lcm_sym55__;
@@ -29985,7 +30066,10 @@ class off_dce_model final : public model_base_crtp<off_dce_model> {
   ~off_dce_model() { }
   
   inline std::string model_name() const final { return "off_dce_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -31006,6 +31090,7 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class off_small_model final : public model_base_crtp<off_small_model> {
 
  private:
+  profile_map profiles__;
   double lcm_sym49__;
   double lcm_sym48__;
   double lcm_sym47__;
@@ -31027,7 +31112,10 @@ class off_small_model final : public model_base_crtp<off_small_model> {
   ~off_small_model() { }
   
   inline std::string model_name() const final { return "off_small_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -32189,13 +32277,17 @@ return rfun_lp<propto__>(lp__, lp_accum__, pstream__);
 class optimizations_model final : public model_base_crtp<optimizations_model> {
 
  private:
+  profile_map profiles__;
   
  
  public:
   ~optimizations_model() { }
   
   inline std::string model_name() const final { return "optimizations_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -33511,6 +33603,7 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class partial_eval_model final : public model_base_crtp<partial_eval_model> {
 
  private:
+  profile_map profiles__;
   double lcm_sym41__;
   double lcm_sym40__;
   double lcm_sym39__;
@@ -33534,7 +33627,10 @@ class partial_eval_model final : public model_base_crtp<partial_eval_model> {
   ~partial_eval_model() { }
   
   inline std::string model_name() const final { return "partial_eval_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -34381,6 +34477,7 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class stalled1_failure_model final : public model_base_crtp<stalled1_failure_model> {
 
  private:
+  profile_map profiles__;
   double lcm_sym38__;
   double lcm_sym37__;
   double lcm_sym36__;
@@ -34404,7 +34501,10 @@ class stalled1_failure_model final : public model_base_crtp<stalled1_failure_mod
   ~stalled1_failure_model() { }
   
   inline std::string model_name() const final { return "stalled1_failure_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
@@ -35429,13 +35529,17 @@ static const std::vector<string> locations_array__ = {" (found before start of p
 class unroll_limit_model final : public model_base_crtp<unroll_limit_model> {
 
  private:
+  profile_map profiles__;
   
  
  public:
   ~unroll_limit_model() { }
   
   inline std::string model_name() const final { return "unroll_limit_model"; }
-
+  inline stan::math::profile_map get_profile_data() {
+    return profiles__;
+  }
+  
   inline std::vector<std::string> model_compile_info() const noexcept {
     return std::vector<std::string>{"stanc_version = %%NAME%%3 %%VERSION%%", "stancflags = --O --print-cpp"};
   }
