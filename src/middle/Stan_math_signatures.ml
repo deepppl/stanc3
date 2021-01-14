@@ -32,8 +32,12 @@ let rec expand_arg = function
   | DReal -> [UnsizedType.UReal]
   | DVector -> [UVector]
   | DMatrix -> [UMatrix]
-  | DVInt -> [UInt; UArray UInt]
-  | DVReal -> [UReal; UArray UReal; UVector; URowVector]
+  | DVInt -> [UInt; UArray UInt;
+              UArray (UArray UInt); UArray (UArray (UArray UInt));
+              UArray (UArray (UArray (UArray UInt)))]
+  | DVReal -> [UReal; UArray UReal; UVector; URowVector;
+              UArray (UArray UReal); UArray (UArray (UArray UReal));
+              UArray (UArray (UArray (UArray UReal)))]
   | DIntAndReals -> expand_arg DVReal @ expand_arg DVInt
   | DVectors -> [UVector; UArray UVector; URowVector; UArray URowVector]
   | DDeepVectorized ->

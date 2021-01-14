@@ -1,0 +1,4 @@
+good/*.py
+logs/*
+data/*
+.pytest_cache

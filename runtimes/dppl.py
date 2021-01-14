@@ -113,6 +113,14 @@ class Model:
         mcmc.thin = thin
         return MCMCProxy(mcmc, self.module, self.tensor)
 
+    def svi(
+        self, optimizer=None, loss=None, params={"lr": 0.0005, "betas": (0.90, 0.999)}
+    ):
+        optimizer = optimizer if optimizer else self.pyro.optim.Adam(params)
+        loss = loss if loss is not None else self.pyro.infer.Trace_ELBO()
+        svi = self.pyro.infer.SVI(self.module.model, self.module.guide, optimizer, loss)
+        return SVIProxy(svi, self.module)
+
 
 class MCMCProxy:
     def __init__(
@@ -164,6 +172,25 @@ class MCMCProxy:
             }
         )
         return DataFrame({"mean": Series(d_mean), "std": Series(d_std)})
+
+
+class SVIProxy(object):
+    def __init__(self, svi, module):
+        self.svi = svi
+        self.module = module
+        self.args = []
+        self.kwargs = {}
+
+    def posterior(self, n, **kwargs):
+        # signature = inspect.signature(self.svi.guide)
+        # kwargs = {k : None for k in signature.parameters}
+        return [self.svi.guide(**kwargs) for _ in range(n)]
+
+    def step(self, *args, **kwargs):
+        self.kwargs = kwargs
+        if hasattr(self.module, "transformed_data"):
+            self.kwargs.update(self.module.transformed_data(**self.kwargs))
+        return self.svi.step(**kwargs)
 
 
 import pyro

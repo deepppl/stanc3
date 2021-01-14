@@ -5,7 +5,17 @@ open Middle
 
 (** Our type for identifiers, on which we record a location *)
 type identifier =
-  {name: string; id_loc: Location_span.t sexp_opaque [@compare.ignore]}
+  {name: string; id_loc: Location_span.t sexp_opaque [@compare.ignore]
+  ;path: string list option}
+[@@deriving sexp, hash, compare]
+
+(** Network declaration *)
+type network =
+  { net_id: identifier
+  ; net_returntype: Middle.UnsizedType.returntype
+  ; net_arguments:
+      (Middle.UnsizedType.autodifftype * Middle.UnsizedType.t * identifier)
+        list }
 [@@deriving sexp, hash, compare]
 
 (** Indices for array access *)
@@ -181,14 +191,14 @@ type ('e, 'm, 'l, 'f) statement_with =
 (** Untyped statements, which have location_spans as meta-data *)
 type untyped_statement =
   (untyped_expression, located_meta, untyped_lval, unit) statement_with
-[@@deriving sexp, compare, map, hash]
+[@@deriving sexp, compare, map, fold, hash]
 
 let mk_untyped_statement ~stmt ~loc : untyped_statement = {stmt; smeta= {loc}}
 
 type stmt_typed_located_meta =
   { loc: Middle.Location_span.t sexp_opaque [@compare.ignore]
   ; return_type: statement_returntype }
-[@@deriving sexp, compare, map, hash]
+[@@deriving sexp, compare, map, fold, hash]
 
 (** Typed statements also have meta-data after type checking: a location_span, as well as a statement returntype
     to check that function bodies have the right return type*)
@@ -198,7 +208,7 @@ type typed_statement =
   , typed_lval
   , fun_kind )
   statement_with
-[@@deriving sexp, compare, map, hash]
+[@@deriving sexp, compare, map, fold, hash]
 
 let mk_typed_statement ~stmt ~loc ~return_type =
   {stmt; smeta= {loc; return_type}}
@@ -212,15 +222,19 @@ type 's program =
   ; parametersblock: 's list option
   ; transformedparametersblock: 's list option
   ; modelblock: 's list option
-  ; generatedquantitiesblock: 's list option }
+  ; generatedquantitiesblock: 's list option
+  ; networksblock: network list option
+  ; guideparametersblock: 's list option
+  ; guideblock: 's list option }
 [@@deriving sexp, hash, compare, map, fold]
 
 (** Untyped programs (before type checking) *)
 type untyped_program = untyped_statement program
-[@@deriving sexp, compare, map]
+[@@deriving sexp, compare, map, fold]
 
 (** Typed programs (after type checking) *)
-type typed_program = typed_statement program [@@deriving sexp, compare, map]
+type typed_program = typed_statement program
+[@@deriving sexp, compare, map, fold]
 
 (*========================== Helper functions ===============================*)
 

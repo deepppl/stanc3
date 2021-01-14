@@ -4,11 +4,11 @@ open Deprecation_analysis
 
 let rec repair_syntax_stmt user_dists {stmt; smeta} =
   match stmt with
-  | Tilde {arg; distribution= {name; id_loc}; args; truncation} ->
+  | Tilde {arg; distribution= {name; id_loc; path}; args; truncation} ->
       { stmt=
           Tilde
             { arg
-            ; distribution= {name= without_suffix user_dists name; id_loc}
+            ; distribution= {name= without_suffix user_dists name; id_loc; path}
             ; args
             ; truncation }
       ; smeta }
@@ -23,38 +23,40 @@ let rec replace_deprecated_expr
   let expr =
     match expr with
     | GetLP -> GetTarget
-    | FunApp (StanLib, {name= "abs"; id_loc}, [e])
+    | FunApp (StanLib, {name= "abs"; id_loc; path= None}, [e])
       when Middle.UnsizedType.is_real_type e.emeta.type_ ->
         FunApp
           ( StanLib
-          , {name= "fabs"; id_loc}
+          , {name= "fabs"; id_loc; path= None}
           , [replace_deprecated_expr deprecated_userdefined e] )
     | FunApp (StanLib, {name= "if_else"; _}, [c; t; e]) ->
         Paren
           (replace_deprecated_expr deprecated_userdefined
              {expr= TernaryIf ({expr= Paren c; emeta= c.emeta}, t, e); emeta})
-    | FunApp (StanLib, {name; id_loc}, e) ->
+    | FunApp (StanLib, {name; id_loc; path= None}, e) ->
         if is_deprecated_distribution name then
           CondDistApp
             ( StanLib
-            , {name= rename_deprecated deprecated_distributions name; id_loc}
+            , {name= rename_deprecated deprecated_distributions name; id_loc;
+               path= None}
             , List.map ~f:(replace_deprecated_expr deprecated_userdefined) e )
         else
           FunApp
             ( StanLib
-            , {name= rename_deprecated deprecated_functions name; id_loc}
+            , {name= rename_deprecated deprecated_functions name; id_loc;
+               path= None}
             , List.map ~f:(replace_deprecated_expr deprecated_userdefined) e )
-    | FunApp (UserDefined, {name; id_loc}, e) -> (
+    | FunApp (UserDefined, {name; id_loc; path= None}, e) -> (
       match String.Map.find deprecated_userdefined name with
       | Some type_ ->
           CondDistApp
             ( UserDefined
-            , {name= update_suffix name type_; id_loc}
+            , {name= update_suffix name type_; id_loc; path= None}
             , List.map ~f:(replace_deprecated_expr deprecated_userdefined) e )
       | None ->
           FunApp
             ( UserDefined
-            , {name; id_loc}
+            , {name; id_loc; path= None}
             , List.map ~f:(replace_deprecated_expr deprecated_userdefined) e )
       )
     | _ ->
@@ -79,7 +81,7 @@ let rec replace_deprecated_stmt
           { assign_lhs= replace_deprecated_lval deprecated_userdefined l
           ; assign_op= Assign
           ; assign_rhs= (replace_deprecated_expr deprecated_userdefined) e }
-    | FunDef {returntype; funname= {name; id_loc}; arguments; body} ->
+    | FunDef {returntype; funname= {name; id_loc; path}; arguments; body} ->
         let newname =
           match String.Map.find deprecated_userdefined name with
           | Some type_ -> update_suffix name type_
@@ -87,7 +89,7 @@ let rec replace_deprecated_stmt
         in
         FunDef
           { returntype
-          ; funname= {name= newname; id_loc}
+          ; funname= {name= newname; id_loc; path}
           ; arguments
           ; body= replace_deprecated_stmt deprecated_userdefined body }
     | _ ->
