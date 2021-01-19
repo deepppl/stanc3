@@ -69,7 +69,6 @@ def _lpmf(d):
 
 
 def _cdf(d):
-    # XXX TODO: check id correct XXX
     def lccdf(y, *args):
         return d(*args).cdf(y)
 
@@ -77,7 +76,6 @@ def _cdf(d):
 
 
 def _lcdf(d):
-    # XXX TODO: check id correct XXX
     def lccdf(y, *args):
         return tlog(d(*args).cdf(y))
 
@@ -85,9 +83,8 @@ def _lcdf(d):
 
 
 def _lccdf(d):
-    # XXX TODO: check id correct XXX
     def lccdf(y, *args):
-        return tlog(d(*args).icdf(y))
+        return tlog(1 - d(*args).cdf(y))
 
     return lccdf
 
