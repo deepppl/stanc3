@@ -98,18 +98,11 @@ let distribution =
     "offset_constrained_improper_uniform", Tnoclone;
     "multiplier_constrained_improper_uniform", Tnoclone;
     "offset_multiplier_constrained_improper_uniform", Tnoclone;
-    (* 19 Continuous Distributions on [0, 1] *)
-    (* 19.1 Beta Distribution *)
-    "beta", Tnoclone;
-    "beta_lpdf", Tnoclone;
-    "beta_cdf", Tnoclone;
-    "beta_lcdf", Tnoclone;
-    "beta_lccdf", Tnoclone;
-    "beta_rng", Tnoclone;
     (* 12 Binary Distributions *)
     (* 12.1 Bernoulli Distribution *)
     "bernoulli", Tnoclone;
     "bernoulli_lpmf", Tnoclone;
+    "bernoulli_lupmf", Tnoclone;
     "bernoulli_cdf", Tnoclone;
     "bernoulli_lcdf", Tnoclone;
     "bernoulli_lccdf", Tnoclone;
@@ -117,28 +110,102 @@ let distribution =
     (* 12.2 Bernoulli Distribution, Logit Parameterization *)
     "bernoulli_logit", Tnoclone;
     "bernoulli_logit_lpmf", Tnoclone;
+    "bernoulli_logit_lupmf", Tnoclone;
+    (* 12.3 Bernoulli-logit generalized linear model (Logistic Regression) *)
+    "bernoulli_logit_glm", Tnoclone;
+    "bernoulli_logit_glm_lpmf", Tnoclone;
+    "bernoulli_logit_glm_lupmf", Tnoclone;
     (* 13 Bounded Discrete Distributions *)
+    (* 13.1 Binomial distribution *)
+    "binomial", Tnoclone;
+    "binomial_lpmf", Tnoclone;
+    "binomial_lupmf", Tnoclone;
+    "binomial_cdf", Tnoclone;
+    "binomial_lcdf", Tnoclone;
+    "binomial_lccdf", Tnoclone;
+    "binomial_rng", Tnoclone;
     (* 13.2 Binomial Distribution, Logit Parameterization *)
     "binomial_logit", Tnoclone;
     "binomial_logit_lpmf", Tnoclone;
+    "binomial_logit_lupmf", Tnoclone;
+    (* 13.3 Beta-binomial distribution *)
+    "beta_binomial", Tnoclone;
+    "beta_binomial_lpmf", Tnoclone;
+    "beta_binomial_lupmf", Tnoclone;
+    "beta_binomial_cdf", Tnoclone;
+    "beta_binomial_lcdf", Tnoclone;
+    "beta_binomial_lccdf", Tnoclone;
+    "beta_binomial_rng", Tnoclone;
+    (* 13.4 Hypergeometric distribution *)
+    "hypergeometric", Tnoclone;
+    "hypergeometric_lpmf", Tnoclone;
+    "hypergeometric_lupmf", Tnoclone;
+    "hypergeometric_rng", Tnoclone;
     (* 13.5 Categorical Distribution *)
     "categorical", Tnoclone;
     "categorical_lpmf", Tnoclone;
+    "categorical_lupmf", Tnoclone;
     "categorical_rng", Tnoclone;
     "categorical_logit", Tnoclone;
     "categorical_logit_lpmf", Tnoclone;
+    "categorical_logit_lupmf", Tnoclone;
     "categorical_logit_rng", Tnoclone;
+    (* 13.6 Categorical logit generalized linear model (softmax regression) *)
+    "categorical_logit_glm", Tnoclone;
+    "categorical_logit_glm_lpmf", Tnoclone;
+    "categorical_logit_glm_lupmf", Tnoclone;
+    (* 13.7 Discrete range distribution *)
+    "discrete_range", Tnoclone;
+    "discrete_range_lpmf", Tnoclone;
+    "discrete_range_lupmf", Tnoclone;
+    "discrete_range_cdf", Tnoclone;
+    "discrete_range_lcdf", Tnoclone;
+    "discrete_range_lccdf", Tnoclone;
+    "discrete_range_rng", Tnoclone;
+    (* 13.8 Ordered logistic distribution *)
+    "ordered_logistic", Tnoclone;
+    "ordered_logistic_lpmf", Tnoclone;
+    "ordered_logistic_lupmf", Tnoclone;
+    "ordered_logistic_rng", Tnoclone;
+    (* 13.9 Ordered logistic generalized linear model (ordinal regression) *)
+    "ordered_logistic_glm", Tnoclone;
+    "ordered_logistic_glm_lpmf", Tnoclone;
+    "ordered_logistic_glm_lupmf", Tnoclone;
+    (* 13.10 Ordered probit distribution *)
+    "ordered_probit", Tnoclone;
+    "ordered_probit_lpmf", Tnoclone;
+    "ordered_probit_lupmf", Tnoclone;
+    "ordered_probit_rng", Tnoclone;
     (* 14 Unbounded Discrete Distributions *)
+    (* 14.1 Negative binomial distribution *)
+    "neg_binomial", Tnoclone;
+    "neg_binomial_lpmf", Tnoclone;
+    "neg_binomial_lupmf", Tnoclone;
+    "neg_binomial_cdf", Tnoclone;
+    "neg_binomial_lcdf", Tnoclone;
+    "neg_binomial_lccdf", Tnoclone;
+    "neg_binomial_rng", Tnoclone;
     (* 14.2 Negative Binomial Distribution (alternative parameterization) *)
     "neg_binomial_2", Tnoclone;
     "neg_binomial_2_lpmf", Tnoclone;
+    "neg_binomial_2_lupmf", Tnoclone;
     "neg_binomial_2_cdf", Tnoclone;
     "neg_binomial_2_lcdf", Tnoclone;
     "neg_binomial_2_lccdf", Tnoclone;
     "neg_binomial_2_rng", Tnoclone;
+    (* 14.3 Negative binomial distribution (log alternative parameterization) *)
+    "neg_binomial_2_log", Tnoclone;
+    "neg_binomial_2_log_lpmf", Tnoclone;
+    "neg_binomial_2_log_lupmf", Tnoclone;
+    "neg_binomial_2_log_rng", Tnoclone;
+    (* 14.4 Negative-binomial-2-log generalized linear model (negative binomial regression) *)
+    "neg_binomial_2_log_glm", Tnoclone;
+    "neg_binomial_2_log_glm_lpmf", Tnoclone;
+    "neg_binomial_2_log_glm_lupmf", Tnoclone;
     (* 14.5 Poisson Distribution *)
     "poisson", Tnoclone;
     "poisson_lpmf", Tnoclone;
+    "poisson_lupmf", Tnoclone;
     "poisson_cdf", Tnoclone;
     "poisson_lcdf", Tnoclone;
     "poisson_lccdf", Tnoclone;
@@ -146,7 +213,23 @@ let distribution =
     (* 14.6 Poisson Distribution, Log Parameterization *)
     "poisson_log", Tnoclone;
     "poisson_log_lpmf", Tnoclone;
+    "poisson_log_lupmf", Tnoclone;
     "poisson_log_rng", Tnoclone;
+    (* 14.7 Poisson-log generalized linear model (Poisson regression) *)
+    "poisson_log_glm", Tnoclone;
+    "poisson_log_glm_lpmf", Tnoclone;
+    "poisson_log_glm_lpmf", Tnoclone;
+    (* 15 Multivariate Discrete Distributions *)
+    (* 15.1 Multinomial distribution *)
+    "multinomial", Tnoclone;
+    "multinomial_lpmf", Tnoclone;
+    "multinomial_lupmf", Tnoclone;
+    "multinomial_rng", Tnoclone;
+    (* 15.2 Multinomial distribution, logit parameterization *)
+    "multinomial_logit", Tnoclone;
+    "multinomial_logit_lpmf", Tnoclone;
+    "multinomial_logit_lupmf", Tnoclone;
+    "multinomial_logit_rng", Tnoclone;
     (* 16 Unbounded Continuous Distributions *)
     (* 16.1 Normal Distribution *)
     "normal", Tnoclone;
@@ -226,6 +309,14 @@ let distribution =
     "pareto_lcdf", Tnoclone;
     "pareto_lccdf", Tnoclone;
     "pareto_rng", Tnoclone;
+    (* 19 Continuous Distributions on [0, 1] *)
+    (* 19.1 Beta Distribution *)
+    "beta", Tnoclone;
+    "beta_lpdf", Tnoclone;
+    "beta_cdf", Tnoclone;
+    "beta_lcdf", Tnoclone;
+    "beta_lccdf", Tnoclone;
+    "beta_rng", Tnoclone;
     (* 21 Bounded Continuous Probabilities *)
     (* 21.1 Uniform Distribution *)
     "uniform", Tnoclone;
@@ -1662,7 +1753,7 @@ let stanlib_id id args =
   if
     List.exists
       ~f:(fun x -> String.is_suffix id.name ~suffix:x)
-      ["_lpdf"; "_lpmf"; "_lcdf"; "_lccdf"; "_rng"]
+      ["_lpdf"; "_lpmf"; "_lupmf"; "_lcdf"; "_lccdf"; "_rng"]
  then
    id.name
  else
