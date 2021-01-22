@@ -1,10 +1,3 @@
-def _XXX_TODO_XXX_(f):
-    def todo(*args):
-        assert False, f"{f}: not yet implemented"
-
-    return todo
-
-
 import numpyro.distributions as d
 from numpyro.distributions import constraints, transforms
 from numpyro.distributions.transforms import biject_to as transform
@@ -29,6 +22,11 @@ from jax.numpy import array
 dtype_float = tensor.dtype("float32")
 dtype_long = tensor.dtype("int32")
 
+def _XXX_TODO_XXX_(f):
+    def todo(*args):
+        assert False, f"{f}: not yet implemented"
+
+    return todo
 
 def _cast_float(x):
     if isinstance(x, Number):
@@ -66,6 +64,9 @@ def _lpmf(d):
         return d(*args).log_prob(y)
 
     return lpmf
+
+
+_lupmf = _lpmf
 
 
 def _cdf(d):
@@ -231,22 +232,6 @@ class corr_constrained_improper_uniform(improper_uniform):
 
 ## Stan distributions
 
-## 19 Continuous Distributions on [0, 1]
-
-## 19.1 Beta Distribution
-
-# real beta_lpdf(reals theta | reals alpha, reals beta)
-# The log of the beta density of theta in [0,1] given positive prior
-# successes (plus one) alpha and prior failures (plus one) beta
-
-beta = _distrib(d.Beta, 2, dtype_float)
-beta_lpdf = _lpdf(beta)
-beta_cdf = _cdf(beta)
-beta_lcdf = _lcdf(beta)
-beta_lccdf = _lccdf(beta)
-beta_rng = _rng(beta)
-
-
 ## 12 Binary Distributions
 
 ## 12.1 Bernoulli Distribution
@@ -256,6 +241,7 @@ beta_rng = _rng(beta)
 
 bernoulli = _distrib(d.Bernoulli, 1, dtype_float)
 bernoulli_lpmf = _lpmf(bernoulli)
+bernoulli_lupmf = _lupmf(bernoulli)
 bernoulli_cdf = _cdf(bernoulli)
 bernoulli_lcdf = _lcdf(bernoulli)
 bernoulli_lccdf = _lccdf(bernoulli)
@@ -268,9 +254,31 @@ bernoulli_rng = _rng(bernoulli)
 
 bernoulli_logit = _distrib(d.BernoulliLogits, 1, dtype_float)
 bernoulli_logit_lpmf = _lpmf(bernoulli_logit)
+bernoulli_logit_lupmf = _lupmf(bernoulli_logit)
 
+## 12.3 Bernoulli-logit generalized linear model (Logistic Regression)
+
+# real bernoulli_logit_glm_lpmf(int y | matrix x, real alpha, vector beta)
+# The log Bernoulli probability mass of y given chance of success inv_logit(alpha + x * beta).
+
+bernoulli_logit_glm = lambda x, alpha, beta: bernoulli_logit(alpha + x * beta)
+bernoulli_logit_glm_lpmf = _lpmf(bernoulli_logit_glm)
+bernoulli_logit_glm_lupmf = _lupmf(bernoulli_logit_glm)
 
 ## 13 Bounded Discrete Distributions
+
+## 13.1 Binomial distribution
+
+# real binomial_lpmf(ints n | ints N, reals theta)
+# The log binomial probability mass of n successes in N trials given chance of success theta
+
+binomial = _XXX_TODO_XXX_("binomial")
+binomial_lpmf = _lpmf(binomial)
+binomial_lupmf = _lupmf(binomial)
+binomial_cdf = _cdf(binomial)
+binomial_lcdf = _lcdf(binomial)
+binomial_lccdf = _lccdf(binomial)
+binomial_rng = _rng(binomial)
 
 ## 13.2 Binomial Distribution, Logit Parameterization
 
@@ -278,7 +286,31 @@ bernoulli_logit_lpmf = _lpmf(bernoulli_logit)
 # The log binomial probability mass of n successes in N trials given logit-scaled chance of success alpha
 
 binomial_logit = _distrib(lambda n, logits: d.BinomialLogits(logits, n), 2, dtype_long)
-binomial_logit_lpmf = _lpmf(binomial_logit)
+binomial_logit_lpmf = _cast1(_lpmf(binomial_logit))
+binomial_logit_lupmf = _cast1(_lupmf(binomial_logit))
+
+## 13.3 Beta-binomial distribution
+
+# real beta_binomial_lpmf(ints n | ints N, reals alpha, reals beta)
+# The log beta-binomial probability mass of n successes in N trials given prior success count (plus one) of alpha and prior failure count (plus one) of beta
+
+beta_binomial = _XXX_TODO_XXX_("beta_binomial")
+beta_binomial_lpmf = _lpmf(beta_binomial)
+beta_binomial_lupmf = _lupmf(beta_binomial)
+beta_binomial_cdf = _cdf(beta_binomial)
+beta_binomial_lcdf = _lcdf(beta_binomial)
+beta_binomial_lccdf = _lccdf(beta_binomial)
+beta_binomial_rng = _rng(beta_binomial)
+
+## 13.4 Hypergeometric distribution
+
+# real hypergeometric_lpmf(int n | int N, int a, int b)
+# The log hypergeometric probability mass of n successes in N trials given total success count of a and total failure count of b
+
+hypergeometric = _XXX_TODO_XXX_("hypergeometric")
+hypergeometric_lpmf = _lpmf(hypergeometric)
+hypergeometric_lupmf = _lupmf(hypergeometric)
+hypergeometric_rng = _rng(hypergeometric)
 
 ## 13.5 Categorical Distribution
 
@@ -287,6 +319,7 @@ binomial_logit_lpmf = _lpmf(binomial_logit)
 
 categorical = _distrib(d.Categorical, 1, dtype_float)
 categorical_lpmf = lambda y, theta: _lpmf(categorical)(y - 1, theta)
+categorical_lupmf = lambda y, theta: _lupmf(categorical)(y - 1, theta)
 categorical_rng = lambda theta: _rng(categorical)(theta) + 1
 
 # real categorical_logit_lpmf(ints y | vector beta)
@@ -297,9 +330,74 @@ categorical_logit = _distrib(
     lambda logits: d.Categorical(logits=logits), 1, dtype_float
 )
 categorical_logit_lpmf = lambda y, beta: _lpmf(categorical_logit)(y - 1, beta)
+categorical_logit_lupmf = lambda y, beta: _lupmf(categorical_logit)(y - 1, beta)
 categorical_logit_rng = lambda beta: _rng(categorical_logit)(beta) + 1
 
+## 13.6 Categorical logit generalized linear model (softmax regression)
+
+# real categorical_logit_glm_lpmf(int y | row_vector x, vector alpha, matrix beta)
+# The log categorical probability mass function with outcome y in 1:N given N-vector of log-odds of outcomes alpha + x * beta.
+
+categorical_logit_glm = _XXX_TODO_XXX_("categorical_logit_glm")
+categorical_logit_glm_lpmf = lambda y, x, alpha, beta: _lpmf(categorical_logit_glm)(y - 1, x, alpha, beta)
+categorical_logit_glm_lupmf = lambda y, x, alpha, beta: _lupmf(categorical_logit_glm)(y - 1, x, alpha, beta)
+
+## 13.7 Discrete range distribution
+
+# real discrete_range_lpmf(ints y | ints l, ints u)
+# The log probability mass function with outcome(s) y in l:u.
+
+discrete_range = _XXX_TODO_XXX_("discrete_range")
+discrete_range_lpmf = _lpmf(discrete_range)
+discrete_range_lupmf = _lupmf(discrete_range)
+discrete_range_cdf = _cdf(discrete_range)
+discrete_range_lcdf = _lcdf(discrete_range)
+discrete_range_lccdf = _lccdf(discrete_range)
+discrete_range_rng = _rng(discrete_range)
+
+## 13.8 Ordered logistic distribution
+
+# real ordered_logistic_lpmf(ints k | vector eta, vectors c)
+# The log ordered logistic probability mass of k given linear predictors eta, and cutpoints c.
+
+ordered_logistic = _XXX_TODO_XXX_("ordered_logistic")
+ordered_logistic_lpmf = lambda k, eta, c: _lpmf(ordered_logistic)(k - 1, eta, c)
+ordered_logistic_lupmf = lambda k, eta, c: _lupmf(ordered_logistic)(k - 1, eta, c)
+ordered_logistic_rng = lambda eta, c: _rng(ordered_logistic)(eta, c) + 1
+
+## 13.9 Ordered logistic generalized linear model (ordinal regression)
+
+# real ordered_logistic_glm_lpmf(int y | row_vector x, vector beta, vector c)
+# The log ordered logistic probability mass of y, given linear predictors x * beta, and cutpoints c. The cutpoints c must be ordered.
+
+ordered_logistic_glm = _XXX_TODO_XXX_("ordered_logistic_glm")
+ordered_logistic_glm_lpmf = lambda y, x, beta, c: _lpmf(ordered_logistic_glm)(y - 1, x, beta, c)
+ordered_logistic_glm_lupmf = lambda y, x, beta, c: _lupmf(ordered_logistic_glm)(y - 1, x, beta, c)
+
+## 13.10 Ordered probit distribution
+
+# real ordered_probit_lpmf(ints k | vector eta, vectors c)
+# The log ordered probit probability mass of k given linear predictors eta, and cutpoints c.
+
+ordered_probit = _XXX_TODO_XXX_("ordered_probit")
+ordered_probit_lpmf = lambda k, eta, c: _lpmf(ordered_probit)(k - 1, eta, c)
+ordered_probit_lupmf = lambda k, eta, c: _lupmf(ordered_probit)(k - 1, eta, c)
+ordered_probit_rng = lambda eta, c: _rng(ordered_probit)(eta, c) + 1
+
 ## 14 Unbounded Discrete Distributions
+
+## 14.1 Negative binomial distribution
+
+# real neg_binomial_lpmf(ints n | reals alpha, reals beta)
+# The log negative binomial probability mass of n given shape alpha and inverse scale beta
+
+neg_binomial = _XXX_TODO_XXX_("neg_binomial")
+neg_binomial_lpmf = _cast1(_lpmf(neg_binomial))
+neg_binomial_lupmf = _cast1(_lupmf(neg_binomial))
+neg_binomial_cdf = _cast1(_cdf(neg_binomial))
+neg_binomial_lcdf = _cast1(_lcdf(neg_binomial))
+neg_binomial_lccdf = _cast1(_lccdf(neg_binomial))
+neg_binomial_rng = _rng(neg_binomial)
 
 ## 14.2 Negative Binomial Distribution (alternative parameterization)
 
@@ -308,10 +406,30 @@ categorical_logit_rng = lambda beta: _rng(categorical_logit)(beta) + 1
 
 neg_binomial_2 = _distrib(d.GammaPoisson, 2, dtype_float)
 neg_binomial_2_lpmf = _cast1(_lpmf(neg_binomial_2))
+neg_binomial_2_lupmf = _cast1(_lupmf(neg_binomial_2))
 neg_binomial_2_cdf = _cast1(_cdf(neg_binomial_2))
 neg_binomial_2_lcdf = _cast1(_lcdf(neg_binomial_2))
 neg_binomial_2_lccdf = _cast1(_lccdf(neg_binomial_2))
 neg_binomial_2_rng = _rng(neg_binomial_2)
+
+## 14.3 Negative binomial distribution (log alternative parameterization)
+
+# real neg_binomial_2_log_lpmf(ints n | reals eta, reals phi)
+# The log negative binomial probability mass of n given log-location eta and inverse overdispersion parameter phi.
+
+neg_binomial_2_log = _XXX_TODO_XXX_("neg_binomial_2_log")
+neg_binomial_2_log_lpmf = _cast1(_lpmf(neg_binomial_2_log))
+neg_binomial_2_log_lupmf = _cast1(_lupmf(neg_binomial_2_log))
+neg_binomial_2_log_rng = _rng(neg_binomial_2_log)
+
+## 14.4 Negative-binomial-2-log generalized linear model (negative binomial regression)
+
+# real neg_binomial_2_log_glm_lpmf(int y | matrix x, real alpha, vector beta, real phi)
+# The log negative binomial probability mass of y given log-location alpha + x * beta and inverse overdispersion parameter phi.
+
+neg_binomial_2_log_glm = lambda x, alpha, beta, phi: neg_binomial_2_log(alpha + x * beta, phi)
+neg_binomial_2_log_glm_lpmf = _cast1(_lpmf(neg_binomial_2_log_glm))
+neg_binomial_2_log_glm_lupmf = _cast1(_lupmf(neg_binomial_2_log_glm))
 
 ## 14.5 Poisson Distribution
 
@@ -320,6 +438,7 @@ neg_binomial_2_rng = _rng(neg_binomial_2)
 
 poisson = _distrib(d.Poisson, 1, dtype_float)
 poisson_lpmf = _cast1(_lpmf(poisson))
+poisson_lupmf = _cast1(_lupmf(poisson))
 poisson_cdf = _cast1(_cdf(poisson))
 poisson_lcdf = _cast1(_lcdf(poisson))
 poisson_lccdf = _cast1(_lccdf(poisson))
@@ -332,7 +451,39 @@ poisson_rng = _rng(poisson)
 
 poisson_log = _distrib(lambda alpha: d.Poisson(texp(alpha)), 1, dtype_float)
 poisson_log_lpmf = _lpmf(poisson_log)
+poisson_log_lupmf = _lupmf(poisson_log)
 poisson_log_rng = _rng(poisson_log)
+
+## 14.7 Poisson-log generalized linear model (Poisson regression)
+
+# real poisson_log_glm_lpmf(int y | matrix x, real alpha, vector beta)
+# The log Poisson probability mass of y given the log-rate alpha + x * beta.
+
+poisson_log_glm = lambda x, alpha, beta: poisson_log(alpha + x * beta)
+poisson_log_glm_lpmf = _lpmf(poisson_log_glm)
+poisson_log_glm_lpmf = _lupmf(poisson_log_glm)
+
+## 15 Multivariate Discrete Distributions
+
+## 15.1 Multinomial distribution
+
+# real multinomial_lpmf(int[] y | vector theta)
+# The log multinomial probability mass function with outcome array y of size K given the K-simplex distribution parameter theta and (implicit) total count N = sum(y)
+
+multinomial = _XXX_TODO_XXX_("multinomial")
+multinomial_lpmf = _lpmf(multinomial)
+multinomial_lupmf = _lupmf(multinomial)
+multinomial_rng = _rng(multinomial)
+
+## 15.2 Multinomial distribution, logit parameterization
+
+# real multinomial_logit_lpmf(int[] y | vector theta)
+# The log multinomial probability mass function with outcome array y of size K given the K-simplex distribution parameter softmax−1(θ) and (implicit) total count N = sum(y)
+
+multinomial_logit = _XXX_TODO_XXX_("multinomial_logit")
+multinomial_logit_lpmf = _lpmf(multinomial_logit)
+multinomial_logit_lupmf = _lupmf(multinomial_logit)
+multinomial_logit_rng = _rng(multinomial_logit)
 
 
 ## 16 Unbounded Continuous Distributions
@@ -478,6 +629,21 @@ pareto_cdf = _cdf(pareto)
 pareto_lcdf = _lcdf(pareto)
 pareto_lccdf = _lccdf(pareto)
 pareto_rng = _rng(pareto)
+
+## 19 Continuous Distributions on [0, 1]
+
+## 19.1 Beta Distribution
+
+# real beta_lpdf(reals theta | reals alpha, reals beta)
+# The log of the beta density of theta in [0,1] given positive prior
+# successes (plus one) alpha and prior failures (plus one) beta
+
+beta = _distrib(d.Beta, 2, dtype_float)
+beta_lpdf = _lpdf(beta)
+beta_cdf = _cdf(beta)
+beta_lcdf = _lcdf(beta)
+beta_lccdf = _lccdf(beta)
+beta_rng = _rng(beta)
 
 
 ## 21 Bounded Continuous Probabilities
