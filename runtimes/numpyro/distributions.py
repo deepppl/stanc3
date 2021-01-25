@@ -35,6 +35,11 @@ def _cast_float(x):
 
 
 ## Utility functions
+def _unwrap(f):
+    def f_unwrap(*args, **kargs):
+        return f(*args, **kargs)[0]
+    return f_unwrap
+
 def _cast1(f):
     def f_casted(y, *args):
         return f(_cast_float(y), *args)
@@ -262,8 +267,8 @@ bernoulli_logit_lupmf = _lupmf(bernoulli_logit)
 # The log Bernoulli probability mass of y given chance of success inv_logit(alpha + x * beta).
 
 bernoulli_logit_glm = lambda x, alpha, beta: bernoulli_logit(alpha + tmatmul(x, beta))
-bernoulli_logit_glm_lpmf = _lpmf(bernoulli_logit_glm)
-bernoulli_logit_glm_lupmf = _lupmf(bernoulli_logit_glm)
+bernoulli_logit_glm_lpmf = _unwrap(_lpmf(bernoulli_logit_glm))
+bernoulli_logit_glm_lupmf = _unwrap(_lupmf(bernoulli_logit_glm))
 
 ## 13 Bounded Discrete Distributions
 
@@ -339,8 +344,8 @@ categorical_logit_rng = lambda beta: _rng(categorical_logit)(beta) + 1
 # The log categorical probability mass function with outcome y in 1:N given N-vector of log-odds of outcomes alpha + x * beta.
 
 categorical_logit_glm = _XXX_TODO_XXX_("categorical_logit_glm")
-categorical_logit_glm_lpmf = lambda y, x, alpha, beta: _lpmf(categorical_logit_glm)(y - 1, x, alpha, beta)
-categorical_logit_glm_lupmf = lambda y, x, alpha, beta: _lupmf(categorical_logit_glm)(y - 1, x, alpha, beta)
+categorical_logit_glm_lpmf = lambda y, x, alpha, beta: _unwrap(_lpmf(categorical_logit_glm)(y - 1, x, alpha, beta))
+categorical_logit_glm_lupmf = lambda y, x, alpha, beta: _unwrap(_lupmf(categorical_logit_glm)(y - 1, x, alpha, beta))
 
 ## 13.7 Discrete range distribution
 
@@ -371,8 +376,8 @@ ordered_logistic_rng = lambda eta, c: _rng(ordered_logistic)(eta, c) + 1
 # The log ordered logistic probability mass of y, given linear predictors x * beta, and cutpoints c. The cutpoints c must be ordered.
 
 ordered_logistic_glm = _XXX_TODO_XXX_("ordered_logistic_glm")
-ordered_logistic_glm_lpmf = lambda y, x, beta, c: _lpmf(ordered_logistic_glm)(y - 1, x, beta, c)
-ordered_logistic_glm_lupmf = lambda y, x, beta, c: _lupmf(ordered_logistic_glm)(y - 1, x, beta, c)
+ordered_logistic_glm_lpmf = lambda y, x, beta, c: _unwrap(_lpmf(ordered_logistic_glm)(y - 1, x, beta, c))
+ordered_logistic_glm_lupmf = lambda y, x, beta, c: _unwrap(_lupmf(ordered_logistic_glm)(y - 1, x, beta, c))
 
 ## 13.10 Ordered probit distribution
 
@@ -428,8 +433,8 @@ neg_binomial_2_log_rng = _rng(neg_binomial_2_log)
 # The log negative binomial probability mass of y given log-location alpha + x * beta and inverse overdispersion parameter phi.
 
 neg_binomial_2_log_glm = lambda x, alpha, beta, phi: neg_binomial_2_log(alpha + tmatmul(x, beta), phi)
-neg_binomial_2_log_glm_lpmf = _cast1(_lpmf(neg_binomial_2_log_glm))
-neg_binomial_2_log_glm_lupmf = _cast1(_lupmf(neg_binomial_2_log_glm))
+neg_binomial_2_log_glm_lpmf = _cast1(_unwrap(_lpmf(neg_binomial_2_log_glm)))
+neg_binomial_2_log_glm_lupmf = _cast1(_unwrap(_lupmf(neg_binomial_2_log_glm)))
 
 ## 14.5 Poisson Distribution
 
@@ -460,8 +465,8 @@ poisson_log_rng = _rng(poisson_log)
 # The log Poisson probability mass of y given the log-rate alpha + x * beta.
 
 poisson_log_glm = lambda x, alpha, beta: poisson_log(alpha + tmatmul(x, beta))
-poisson_log_glm_lpmf = _lpmf(poisson_log_glm)
-poisson_log_glm_lpmf = _lupmf(poisson_log_glm)
+poisson_log_glm_lpmf = _unwrap(_lpmf(poisson_log_glm))
+poisson_log_glm_lpmf = _unwrap(_lupmf(poisson_log_glm))
 
 ## 15 Multivariate Discrete Distributions
 

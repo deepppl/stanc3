@@ -2,8 +2,8 @@ import pyro
 from pyro.distributions import Exponential, Bernoulli, Binomial, Poisson, GammaPoisson
 from pyro import module as register_network
 from pyro import random_module
-from torch import tensor as array
 from torch import (
+    tensor,
     zeros,
     ones,
     Tensor,
@@ -20,6 +20,11 @@ from torch import float as dtype_float
 from collections import defaultdict
 
 import torch
+
+def array(x, dtype=None):
+  if isinstance(x, list):
+    return stack([tensor(e, dtype=dtype) for e in x])
+  return tensor(x, dtype=dtype)
 
 def vmap(f):
     def vmap(*args):
