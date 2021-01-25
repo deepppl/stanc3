@@ -25,13 +25,7 @@ def _cuda(f):
 
 tones = _cuda(tones)
 tzeros = _cuda(tzeros)
-tensor = _cuda(tensor)
-
-def array(x):
-  if isinstance(x, list):
-    stack([tensor(e) for e in x])
-  else:
-    tensor(x)
+array = _cuda(tensor)
 
 def tsort(x):
     return torch.sort(x).values
@@ -276,8 +270,8 @@ bernoulli_rng = _rng(bernoulli)
 # The log Bernoulli probability mass of y given chance of success inv_logit(alpha)
 
 bernoulli_logit = _distrib(d.BernoulliLogits, 1, dtype_float)
-bernoulli_logit_lpmf = _lpmf(bernoulli_logit)
-bernoulli_logit_lupmf = _lupmf(bernoulli_logit)
+bernoulli_logit_lpmf = _cast1(_lpmf(bernoulli_logit))
+bernoulli_logit_lupmf = _cast1(_lupmf(bernoulli_logit))
 
 ## 12.3 Bernoulli-logit generalized linear model (Logistic Regression)
 
@@ -285,8 +279,8 @@ bernoulli_logit_lupmf = _lupmf(bernoulli_logit)
 # The log Bernoulli probability mass of y given chance of success inv_logit(alpha + x * beta).
 
 bernoulli_logit_glm = lambda x, alpha, beta: bernoulli_logit(alpha + tmatmul(x, beta))
-bernoulli_logit_glm_lpmf = _lpmf(bernoulli_logit_glm)
-bernoulli_logit_glm_lupmf = _lupmf(bernoulli_logit_glm)
+bernoulli_logit_glm_lpmf = _cast1(_lpmf(bernoulli_logit_glm))
+bernoulli_logit_glm_lupmf = _cast1(_lupmf(bernoulli_logit_glm))
 
 ## 13 Bounded Discrete Distributions
 

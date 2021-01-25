@@ -29,8 +29,13 @@ def _cuda(f):
 
 zeros = _cuda(zeros)
 ones = _cuda(ones)
-array = _cuda(tensor)
+tensor = _cuda(tensor)
 empty = _cuda(empty)
+
+def array(x, dtype=None):
+  if isinstance(x, list):
+    return stack([tensor(e, dtype=dtype) for e in x])
+  return tensor(x, dtype=dtype)
 
 def vmap(f):
     def vmap(*args):
