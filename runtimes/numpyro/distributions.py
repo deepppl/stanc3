@@ -261,7 +261,7 @@ bernoulli_logit_lupmf = _lupmf(bernoulli_logit)
 # real bernoulli_logit_glm_lpmf(int y | matrix x, real alpha, vector beta)
 # The log Bernoulli probability mass of y given chance of success inv_logit(alpha + x * beta).
 
-bernoulli_logit_glm = lambda x, alpha, beta: bernoulli_logit(alpha + x * beta)
+bernoulli_logit_glm = lambda x, alpha, beta: bernoulli_logit(alpha + tmatmul(x, beta))
 bernoulli_logit_glm_lpmf = _lpmf(bernoulli_logit_glm)
 bernoulli_logit_glm_lupmf = _lupmf(bernoulli_logit_glm)
 
@@ -427,7 +427,7 @@ neg_binomial_2_log_rng = _rng(neg_binomial_2_log)
 # real neg_binomial_2_log_glm_lpmf(int y | matrix x, real alpha, vector beta, real phi)
 # The log negative binomial probability mass of y given log-location alpha + x * beta and inverse overdispersion parameter phi.
 
-neg_binomial_2_log_glm = lambda x, alpha, beta, phi: neg_binomial_2_log(alpha + x * beta, phi)
+neg_binomial_2_log_glm = lambda x, alpha, beta, phi: neg_binomial_2_log(alpha + tmatmul(x, beta), phi)
 neg_binomial_2_log_glm_lpmf = _cast1(_lpmf(neg_binomial_2_log_glm))
 neg_binomial_2_log_glm_lupmf = _cast1(_lupmf(neg_binomial_2_log_glm))
 
@@ -459,7 +459,7 @@ poisson_log_rng = _rng(poisson_log)
 # real poisson_log_glm_lpmf(int y | matrix x, real alpha, vector beta)
 # The log Poisson probability mass of y given the log-rate alpha + x * beta.
 
-poisson_log_glm = lambda x, alpha, beta: poisson_log(alpha + x * beta)
+poisson_log_glm = lambda x, alpha, beta: poisson_log(alpha + tmatmul(x, beta))
 poisson_log_glm_lpmf = _lpmf(poisson_log_glm)
 poisson_log_glm_lpmf = _lupmf(poisson_log_glm)
 
