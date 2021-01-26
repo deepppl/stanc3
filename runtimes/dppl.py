@@ -96,9 +96,10 @@ class Model:
         if self.pyro_backend == "numpyro":
             rng_key, _ = jax.random.split(jax.random.PRNGKey(0))
             mcmc = self.pyro.infer.MCMC(
-                kernel, warmups, samples - warmups, num_chains=chains, **kwargs
+                kernel, warmups, samples - warmups, num_chains=chains, thinning=thin, **kwargs
             )
             mcmc.run = partial(mcmc.run, rng_key)
+            mcmc.thin = None
         elif self.pyro_backend == "pyro":
             kwargs = {"mp_context": "forkserver", **kwargs}
             mcmc = self.pyro.infer.MCMC(
@@ -108,9 +109,9 @@ class Model:
                 num_chains=chains,
                 **kwargs,
             )
+            mcmc.thin = thin
         else:
             assert False, "Invalid Pyro implementation"
-        mcmc.thin = thin
         return MCMCProxy(mcmc, self.module, self.tensor)
 
     def svi(
@@ -136,6 +137,8 @@ class MCMCProxy:
 
     def _sample_model(self):
         samples = self.mcmc.get_samples()
+        if not self.mcmc.thin:
+            return samples
         return {x: samples[x][:: self.mcmc.thin] for x in samples}
 
     def _sample_generated(self, samples):
