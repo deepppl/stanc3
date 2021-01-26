@@ -37,6 +37,7 @@ def _cast_float(x):
 ## Utility functions
 def _unwrap(f):
     def f_unwrap(*args, **kargs):
+        # XXXX TODO: check that there is only one element XXXX
         return f(*args, **kargs)[0]
     return f_unwrap
 
