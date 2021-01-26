@@ -1,5 +1,4 @@
 import pyro.distributions as d
-import torch as tensor
 from torch.distributions import constraints, transform_to as transform
 from pyro.distributions.constraints import Constraint
 from torch import (
@@ -21,6 +20,10 @@ import torch
 def tsort(x):
     return torch.sort(x).values
 
+def array(x, dtype=None):
+  if isinstance(x, list):
+    return stack([tensor(e, dtype=dtype) for e in x])
+  return tensor(x, dtype=dtype)
 
 d.BernoulliLogits = lambda logits: d.Bernoulli(logits=logits)
 d.BinomialLogits = lambda logits, n: d.Binomial(n, logits=logits)
