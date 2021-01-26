@@ -2674,10 +2674,8 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       let kind =
         match ctx.ctx_backend with
         | Numpyro ->
-            begin match ctx.ctx_block, ctx.ctx_loops with
-            | Some Model, [] ->
-               if is_pure loop_body then CtrlLax
-               else CtrlNympyro
+            begin match ctx.ctx_block with
+            | Some Model -> CtrlNympyro
             | _ -> CtrlLax
             end
         | Pyro | Pyro_cuda -> CtrlPython
@@ -2716,10 +2714,8 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       let kind =
         match ctx.ctx_backend with
         | Numpyro ->
-            begin match ctx.ctx_block, ctx.ctx_loops with
-            | Some Model, [] ->
-               if is_pure body then CtrlLax
-               else CtrlNympyro
+            begin match ctx.ctx_block with
+            | Some Model -> CtrlNympyro
             | _ -> CtrlLax
             end
         | Pyro | Pyro_cuda -> CtrlPython
@@ -2813,16 +2809,6 @@ and build_closure ctx fun_name fv args stmt =
       pp_pack ()
   in
   fun_name, pp_closure, pp_pack, pp_unpack
-
-and is_pure stmt =
-  let rec is_pure acc s =
-    match s.stmt with
-    | TargetPE _ | IncrementLogProb _ | Tilde _ -> false
-    | _ ->
-      fold_statement (fun b _ -> b)
-        is_pure (fun b _ -> b) (fun b _ -> b) acc s.stmt
-  in
-  is_pure true stmt
 
 and print_jit ff kind =
   match kind with
