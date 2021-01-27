@@ -234,16 +234,22 @@ let distribution =
     (* 16.1 Normal Distribution *)
     "normal", Tnoclone;
     "normal_lpdf", Tnoclone;
+    "normal_lupdf", Tnoclone;
     "normal_cdf", Tnoclone;
     "normal_lcdf", Tnoclone;
     "normal_lccdf", Tnoclone;
     "normal_rng", Tnoclone;
     "std_normal", Tnoclone;
     "std_normal_lpdf", Tnoclone;
+    "std_normal_lupdf", Tnoclone;
     "std_normal_cdf", Tnoclone;
     "std_normal_lcdf", Tnoclone;
     "std_normal_lccdf", Tnoclone;
     "std_normal_rng", Tnoclone;
+    (* 16.2 Normal-id generalized linear model (linear regression) *)
+    "normal_id_glm", Tnoclone;
+    "normal_id_glm_lpdf", Tnoclone;
+    "normal_id_glm_lupdf", Tnoclone;
     (* 16.5 Student-T Distribution *)
     "student_t", Tnoclone;
     "student_t_lpdf", Tnoclone;

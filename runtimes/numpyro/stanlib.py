@@ -2535,55 +2535,58 @@ linspaced_row_vector_int_int_int = _to_float_1_2(linspaced_row_vector_int_real_r
 
 # int[] one_hot_int_array(int n, int k)
 # Create a one-hot encoded int array of length n with array[k] = 1
-one_hot_int_array_int_int = _XXX_TODO_XXX_("one_hot_int_array")
+from jax.nn import one_hot
+
+one_hot_int_array_int_int = lambda x, k: one_hot(x, k, dtype=dtype_long)
 
 # real[] one_hot_array(int n, int k)
 # Create a one-hot encoded real array of length n with array[k] = 1
-one_hot_array_int_int = _XXX_TODO_XXX_("one_hot_array")
+one_hot_array_int_int = lambda x, k: one_hot(x, k, dtype=dtype_float)
 
 # vector one_hot_vector(int n, int k)
 # Create an n-dimensional one-hot encoded vector with vector[k] = 1
-one_hot_vector_int_int = _XXX_TODO_XXX_("one_hot_vector")
+one_hot_vector_int_int = lambda x, k: one_hot(x, k, dtype=dtype_float)
 
 # row_vector one_hot_row_vector(int n, int k)
 # Create an n-dimensional one-hot encoded row-vector with row_vector[k] = 1
-one_hot_row_vector_int_int = _XXX_TODO_XXX_("one_hot_row_vector")
+one_hot_row_vector_int_int = lambda x, k: one_hot(x, k, dtype=dtype_float)
 
 # int[] ones_int_array(int n)
 # Create an int array of length n of all ones
-ones_int_array_int = _XXX_TODO_XXX_("ones_int_array")
+ones_int_array_int = lambda n: ones(n, dtype=dtype_long)
 
 # real[] ones_array(int n)
 # Create a real array of length n of all ones
-ones_array_int = _XXX_TODO_XXX_("ones_array")
+ones_array_int = lambda n: ones(n, dtype=dtype_float)
 
 # vector ones_vector(int n)
 # Create an n-dimensional vector of all ones
-ones_vector_int = _XXX_TODO_XXX_("ones_vector")
+ones_vector_int = lambda n: ones(n, dtype=dtype_float)
 
 # row_vector ones_row_vector(int n)
 # Create an n-dimensional row-vector of all ones
-ones_row_vector_int = _XXX_TODO_XXX_("ones_row_vector")
+ones_row_vector_int = lambda n: ones(n, dtype=dtype_float)
 
 # int[] zeros_int_array(int n)
 # Create an int array of length n of all zeros
-zeros_int_array_int = _XXX_TODO_XXX_("zeros_int_array")
+from jax.numpy import zeros
+zeros_int_array_int = lambda n: zeros(n, dtype=dtype_long)
 
 # real[] zeros_array(int n)
 # Create a real array of length n of all zeros
-zeros_array_int = _XXX_TODO_XXX_("zeros_array")
+zeros_array_int = lambda n: zeros(n, dtype=dtype_float)
 
 # vector zeros_vector(int n)
 # Create an n-dimensional vector of all zeros
-zeros_vector_int = _XXX_TODO_XXX_("zeros_vector")
+zeros_vector_int = lambda n: zeros(n, dtype=dtype_float)
 
 # row_vector zeros_row_vector(int n)
 # Create an n-dimensional row-vector of all zeros
-zeros_row_vector_int = _XXX_TODO_XXX_("zeros_row_vector")
+zeros_row_vector_int = lambda n: zeros(n, dtype=dtype_float)
 
 # vector uniform_simplex(int n)
 # Create an n-dimensional simplex with elements vector[i] = 1 / n for all i∈1,…,n
-uniform_simplex_int = _XXX_TODO_XXX_("uniform_simplex")
+uniform_simplex_int = lambda n: ones(n) / n
 
 
 ## 5.10 Slicing and Blocking Functions

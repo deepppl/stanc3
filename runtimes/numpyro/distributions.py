@@ -1,4 +1,5 @@
 import numpyro.distributions as d
+import numpyro.contrib.tfp.distributions as dtfp
 from numpyro.distributions import constraints, transforms
 from numpyro.distributions.transforms import biject_to as transform
 from numpyro.distributions.constraints import Constraint
@@ -15,6 +16,7 @@ from jax.numpy import zeros as tzeros
 from jax.numpy import zeros_like as tzeros_like
 from jax.numpy import transpose as ttranspose
 from jax.numpy import matmul as tmatmul
+from jax.numpy import sum as tsum
 import jax.numpy as tensor
 from numbers import Number
 from jax.numpy import array
@@ -30,15 +32,15 @@ def _XXX_TODO_XXX_(f):
 
 def _cast_float(x):
     if isinstance(x, Number):
-        return x.astype(dtype_float)
-    return array(x, dtype=dtype_float)
+        return array(x, dtype=dtype_float)
+    return x.astype(dtype_float)
 
 
 ## Utility functions
 def _unwrap(f):
     def f_unwrap(*args, **kargs):
-        # XXXX TODO: check that there is only one element XXXX
-        return f(*args, **kargs)[0]
+        # XXXX TODO: check that is correct XXXX
+        return tsum(f(*args, **kargs))
     return f_unwrap
 
 def _cast1(f):
@@ -63,6 +65,9 @@ def _lpdf(d):
         return d(*args).log_prob(y)
 
     return lpdf
+
+
+_lupdf = _lpdf
 
 
 def _lpmf(d):
@@ -501,6 +506,7 @@ multinomial_logit_rng = _rng(multinomial_logit)
 
 normal = _distrib(d.Normal, 2, dtype_float)
 normal_lpdf = _lpdf(normal)
+normal_lupdf = _lupdf(normal)
 normal_cdf = _cdf(normal)
 normal_lcdf = _lcdf(normal)
 normal_lccdf = _lccdf(normal)
@@ -516,19 +522,28 @@ def std_normal(*args):
     else:
         return d.Normal(0, 1)
 
-
 std_normal_lpdf = _lpdf(std_normal)
+std_normal_lupdf = _lupdf(std_normal)
 std_normal_cdf = _cdf(std_normal)
 std_normal_lcdf = _lcdf(std_normal)
 std_normal_lccdf = _lccdf(std_normal)
 std_normal_rng = _rng(std_normal)
+
+## 16.2 Normal-id generalized linear model (linear regression)
+
+# real normal_id_glm_lpdf(real y | matrix x, real alpha, vector beta, real sigma)
+# The log normal probability density of y given location alpha + x * beta and scale sigma.
+
+normal_id_glm = lambda x, alpha, beta, sigma: normal(alpha + tmatmul(x, beta), sigma)
+normal_id_glm_lpdf = _unwrap(_lpmf(normal_id_glm))
+normal_id_glm_lupdf = _unwrap(_lupmf(normal_id_glm))
 
 ## 16.5 Student-T Distribution
 
 # real student_t_lpdf(reals y | reals nu, reals mu, reals sigma)
 # The log of the Student-t density of y given degrees of freedom nu, location mu, and scale sigma
 
-student_t = _distrib(d.StudentT, 3, dtype_float)
+student_t = _distrib(dtfp.StudentT, 3, dtype_float)
 student_t_lpdf = _lpdf(student_t)
 student_t_cdf = _cdf(student_t)
 student_t_lcdf = _lcdf(student_t)
