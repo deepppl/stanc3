@@ -1703,14 +1703,18 @@ let stanlib =
     (* 10.1 integrate_ode_rk45, integrate_ode_adams, integrate_ode_bdf ODE integrators *)
     (* 10.1.1 Specifying an ordinary differential equation as a function *)
     (* 10.1.2 Non-stiff solver *)
-    "integrate_ode_rk45_function", Tnoclone;
-    "integrate_ode_rk45_function", Tnoclone;
+    "integrate_ode_rk45_function_array_real_array_array_array_array", Tnoclone;
+    "integrate_ode_rk45_function_array_int_array_array_array_array", Tnoclone;
+    "integrate_ode_rk45_function_array_real_array_array_array_array_real_real_int", Tnoclone;
+    "integrate_ode_rk45_function_array_int_array_array_array_array_real_real_int", Tnoclone;
     "integrate_ode_function", Tnoclone;
     "integrate_ode_adams_function", Tnoclone;
     "integrate_ode_adams_function", Tnoclone;
     (* 10.1.3 Stiff solver *)
-    "integrate_ode_bdf_function", Tnoclone;
-    "integrate_ode_bdf_function", Tnoclone;
+    "integrate_ode_bdf_function_array_real_array_array_array_array", Tnoclone;
+    "integrate_ode_bdf_function_array_int_array_array_array_array", Tnoclone;
+    "integrate_ode_bdf_function_array_real_array_array_array_array_real_real_int", Tnoclone;
+    "integrate_ode_bdf_function_array_int_array_array_array_array_real_real_int", Tnoclone;
   ]
 
 let keywords =
@@ -1748,7 +1752,7 @@ let stanlib_id id args =
     | URowVector -> "_rowvector"
     | UMatrix -> "_matrix"
     | UArray _ -> "_array"
-    | UMathLibraryFunction | UFun _ -> ""
+    | UMathLibraryFunction | UFun _ -> "_function"
   in
   if
     List.exists
