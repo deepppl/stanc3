@@ -1,6 +1,7 @@
 import pyro.distributions as d
 from torch.distributions import constraints, transform_to as transform
 from pyro.distributions.constraints import Constraint
+from numbers import Number
 from torch import (
     norm as tnorm,
     log as tlog,
@@ -45,9 +46,9 @@ def _XXX_TODO_XXX_(f):
     return todo
 
 def _cast_float(x):
-    if isinstance(x, dtype_long):
-        return x.type(dtype_float)
-    return array(x, dtype=dtype_float)
+    if isinstance(x, Number):
+        return array(x, dtype=dtype_float)
+    return x.type(dtype_float)
 
 
 ## Utility functions
@@ -515,6 +516,7 @@ multinomial_logit_rng = _rng(multinomial_logit)
 
 normal = _distrib(d.Normal, 2, dtype_float)
 normal_lpdf = _lpdf(normal)
+normal_lupdf = _lupdf(normal)
 normal_cdf = _cdf(normal)
 normal_lcdf = _lcdf(normal)
 normal_lccdf = _lccdf(normal)
@@ -532,10 +534,20 @@ def std_normal(*args):
 
 
 std_normal_lpdf = _lpdf(std_normal)
+std_normal_lupdf = _lupdf(std_normal)
 std_normal_cdf = _cdf(std_normal)
 std_normal_lcdf = _lcdf(std_normal)
 std_normal_lccdf = _lccdf(std_normal)
 std_normal_rng = _rng(std_normal)
+
+## 16.2 Normal-id generalized linear model (linear regression)
+
+# real normal_id_glm_lpdf(real y | matrix x, real alpha, vector beta, real sigma)
+# The log normal probability density of y given location alpha + x * beta and scale sigma.
+
+normal_id_glm = lambda x, alpha, beta, sigma: normal(alpha + tmatmul(x, beta), sigma)
+normal_id_glm_lpdf = _lpmf(normal_id_glm)
+normal_id_glm_lupdf = _lupmf(normal_id_glm)
 
 ## 16.5 Student-T Distribution
 
