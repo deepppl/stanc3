@@ -1727,6 +1727,7 @@ let keywords =
   [ "lambda"; "def"; ]
 
 let avoid =
+  "_f" ::
   keywords @ pyro_dppllib @ numpyro_dppllib @ dppllib_networks @
   (List.map ~f:fst distribution) @ (List.map ~f:fst stanlib)
 
@@ -1763,7 +1764,7 @@ let stanlib_id id args =
   if
     List.exists
       ~f:(fun x -> String.is_suffix id.name ~suffix:x)
-      ["_lpdf"; "_lpmf"; "_lupmf"; "_lcdf"; "_lccdf"; "_rng"]
+      ["_lpdf"; "_lupdf"; "_lpmf"; "_lupmf"; "_lcdf"; "_lccdf"; "_rng"]
  then
    id.name
  else
@@ -3162,7 +3163,11 @@ let trans_generatedquantitiesblock ctx networks data tdata params tparams ff
       trans_block_as_kwargs
       Option.(merge ~f:(@) data (merge ~f:(@) tdata params))
       trans_networks_as_arg networks;
-    fprintf ff "return vmap(_generated_quantities)(%a)"
+    begin match ctx.ctx_backend with
+    | Numpyro -> fprintf ff "_f = jit(vmap(_generated_quantities))@,"
+    | Pyro | Pyro_cuda -> fprintf ff "_f = vmap(_generated_quantities)@,"
+    end;
+    fprintf ff "return _f(%a)"
       (trans_block_as_unpack "_samples") params;
     fprintf ff "@]@,@]";
   end
