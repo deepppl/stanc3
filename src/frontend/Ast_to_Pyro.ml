@@ -1726,6 +1726,7 @@ let keywords =
   [ "lambda"; "def"; ]
 
 let avoid =
+  "_f" ::
   keywords @ pyro_dppllib @ numpyro_dppllib @
   (List.map ~f:fst distribution) @ (List.map ~f:fst stanlib)
 
@@ -2990,7 +2991,11 @@ let trans_generatedquantitiesblock ctx data tdata params tparams ff
       (trans_block_as_args ~named:false) params
       trans_block_as_kwargs
       Option.(merge ~f:(@) data (merge ~f:(@) tdata params));
-    fprintf ff "return vmap(_generated_quantities)(%a)"
+    begin match ctx.ctx_backend with
+    | Numpyro -> fprintf ff "_f = jit(vmap(_generated_quantities))@,"
+    | Pyro | Pyro_cuda -> fprintf ff "_f = vmap(_generated_quantities)@,"
+    end;
+    fprintf ff "return _f(%a)"
       (trans_block_as_unpack "_samples") params;
     fprintf ff "@]@,@]";
   end
