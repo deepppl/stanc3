@@ -1753,7 +1753,7 @@ let stanlib_id id args =
   if
     List.exists
       ~f:(fun x -> String.is_suffix id.name ~suffix:x)
-      ["_lpdf"; "_lpmf"; "_lupmf"; "_lcdf"; "_lccdf"; "_rng"]
+      ["_lpdf"; "_lupdf"; "_lpmf"; "_lupmf"; "_lcdf"; "_lccdf"; "_rng"]
  then
    id.name
  else
