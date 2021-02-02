@@ -2767,6 +2767,9 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
       fprintf ff "%a = %a"
         trans_id identifier
         (trans_expr_opt ctx decl_type) initial_value
+  | Profile (x, stmts) ->
+      fprintf ff "@[<v 0># profile(%s)@,%a@]"
+        x (print_list_newline (trans_stmt ctx)) stmts
   | Block stmts ->
       fprintf ff "%a" (print_list_newline (trans_stmt ctx)) stmts
   | Return e ->

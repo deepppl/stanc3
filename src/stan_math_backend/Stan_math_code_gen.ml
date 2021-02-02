@@ -26,7 +26,11 @@ let standalone_functions = ref false
 
 let stanc_args_to_print =
   let sans_model_and_hpp_paths x =
-    not String.(is_suffix ~suffix:".stan" x || is_prefix ~prefix:"--o" x)
+    not
+      String.(
+        is_suffix ~suffix:".stan" x
+        && not (is_prefix ~prefix:"--filename-in-msg" x)
+        || is_prefix ~prefix:"--o" x)
   in
   (* Ignore the "--o" arg, the stan file and the binary name (bin/stanc). *)
   Array.to_list Sys.argv |> List.tl_exn
@@ -937,6 +941,11 @@ stan::model::model_base& new_model(
   return *m;
 }
 
+stan::math::profile_map& get_stan_profile_data() {
+  return %s_namespace::profiles__;
+}
+
 #endif
-|} ;
+|}
+      p.prog_name ;
     pf ppf "@[<v>%a@]" pp_register_map_rect_functors p )

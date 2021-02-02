@@ -375,9 +375,9 @@ let pretty_print_math_sigs = Fmt.strf "@[<v>@,%a@]" pp_math_sigs
 let pretty_print_all_math_sigs ppf () =
   let open Fmt in
   let pp_sig ppf (name, (rt, args)) =
-    pf ppf "%a %s(@[<hov 2>%a@])" UnsizedType.pp_returntype rt name
+    pf ppf "%s(@[<hov 2>%a@]) => %a" name
       (list ~sep:comma UnsizedType.pp)
-      (List.map ~f:snd args)
+      (List.map ~f:snd args) UnsizedType.pp_returntype rt
   in
   let pp_sigs_for_name ppf name =
     (list ~sep:cut pp_sig) ppf
@@ -1219,6 +1219,10 @@ let () =
   add_binary "lchoose" ;
   add_binary_vec_real_int "ldexp" ;
   add_qualified
+    ( "linspaced_int_array"
+    , ReturnType (UArray UInt)
+    , [(DataOnly, UInt); (DataOnly, UInt); (DataOnly, UInt)] ) ;
+  add_qualified
     ( "linspaced_array"
     , ReturnType (UArray UReal)
     , [(DataOnly, UInt); (DataOnly, UReal); (DataOnly, UReal)] ) ;
@@ -1706,6 +1710,7 @@ let () =
   add_unqualified ("sum", ReturnType UReal, [UMatrix]) ;
   add_unqualified ("svd_U", ReturnType UMatrix, [UMatrix]) ;
   add_unqualified ("svd_V", ReturnType UMatrix, [UMatrix]) ;
+  add_unqualified ("symmetrize_from_lower_tri", ReturnType UMatrix, [UMatrix]) ;
   add_unqualified ("tail", ReturnType URowVector, [URowVector; UInt]) ;
   add_unqualified ("tail", ReturnType UVector, [UVector; UInt]) ;
   List.iter

@@ -112,8 +112,8 @@ let lub_rt loc rt1 rt2 =
   | _, _ when rt1 = rt2 -> Validate.ok rt2
   | _ -> Semantic_error.mismatched_return_types loc rt1 rt2 |> Validate.error
 
-(* 
-Checks that a variable/function name: 
+(*
+Checks that a variable/function name:
  - if UDF that it does not match a Stan Math function
  - a function/identifier does not have the _lupdf/_lupmf suffix
  - is not already in use
@@ -193,7 +193,7 @@ let reserved_keywords =
   ; "for"; "in"; "break"; "continue"; "void"; "int"; "real"; "vector"
   ; "row_vector"; "matrix"; "ordered"; "positive_ordered"; "simplex"
   ; "unit_vector"; "cholesky_factor_corr"; "cholesky_factor_cov"; "corr_matrix"
-  ; "cov_matrix"; "print"; "reject"; "target"; "get_lp" ]
+  ; "cov_matrix"; "print"; "reject"; "target"; "get_lp"; "profile" ]
 
 let semantic_check_identifier id =
   Validate.(
@@ -1035,10 +1035,14 @@ let mk_assignment_from_indexed_expr assop lhs rhs =
     {assign_lhs= Ast.lvalue_of_expr lhs; assign_op= assop; assign_rhs= rhs}
 
 let semantic_check_assignment_operator ~loc assop lhs rhs =
+  let op =
+    match assop with
+    | Assign | ArrowAssign -> Operator.Equals
+    | OperatorAssign op -> op
+  in
   Validate.(
     let err =
-      Semantic_error.illtyped_assignment loc assop lhs.emeta.type_
-        rhs.emeta.type_
+      Semantic_error.illtyped_assignment loc op lhs.emeta.type_ rhs.emeta.type_
     in
     match assop with
     | Assign | ArrowAssign ->
@@ -1494,6 +1498,28 @@ and semantic_check_block ~loc ~cf stmts =
     map return_ty ~f:(fun return_type ->
         mk_typed_statement ~stmt:(Block xs) ~return_type ~loc ))
 
+and semantic_check_profile ~loc ~cf name stmts =
+  Symbol_table.begin_scope vm ;
+  (* Any statements after a break or continue or return or reject
+     do not count for the return type.
+  *)
+  let validated_stmts =
+    List.map ~f:(semantic_check_statement cf) stmts |> Validate.sequence
+  in
+  Symbol_table.end_scope vm ;
+  Validate.(
+    validated_stmts
+    >>= fun xs ->
+    let return_ty =
+      xs |> list_until_escape
+      |> List.map ~f:(fun s -> s.smeta.return_type)
+      |> List.fold ~init:(ok NoReturnType) ~f:(fun accu x ->
+             accu >>= fun y -> try_compute_block_statement_returntype loc y x
+         )
+    in
+    map return_ty ~f:(fun return_type ->
+        mk_typed_statement ~stmt:(Profile (name, xs)) ~return_type ~loc ))
+
 (* -- Variable Declarations ------------------------------------------------- *)
 and semantic_check_var_decl_bounds ~loc is_global sized_ty trans =
   let is_real {emeta; _} = emeta.type_ = UReal in
@@ -1772,6 +1798,7 @@ and semantic_check_statement cf (s : Ast.untyped_statement) :
         loop_body
   | ForEach (id, e, s) -> semantic_check_foreach ~loc ~cf id e s
   | Block vdsl -> semantic_check_block ~loc ~cf vdsl
+  | Profile (name, vdsl) -> semantic_check_profile ~loc ~cf name vdsl
   | VarDecl {decl_type= Unsized _; _} ->
       raise_s [%message "Don't support unsized declarations yet."]
   | VarDecl
