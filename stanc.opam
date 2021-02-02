@@ -1,0 +1,20 @@
+opam-version: "2.0"
+maintainer: "TODO"
+authors: "TODO"
+homepage: "TODO"
+bug-reports: "TODO"
+synopsis: "TODO"
+depends: [
+  "ocaml" {= "4.07.0"}
+  "dune" {>= "2.6"}
+  "ocamlformat" {= "0.8"}
+  "menhir"
+  "ocp-indent"
+  "patdiff"
+]
+build: [
+  [
+    "dune" "build" "-p" name "-j" jobs
+    "@install"
+  ]
+]
