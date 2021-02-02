@@ -3265,9 +3265,9 @@ let trans_prog backend mode ff (p : typed_program) =
     if p.networksblock <> None then dppllib @ dppllib_networks else dppllib
   in
   fprintf ff "@[<v 0>%a%a%a@,@]"
-    (pp_imports ("runtimes."^runtime^".distributions")) ["*"]
-    (pp_imports ("runtimes."^runtime^".dppllib")) dppllib
-    (pp_imports ("runtimes."^runtime^".stanlib"))
+    (pp_imports ("stan"^runtime^".distributions")) ["*"]
+    (pp_imports ("stan"^runtime^".dppllib")) dppllib
+    (pp_imports ("stan"^runtime^".stanlib"))
     (SSet.to_list (get_stanlib_calls p));
   Option.iter ~f:(trans_functionblock ctx ff) p.functionblock;
   fprintf ff "%a" trans_datablock p.datablock;

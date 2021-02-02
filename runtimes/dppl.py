@@ -29,15 +29,18 @@ def _flatten_dict(d):
 
 
 def _exec(cmd):
-    try:
-        output = subprocess.check_output(
-            cmd, stderr=subprocess.PIPE, universal_newlines=True
-        )
-        if output:
-            print(output, file=sys.stdout)
-    except subprocess.CalledProcessError as exc:
-        print(f"Error {exc.returncode}: {exc.stderr}", file=sys.stderr)
-        assert False
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=os.environ,
+    )
+    stdout, stderr = proc.communicate()
+    if proc.returncode:
+        raise RuntimeError(f"{stderr.decode('utf-8').strip()}")
+    if stdout:
+        print(f"stdout.decode('utf-8').strip()")
+    return None
 
 
 def compile(backend, mode, stanfile, compiler, build_dir="_tmp"):
@@ -94,11 +97,10 @@ class Model:
 
         # HACK pyro an numpyro MCMC do not have the same parameters...
         if self.pyro_backend == "numpyro":
-            rng_key, _ = jax.random.split(jax.random.PRNGKey(0))
             mcmc = self.pyro.infer.MCMC(
                 kernel, warmups, samples - warmups, num_chains=chains, thinning=thin, **kwargs
             )
-            mcmc.run = partial(mcmc.run, rng_key)
+            mcmc.run = partial(mcmc.run, jax.random.PRNGKey(0))
             mcmc.thin = None
         elif self.pyro_backend == "pyro":
             kwargs = {"mp_context": "forkserver", **kwargs}
