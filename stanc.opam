@@ -8,7 +8,11 @@ depends: [
   "ocaml" {= "4.07.0"}
   "dune" {>= "2.6"}
   "ocamlformat" {= "0.8"}
-  "menhir"
+  "core_kernel" {= "v0.11.1"} 
+  "menhir" {= "20181113"}
+  "ppx_deriving" {= "4.2.1"}
+  "fmt" {= "0.8.5"}
+  "yojson" {= "1.7.0"}
   "ocp-indent"
   "patdiff"
 ]
