@@ -1,10 +1,10 @@
-from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap, register_network, random_module
+from stanpyro.distributions import *
+from stanpyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap, register_network, random_module
 
 def convert_inputs(inputs):
     nz = inputs['nz']
     x = array(inputs['x'], dtype=dtype_long)
-    return { 'nz': nz, 'x': x }
+    return { 'nz': nz, 'x': x, 'encoder': encoder, 'decoder': decoder }
 
 def model(*, nz, x, decoder, encoder):
     # Networks

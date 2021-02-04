@@ -1,6 +1,6 @@
-from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap
-from runtimes.pyro.stanlib import sqrt_real
+from stanpyro.distributions import *
+from stanpyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap
+from stanpyro.stanlib import sqrt_real
 
 def convert_inputs(inputs):
     I = inputs['I']
@@ -50,8 +50,6 @@ def map_generated_quantities(_samples, *, I, n, N, x1, x2, x1x2):
                                     alpha0=alpha0, alpha1=alpha1,
                                     alpha12=alpha12, alpha2=alpha2, tau=tau,
                                     b=b)
-    return vmap(_generated_quantities)(_samples['alpha0'],
-                                       _samples['alpha1'],
-                                       _samples['alpha12'],
-                                       _samples['alpha2'], _samples['tau'],
-                                       _samples['b'])
+    _f = vmap(_generated_quantities)
+    return _f(_samples['alpha0'], _samples['alpha1'], _samples['alpha12'],
+              _samples['alpha2'], _samples['tau'], _samples['b'])

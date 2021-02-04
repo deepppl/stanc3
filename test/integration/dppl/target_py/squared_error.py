@@ -1,6 +1,6 @@
-from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap
-from runtimes.pyro.stanlib import dot_self_vector
+from stanpyro.distributions import *
+from stanpyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap
+from stanpyro.stanlib import dot_self_vector
 
 def convert_inputs(inputs):
     N = inputs['N']
@@ -28,4 +28,5 @@ def generated_quantities(*, N, y, K, x, beta__):
 def map_generated_quantities(_samples, *, N, y, K, x):
     def _generated_quantities(beta__):
         return generated_quantities(N=N, y=y, K=K, x=x, beta__=beta__)
-    return vmap(_generated_quantities)(_samples['beta'])
+    _f = vmap(_generated_quantities)
+    return _f(_samples['beta'])

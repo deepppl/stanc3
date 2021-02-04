@@ -1,6 +1,6 @@
-from runtimes.pyro.distributions import *
-from runtimes.pyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap
-from runtimes.pyro.stanlib import log_vector, sqrt_vector
+from stanpyro.distributions import *
+from stanpyro.dppllib import sample, param, observe, factor, array, zeros, ones, empty, matmul, true_divide, floor_divide, transpose, dtype_long, dtype_float, vmap
+from stanpyro.stanlib import log_vector, sqrt_vector
 
 def convert_inputs(inputs):
     N = inputs['N']
