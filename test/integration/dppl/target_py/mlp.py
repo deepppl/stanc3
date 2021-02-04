@@ -9,8 +9,9 @@ def convert_inputs(inputs):
     batch_size = inputs['batch_size']
     imgs = array(inputs['imgs'], dtype=dtype_long)
     labels = array(inputs['labels'], dtype=dtype_long)
+    mlp = inputs['mlp']
     return { 'nx': nx, 'nh': nh, 'ny': ny, 'batch_size': batch_size,
-             'imgs': imgs, 'labels': labels }
+             'imgs': imgs, 'labels': labels, 'mlp': mlp }
 
 def prior_mlp(*, nx, nh, ny, batch_size, imgs, labels, mlp):
     mlp_ = {}

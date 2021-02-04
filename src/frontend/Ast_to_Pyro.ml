@@ -2842,6 +2842,12 @@ and print_jit ff kind =
 let trans_stmts ctx ff stmts =
   fprintf ff "%a" (print_list_newline (trans_stmt ctx)) stmts
 
+let id_list_of_networks networks =
+  match networks with
+  | None -> []
+  | Some nets ->
+      List.fold_left ~init:[] ~f:(fun acc net -> net.net_id :: acc) nets
+
 let trans_fun_def ctx ff (ts : typed_statement) =
   match ts.stmt with
   | FunDef {funname; arguments; body; _} ->
@@ -2868,7 +2874,7 @@ let trans_block_as_kwargs ff block =
               (print_list_comma
                  (fun ff x -> fprintf ff "%a=%a" trans_id x trans_id x)) args
 
-let trans_block_as_return ?(with_rename=false) ff block =
+let trans_ids_as_return ?(with_rename=false) ff ids =
   fprintf ff "return { %a }"
     (print_list_comma
        (fun ff x ->
@@ -2876,7 +2882,10 @@ let trans_block_as_return ?(with_rename=false) ff block =
             fprintf ff "'%a': %a" trans_id x trans_id x
           else
             fprintf ff "'%s': %a" x.name trans_id x))
-    (get_var_decl_names_block block)
+    ids
+
+let trans_block_as_return ?(with_rename=false) ff block =
+  trans_ids_as_return ~with_rename ff (get_var_decl_names_block block)
 
 let trans_block_as_unpack name ff block =
   let unpack ff x = fprintf ff "%s['%s']" name x.name in
@@ -2908,11 +2917,23 @@ let convert_inputs ff odata =
     ~f:(fun data -> print_list_newline convert_input ff data)
     odata
 
-let trans_datablock ff data =
+let convert_networks_inputs ff onetworks =
+  let convert_network_input ff net =
+    fprintf ff "%a = inputs['%s']" trans_id net.net_id net.net_id.name
+  in
+  Option.iter
+    ~f:(fun nets -> print_list_newline ~eol:true convert_network_input ff nets)
+    onetworks
+
+let trans_datablock networks ff data =
+  let ids =
+    (get_var_decl_names_block data) @ (id_list_of_networks networks)
+  in
   fprintf ff
-    "@[<v 0>@[<v 4>def convert_inputs(inputs):@,%a@,%a@]@,@,@]"
+    "@[<v 0>@[<v 4>def convert_inputs(inputs):@,%a@,%a%a@]@,@,@]"
     convert_inputs data
-    (trans_block_as_return ~with_rename:true) data
+    convert_networks_inputs networks
+    (trans_ids_as_return ~with_rename:true) ids
 
 let trans_networks_as_arg ff networks =
   match networks with
@@ -3273,7 +3294,7 @@ let trans_prog backend mode ff (p : typed_program) =
     (pp_imports ("stan"^runtime^".stanlib"))
     (SSet.to_list (get_stanlib_calls p));
   Option.iter ~f:(trans_functionblock ctx ff) p.functionblock;
-  fprintf ff "%a" trans_datablock p.datablock;
+  fprintf ff "%a" (trans_datablock p.networksblock) p.datablock;
   fprintf ff "%a"
     (trans_transformeddatablock ctx p.datablock) p.transformeddatablock;
   fprintf ff "%a"

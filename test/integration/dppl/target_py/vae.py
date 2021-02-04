@@ -4,6 +4,8 @@ from stanpyro.dppllib import sample, param, observe, factor, array, zeros, ones,
 def convert_inputs(inputs):
     nz = inputs['nz']
     x = array(inputs['x'], dtype=dtype_long)
+    decoder = inputs['decoder']
+    encoder = inputs['encoder']
     return { 'nz': nz, 'x': x, 'encoder': encoder, 'decoder': decoder }
 
 def model(*, nz, x, decoder, encoder):
