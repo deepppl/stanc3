@@ -1966,7 +1966,7 @@ let push_priors priors stmts =
             | Some prior, stmts -> priors @ [prior], stmts
             | None, stmts -> priors, stmts
             end
-        | VarDecl { identifier = id; _ } -> priors @ [decl], stmts
+        | VarDecl _ -> priors @ [decl], stmts
         | _ -> assert false)
     ~init:([], stmts) priors
 
