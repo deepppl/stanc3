@@ -1959,11 +1959,14 @@ let push_priors priors stmts =
   List.fold_left
     ~f:(fun (priors, stmts) decl ->
         match decl.stmt with
-        | VarDecl { identifier = id; initial_value = None; _ } ->
+        | VarDecl { identifier = id; initial_value = None;
+                    transformation = Identity; _ } ->
+
             begin match push_prior_stmts (id.name, decl) stmts with
             | Some prior, stmts -> priors @ [prior], stmts
             | None, stmts -> priors, stmts
             end
+        | VarDecl { identifier = id; _ } -> priors @ [decl], stmts
         | _ -> assert false)
     ~init:([], stmts) priors
 
