@@ -83,264 +83,340 @@ let numpyro_dppllib =
     "jit"; ] @ pyro_dppllib
 let dppllib_networks = [ "register_network"; "random_module"; ]
 
-let distribution =
-  [ "improper_uniform", Tnoclone;
-    "lower_constrained_improper_uniform", Tnoclone;
-    "upper_constrained_improper_uniform", Tnoclone;
-    "simplex_constrained_improper_uniform", Tnoclone;
-    "unit_constrained_improper_uniform", Tnoclone;
-    "ordered_constrained_improper_uniform", Tnoclone;
-    "positive_ordered_constrained_improper_uniform", Tnoclone;
-    "cholesky_factor_corr_constrained_improper_uniform", Tnoclone;
-    "cholesky_factor_cov_constrained_improper_uniform", Tnoclone;
-    "cov_constrained_improper_uniform", Tnoclone;
-    "corr_constrained_improper_uniform", Tnoclone;
-    "offset_constrained_improper_uniform", Tnoclone;
-    "multiplier_constrained_improper_uniform", Tnoclone;
-    "offset_multiplier_constrained_improper_uniform", Tnoclone;
+let no_constraint _ =
+  Program.Identity
+
+let lower_constraint args =
+  match List.map ~f:untyped_expression_of_typed_expression args with
+  | [ lb ] -> Program.Lower lb
+  | _ -> assert false
+
+let upper_constraint args =
+  match List.map ~f:untyped_expression_of_typed_expression args with
+  | [ ub ] -> Program.Upper ub
+  | _ -> assert false
+
+let lower_upper_constraint args =
+  match List.map ~f:untyped_expression_of_typed_expression args with
+  | [ lb; ub ] -> Program.LowerUpper (lb, ub)
+  | _ -> assert false
+
+let simplex_constraint _ =
+  Program.Simplex
+
+let unit_constraint _ =
+  Program.UnitVector
+
+let ordered_constraint _ =
+  Program.Ordered
+
+let positive_ordered_constraint _ =
+  Program.PositiveOrdered
+
+let cholesky_corr_constraint _ =
+  Program.CholeskyCorr
+
+let cholesky_cov_constraint _ =
+  Program.CholeskyCov
+
+let covariance_constraint _ =
+  Program.Covariance
+
+let correlation_constraint _ =
+  Program.Correlation
+
+let offset_constraint args =
+  match List.map ~f:untyped_expression_of_typed_expression args with
+  | [ e ] -> Program.Offset e
+  | _ -> assert false
+
+let multiplier_constraint args =
+  match List.map ~f:untyped_expression_of_typed_expression args with
+  | [ e ] -> Program.Multiplier e
+  | _ -> assert false
+
+let offset_multiplier_constraint args =
+  match List.map ~f:untyped_expression_of_typed_expression args with
+  | [ e1; e2 ] -> Program.OffsetMultiplier (e1, e2)
+  | _ -> assert false
+
+let inteval_constraint lb ub _ =
+  let lb =
+    mk_untyped_expression ~expr:(RealNumeral lb) ~loc:Location_span.empty
+  in
+  let ub =
+    mk_untyped_expression ~expr:(RealNumeral ub) ~loc:Location_span.empty
+  in
+  Program.LowerUpper (lb, ub)
+
+let grather_than_constraint lb _ =
+  let lb =
+    mk_untyped_expression ~expr:(RealNumeral lb) ~loc:Location_span.empty
+  in
+  Program.Lower lb
+
+let distributions =
+  [ "improper_uniform", (Tnoclone, no_constraint);
+    "lower_constrained_improper_uniform", (Tnoclone, lower_constraint);
+    "upper_constrained_improper_uniform", (Tnoclone, upper_constraint);
+    "simplex_constrained_improper_uniform", (Tnoclone, simplex_constraint);
+    "unit_constrained_improper_uniform", (Tnoclone, unit_constraint);
+    "ordered_constrained_improper_uniform", (Tnoclone, ordered_constraint);
+    "positive_ordered_constrained_improper_uniform", (Tnoclone,
+    positive_ordered_constraint);
+    "cholesky_factor_corr_constrained_improper_uniform", (Tnoclone,
+    cholesky_corr_constraint);
+    "cholesky_factor_cov_constrained_improper_uniform", (Tnoclone,
+    cholesky_cov_constraint);
+    "cov_constrained_improper_uniform", (Tnoclone, covariance_constraint);
+    "corr_constrained_improper_uniform", (Tnoclone, correlation_constraint);
+    "offset_constrained_improper_uniform", (Tnoclone, offset_constraint);
+    "multiplier_constrained_improper_uniform", (Tnoclone, multiplier_constraint);
+    "offset_multiplier_constrained_improper_uniform", (Tnoclone,
+    offset_multiplier_constraint);
     (* 12 Binary Distributions *)
     (* 12.1 Bernoulli Distribution *)
-    "bernoulli", Tnoclone;
-    "bernoulli_lpmf", Tnoclone;
-    "bernoulli_lupmf", Tnoclone;
-    "bernoulli_cdf", Tnoclone;
-    "bernoulli_lcdf", Tnoclone;
-    "bernoulli_lccdf", Tnoclone;
-    "bernoulli_rng", Tnoclone;
+    "bernoulli", (Tnoclone, inteval_constraint "0" "1");
+    "bernoulli_lpmf", (Tnoclone, no_constraint);
+    "bernoulli_lupmf", (Tnoclone, no_constraint);
+    "bernoulli_cdf", (Tnoclone, no_constraint);
+    "bernoulli_lcdf", (Tnoclone, no_constraint);
+    "bernoulli_lccdf", (Tnoclone, no_constraint);
+    "bernoulli_rng", (Tnoclone, no_constraint);
     (* 12.2 Bernoulli Distribution, Logit Parameterization *)
-    "bernoulli_logit", Tnoclone;
-    "bernoulli_logit_lpmf", Tnoclone;
-    "bernoulli_logit_lupmf", Tnoclone;
+    "bernoulli_logit", (Tnoclone, inteval_constraint "0" "1");
+    "bernoulli_logit_lpmf", (Tnoclone, no_constraint);
+    "bernoulli_logit_lupmf", (Tnoclone, no_constraint);
     (* 12.3 Bernoulli-logit generalized linear model (Logistic Regression) *)
-    "bernoulli_logit_glm", Tnoclone;
-    "bernoulli_logit_glm_lpmf", Tnoclone;
-    "bernoulli_logit_glm_lupmf", Tnoclone;
+    "bernoulli_logit_glm", (Tnoclone, inteval_constraint "0" "1");
+    "bernoulli_logit_glm_lpmf", (Tnoclone, no_constraint);
+    "bernoulli_logit_glm_lupmf", (Tnoclone, no_constraint);
     (* 13 Bounded Discrete Distributions *)
     (* 13.1 Binomial distribution *)
-    "binomial", Tnoclone;
-    "binomial_lpmf", Tnoclone;
-    "binomial_lupmf", Tnoclone;
-    "binomial_cdf", Tnoclone;
-    "binomial_lcdf", Tnoclone;
-    "binomial_lccdf", Tnoclone;
-    "binomial_rng", Tnoclone;
+    "binomial", (Tnoclone, no_constraint);
+    "binomial_lpmf", (Tnoclone, no_constraint);
+    "binomial_lupmf", (Tnoclone, no_constraint);
+    "binomial_cdf", (Tnoclone, no_constraint);
+    "binomial_lcdf", (Tnoclone, no_constraint);
+    "binomial_lccdf", (Tnoclone, no_constraint);
+    "binomial_rng", (Tnoclone, no_constraint);
     (* 13.2 Binomial Distribution, Logit Parameterization *)
-    "binomial_logit", Tnoclone;
-    "binomial_logit_lpmf", Tnoclone;
-    "binomial_logit_lupmf", Tnoclone;
+    "binomial_logit", (Tnoclone, no_constraint);
+    "binomial_logit_lpmf", (Tnoclone, no_constraint);
+    "binomial_logit_lupmf", (Tnoclone, no_constraint);
     (* 13.3 Beta-binomial distribution *)
-    "beta_binomial", Tnoclone;
-    "beta_binomial_lpmf", Tnoclone;
-    "beta_binomial_lupmf", Tnoclone;
-    "beta_binomial_cdf", Tnoclone;
-    "beta_binomial_lcdf", Tnoclone;
-    "beta_binomial_lccdf", Tnoclone;
-    "beta_binomial_rng", Tnoclone;
+    "beta_binomial", (Tnoclone, no_constraint);
+    "beta_binomial_lpmf", (Tnoclone, no_constraint);
+    "beta_binomial_lupmf", (Tnoclone, no_constraint);
+    "beta_binomial_cdf", (Tnoclone, no_constraint);
+    "beta_binomial_lcdf", (Tnoclone, no_constraint);
+    "beta_binomial_lccdf", (Tnoclone, no_constraint);
+    "beta_binomial_rng", (Tnoclone, no_constraint);
     (* 13.4 Hypergeometric distribution *)
-    "hypergeometric", Tnoclone;
-    "hypergeometric_lpmf", Tnoclone;
-    "hypergeometric_lupmf", Tnoclone;
-    "hypergeometric_rng", Tnoclone;
+    "hypergeometric", (Tnoclone, no_constraint);
+    "hypergeometric_lpmf", (Tnoclone, no_constraint);
+    "hypergeometric_lupmf", (Tnoclone, no_constraint);
+    "hypergeometric_rng", (Tnoclone, no_constraint);
     (* 13.5 Categorical Distribution *)
-    "categorical", Tnoclone;
-    "categorical_lpmf", Tnoclone;
-    "categorical_lupmf", Tnoclone;
-    "categorical_rng", Tnoclone;
-    "categorical_logit", Tnoclone;
-    "categorical_logit_lpmf", Tnoclone;
-    "categorical_logit_lupmf", Tnoclone;
-    "categorical_logit_rng", Tnoclone;
+    "categorical", (Tnoclone, no_constraint);
+    "categorical_lpmf", (Tnoclone, no_constraint);
+    "categorical_lupmf", (Tnoclone, no_constraint);
+    "categorical_rng", (Tnoclone, no_constraint);
+    "categorical_logit", (Tnoclone, no_constraint);
+    "categorical_logit_lpmf", (Tnoclone, no_constraint);
+    "categorical_logit_lupmf", (Tnoclone, no_constraint);
+    "categorical_logit_rng", (Tnoclone, no_constraint);
     (* 13.6 Categorical logit generalized linear model (softmax regression) *)
-    "categorical_logit_glm", Tnoclone;
-    "categorical_logit_glm_lpmf", Tnoclone;
-    "categorical_logit_glm_lupmf", Tnoclone;
+    "categorical_logit_glm", (Tnoclone, no_constraint);
+    "categorical_logit_glm_lpmf", (Tnoclone, no_constraint);
+    "categorical_logit_glm_lupmf", (Tnoclone, no_constraint);
     (* 13.7 Discrete range distribution *)
-    "discrete_range", Tnoclone;
-    "discrete_range_lpmf", Tnoclone;
-    "discrete_range_lupmf", Tnoclone;
-    "discrete_range_cdf", Tnoclone;
-    "discrete_range_lcdf", Tnoclone;
-    "discrete_range_lccdf", Tnoclone;
-    "discrete_range_rng", Tnoclone;
+    "discrete_range", (Tnoclone, lower_upper_constraint);
+    "discrete_range_lpmf", (Tnoclone, no_constraint);
+    "discrete_range_lupmf", (Tnoclone, no_constraint);
+    "discrete_range_cdf", (Tnoclone, no_constraint);
+    "discrete_range_lcdf", (Tnoclone, no_constraint);
+    "discrete_range_lccdf", (Tnoclone, no_constraint);
+    "discrete_range_rng", (Tnoclone, no_constraint);
     (* 13.8 Ordered logistic distribution *)
-    "ordered_logistic", Tnoclone;
-    "ordered_logistic_lpmf", Tnoclone;
-    "ordered_logistic_lupmf", Tnoclone;
-    "ordered_logistic_rng", Tnoclone;
+    "ordered_logistic", (Tnoclone, no_constraint);
+    "ordered_logistic_lpmf", (Tnoclone, no_constraint);
+    "ordered_logistic_lupmf", (Tnoclone, no_constraint);
+    "ordered_logistic_rng", (Tnoclone, no_constraint);
     (* 13.9 Ordered logistic generalized linear model (ordinal regression) *)
-    "ordered_logistic_glm", Tnoclone;
-    "ordered_logistic_glm_lpmf", Tnoclone;
-    "ordered_logistic_glm_lupmf", Tnoclone;
+    "ordered_logistic_glm", (Tnoclone, no_constraint);
+    "ordered_logistic_glm_lpmf", (Tnoclone, no_constraint);
+    "ordered_logistic_glm_lupmf", (Tnoclone, no_constraint);
     (* 13.10 Ordered probit distribution *)
-    "ordered_probit", Tnoclone;
-    "ordered_probit_lpmf", Tnoclone;
-    "ordered_probit_lupmf", Tnoclone;
-    "ordered_probit_rng", Tnoclone;
+    "ordered_probit", (Tnoclone, no_constraint);
+    "ordered_probit_lpmf", (Tnoclone, no_constraint);
+    "ordered_probit_lupmf", (Tnoclone, no_constraint);
+    "ordered_probit_rng", (Tnoclone, no_constraint);
     (* 14 Unbounded Discrete Distributions *)
     (* 14.1 Negative binomial distribution *)
-    "neg_binomial", Tnoclone;
-    "neg_binomial_lpmf", Tnoclone;
-    "neg_binomial_lupmf", Tnoclone;
-    "neg_binomial_cdf", Tnoclone;
-    "neg_binomial_lcdf", Tnoclone;
-    "neg_binomial_lccdf", Tnoclone;
-    "neg_binomial_rng", Tnoclone;
+    "neg_binomial", (Tnoclone, no_constraint);
+    "neg_binomial_lpmf", (Tnoclone, no_constraint);
+    "neg_binomial_lupmf", (Tnoclone, no_constraint);
+    "neg_binomial_cdf", (Tnoclone, no_constraint);
+    "neg_binomial_lcdf", (Tnoclone, no_constraint);
+    "neg_binomial_lccdf", (Tnoclone, no_constraint);
+    "neg_binomial_rng", (Tnoclone, no_constraint);
     (* 14.2 Negative Binomial Distribution (alternative parameterization) *)
-    "neg_binomial_2", Tnoclone;
-    "neg_binomial_2_lpmf", Tnoclone;
-    "neg_binomial_2_lupmf", Tnoclone;
-    "neg_binomial_2_cdf", Tnoclone;
-    "neg_binomial_2_lcdf", Tnoclone;
-    "neg_binomial_2_lccdf", Tnoclone;
-    "neg_binomial_2_rng", Tnoclone;
+    "neg_binomial_2", (Tnoclone, no_constraint);
+    "neg_binomial_2_lpmf", (Tnoclone, no_constraint);
+    "neg_binomial_2_lupmf", (Tnoclone, no_constraint);
+    "neg_binomial_2_cdf", (Tnoclone, no_constraint);
+    "neg_binomial_2_lcdf", (Tnoclone, no_constraint);
+    "neg_binomial_2_lccdf", (Tnoclone, no_constraint);
+    "neg_binomial_2_rng", (Tnoclone, no_constraint);
     (* 14.3 Negative binomial distribution (log alternative parameterization) *)
-    "neg_binomial_2_log", Tnoclone;
-    "neg_binomial_2_log_lpmf", Tnoclone;
-    "neg_binomial_2_log_lupmf", Tnoclone;
-    "neg_binomial_2_log_rng", Tnoclone;
+    "neg_binomial_2_log", (Tnoclone, no_constraint);
+    "neg_binomial_2_log_lpmf", (Tnoclone, no_constraint);
+    "neg_binomial_2_log_lupmf", (Tnoclone, no_constraint);
+    "neg_binomial_2_log_rng", (Tnoclone, no_constraint);
     (* 14.4 Negative-binomial-2-log generalized linear model (negative binomial regression) *)
-    "neg_binomial_2_log_glm", Tnoclone;
-    "neg_binomial_2_log_glm_lpmf", Tnoclone;
-    "neg_binomial_2_log_glm_lupmf", Tnoclone;
+    "neg_binomial_2_log_glm", (Tnoclone, no_constraint);
+    "neg_binomial_2_log_glm_lpmf", (Tnoclone, no_constraint);
+    "neg_binomial_2_log_glm_lupmf", (Tnoclone, no_constraint);
     (* 14.5 Poisson Distribution *)
-    "poisson", Tnoclone;
-    "poisson_lpmf", Tnoclone;
-    "poisson_lupmf", Tnoclone;
-    "poisson_cdf", Tnoclone;
-    "poisson_lcdf", Tnoclone;
-    "poisson_lccdf", Tnoclone;
-    "poisson_rng", Tnoclone;
+    "poisson", (Tnoclone, grather_than_constraint "0");
+    "poisson_lpmf", (Tnoclone, no_constraint);
+    "poisson_lupmf", (Tnoclone, no_constraint);
+    "poisson_cdf", (Tnoclone, no_constraint);
+    "poisson_lcdf", (Tnoclone, no_constraint);
+    "poisson_lccdf", (Tnoclone, no_constraint);
+    "poisson_rng", (Tnoclone, no_constraint);
     (* 14.6 Poisson Distribution, Log Parameterization *)
-    "poisson_log", Tnoclone;
-    "poisson_log_lpmf", Tnoclone;
-    "poisson_log_lupmf", Tnoclone;
-    "poisson_log_rng", Tnoclone;
+    "poisson_log", (Tnoclone, grather_than_constraint "0");
+    "poisson_log_lpmf", (Tnoclone, no_constraint);
+    "poisson_log_lupmf", (Tnoclone, no_constraint);
+    "poisson_log_rng", (Tnoclone, no_constraint);
     (* 14.7 Poisson-log generalized linear model (Poisson regression) *)
-    "poisson_log_glm", Tnoclone;
-    "poisson_log_glm_lpmf", Tnoclone;
-    "poisson_log_glm_lpmf", Tnoclone;
+    "poisson_log_glm", (Tnoclone, grather_than_constraint "0");
+    "poisson_log_glm_lpmf", (Tnoclone, no_constraint);
+    "poisson_log_glm_lpmf", (Tnoclone, no_constraint);
     (* 15 Multivariate Discrete Distributions *)
     (* 15.1 Multinomial distribution *)
-    "multinomial", Tnoclone;
-    "multinomial_lpmf", Tnoclone;
-    "multinomial_lupmf", Tnoclone;
-    "multinomial_rng", Tnoclone;
+    "multinomial", (Tnoclone, no_constraint);
+    "multinomial_lpmf", (Tnoclone, no_constraint);
+    "multinomial_lupmf", (Tnoclone, no_constraint);
+    "multinomial_rng", (Tnoclone, no_constraint);
     (* 15.2 Multinomial distribution, logit parameterization *)
-    "multinomial_logit", Tnoclone;
-    "multinomial_logit_lpmf", Tnoclone;
-    "multinomial_logit_lupmf", Tnoclone;
-    "multinomial_logit_rng", Tnoclone;
+    "multinomial_logit", (Tnoclone, no_constraint);
+    "multinomial_logit_lpmf", (Tnoclone, no_constraint);
+    "multinomial_logit_lupmf", (Tnoclone, no_constraint);
+    "multinomial_logit_rng", (Tnoclone, no_constraint);
     (* 16 Unbounded Continuous Distributions *)
     (* 16.1 Normal Distribution *)
-    "normal", Tnoclone;
-    "normal_lpdf", Tnoclone;
-    "normal_lupdf", Tnoclone;
-    "normal_cdf", Tnoclone;
-    "normal_lcdf", Tnoclone;
-    "normal_lccdf", Tnoclone;
-    "normal_rng", Tnoclone;
-    "std_normal", Tnoclone;
-    "std_normal_lpdf", Tnoclone;
-    "std_normal_lupdf", Tnoclone;
-    "std_normal_cdf", Tnoclone;
-    "std_normal_lcdf", Tnoclone;
-    "std_normal_lccdf", Tnoclone;
-    "std_normal_rng", Tnoclone;
+    "normal", (Tnoclone, no_constraint);
+    "normal_lpdf", (Tnoclone, no_constraint);
+    "normal_lupdf", (Tnoclone, no_constraint);
+    "normal_cdf", (Tnoclone, no_constraint);
+    "normal_lcdf", (Tnoclone, no_constraint);
+    "normal_lccdf", (Tnoclone, no_constraint);
+    "normal_rng", (Tnoclone, no_constraint);
+    "std_normal", (Tnoclone, no_constraint);
+    "std_normal_lpdf", (Tnoclone, no_constraint);
+    "std_normal_lupdf", (Tnoclone, no_constraint);
+    "std_normal_cdf", (Tnoclone, no_constraint);
+    "std_normal_lcdf", (Tnoclone, no_constraint);
+    "std_normal_lccdf", (Tnoclone, no_constraint);
+    "std_normal_rng", (Tnoclone, no_constraint);
     (* 16.2 Normal-id generalized linear model (linear regression) *)
-    "normal_id_glm", Tnoclone;
-    "normal_id_glm_lpdf", Tnoclone;
-    "normal_id_glm_lupdf", Tnoclone;
+    "normal_id_glm", (Tnoclone, no_constraint);
+    "normal_id_glm_lpdf", (Tnoclone, no_constraint);
+    "normal_id_glm_lupdf", (Tnoclone, no_constraint);
     (* 16.5 Student-T Distribution *)
-    "student_t", Tnoclone;
-    "student_t_lpdf", Tnoclone;
-    "student_t_cdf", Tnoclone;
-    "student_t_lcdf", Tnoclone;
-    "student_t_lccdf", Tnoclone;
-    "student_t_rng", Tnoclone;
+    "student_t", (Tnoclone, no_constraint);
+    "student_t_lpdf", (Tnoclone, no_constraint);
+    "student_t_cdf", (Tnoclone, no_constraint);
+    "student_t_lcdf", (Tnoclone, no_constraint);
+    "student_t_lccdf", (Tnoclone, no_constraint);
+    "student_t_rng", (Tnoclone, no_constraint);
     (* 16.6 Cauchy Distribution *)
-    "cauchy", Tnoclone;
-    "cauchy_lpdf", Tnoclone;
-    "cauchy_cdf", Tnoclone;
-    "cauchy_lcdf", Tnoclone;
-    "cauchy_lccdf", Tnoclone;
-    "cauchy_rng", Tnoclone;
+    "cauchy", (Tnoclone, no_constraint);
+    "cauchy_lpdf", (Tnoclone, no_constraint);
+    "cauchy_cdf", (Tnoclone, no_constraint);
+    "cauchy_lcdf", (Tnoclone, no_constraint);
+    "cauchy_lccdf", (Tnoclone, no_constraint);
+    "cauchy_rng", (Tnoclone, no_constraint);
     (* 16.7 Double Exponential (Laplace) Distribution *)
-    "double_exponential", Tnoclone;
-    "double_exponential_lpdf", Tnoclone;
-    "double_exponential_cdf", Tnoclone;
-    "double_exponential_lcdf", Tnoclone;
-    "double_exponential_lccdf", Tnoclone;
-    "double_exponential_rng", Tnoclone;
+    "double_exponential", (Tnoclone, no_constraint);
+    "double_exponential_lpdf", (Tnoclone, no_constraint);
+    "double_exponential_cdf", (Tnoclone, no_constraint);
+    "double_exponential_lcdf", (Tnoclone, no_constraint);
+    "double_exponential_lccdf", (Tnoclone, no_constraint);
+    "double_exponential_rng", (Tnoclone, no_constraint);
     (* 16.8 Logistic Distribution *)
-    "logistic", Tnoclone;
-    "logistic_lpdf", Tnoclone;
-    "logistic_cdf", Tnoclone;
-    "logistic_lcdf", Tnoclone;
-    "logistic_lccdf", Tnoclone;
-    "logistic_rng", Tnoclone;
+    "logistic", (Tnoclone, no_constraint);
+    "logistic_lpdf", (Tnoclone, no_constraint);
+    "logistic_cdf", (Tnoclone, no_constraint);
+    "logistic_lcdf", (Tnoclone, no_constraint);
+    "logistic_lccdf", (Tnoclone, no_constraint);
+    "logistic_rng", (Tnoclone, no_constraint);
     (* 17 Positive Continuous Distributions *)
     (* 17.1 Lognormal Distribution *)
-    "lognormal", Tnoclone;
-    "lognormal_lpdf", Tnoclone;
-    "lognormal_cdf", Tnoclone;
-    "lognormal_lcdf", Tnoclone;
-    "lognormal_lccdf", Tnoclone;
-    "lognormal_rng", Tnoclone;
+    "lognormal", (Tnoclone, grather_than_constraint "0.0");
+    "lognormal_lpdf", (Tnoclone, no_constraint);
+    "lognormal_cdf", (Tnoclone, no_constraint);
+    "lognormal_lcdf", (Tnoclone, no_constraint);
+    "lognormal_lccdf", (Tnoclone, no_constraint);
+    "lognormal_rng", (Tnoclone, no_constraint);
     (* 17.5 Exponential Distribution *)
-    "exponential", Tnoclone;
-    "exponential_lpdf", Tnoclone;
-    "exponential_cdf", Tnoclone;
-    "exponential_lcdf", Tnoclone;
-    "exponential_lccdf", Tnoclone;
-    "exponential_rng", Tnoclone;
+    "exponential", (Tnoclone, grather_than_constraint "0.0");
+    "exponential_lpdf", (Tnoclone, no_constraint);
+    "exponential_cdf", (Tnoclone, no_constraint);
+    "exponential_lcdf", (Tnoclone, no_constraint);
+    "exponential_lccdf", (Tnoclone, no_constraint);
+    "exponential_rng", (Tnoclone, no_constraint);
     (* 17.6 Gamma Distribution *)
-    "gamma", Tnoclone;
-    "gamma_lpdf", Tnoclone;
-    "gamma_cdf", Tnoclone;
-    "gamma_lcdf", Tnoclone;
-    "gamma_lccdf", Tnoclone;
-    "gamma_rng", Tnoclone;
+    "gamma", (Tnoclone, grather_than_constraint "0.0");
+    "gamma_lpdf", (Tnoclone, no_constraint);
+    "gamma_cdf", (Tnoclone, no_constraint);
+    "gamma_lcdf", (Tnoclone, no_constraint);
+    "gamma_lccdf", (Tnoclone, no_constraint);
+    "gamma_rng", (Tnoclone, no_constraint);
     (* 17.7 Inverse Gamma Distribution *)
-    "inv_gamma", Tnoclone;
-    "inv_gamma_lpdf", Tnoclone;
-    "inv_gamma_cdf", Tnoclone;
-    "inv_gamma_lcdf", Tnoclone;
-    "inv_gamma_lccdf", Tnoclone;
-    "inv_gamma_rng", Tnoclone;
+    "inv_gamma", (Tnoclone, no_constraint);
+    "inv_gamma_lpdf", (Tnoclone, no_constraint);
+    "inv_gamma_cdf", (Tnoclone, no_constraint);
+    "inv_gamma_lcdf", (Tnoclone, no_constraint);
+    "inv_gamma_lccdf", (Tnoclone, no_constraint);
+    "inv_gamma_rng", (Tnoclone, no_constraint);
     (* 18 Positive Lower-Bounded Distributions *)
     (* 18.1 Pareto Distribution *)
-    "pareto", Tnoclone;
-    "pareto_lpdf", Tnoclone;
-    "pareto_cdf", Tnoclone;
-    "pareto_lcdf", Tnoclone;
-    "pareto_lccdf", Tnoclone;
-    "pareto_rng", Tnoclone;
+    "pareto", (Tnoclone, no_constraint);
+    "pareto_lpdf", (Tnoclone, no_constraint);
+    "pareto_cdf", (Tnoclone, no_constraint);
+    "pareto_lcdf", (Tnoclone, no_constraint);
+    "pareto_lccdf", (Tnoclone, no_constraint);
+    "pareto_rng", (Tnoclone, no_constraint);
     (* 19 Continuous Distributions on [0, 1] *)
     (* 19.1 Beta Distribution *)
-    "beta", Tnoclone;
-    "beta_lpdf", Tnoclone;
-    "beta_cdf", Tnoclone;
-    "beta_lcdf", Tnoclone;
-    "beta_lccdf", Tnoclone;
-    "beta_rng", Tnoclone;
+    "beta", (Tnoclone, inteval_constraint "0.0" "1.0");
+    "beta_lpdf", (Tnoclone, no_constraint);
+    "beta_cdf", (Tnoclone, no_constraint);
+    "beta_lcdf", (Tnoclone, no_constraint);
+    "beta_lccdf", (Tnoclone, no_constraint);
+    "beta_rng", (Tnoclone, no_constraint);
     (* 21 Bounded Continuous Probabilities *)
     (* 21.1 Uniform Distribution *)
-    "uniform", Tnoclone;
-    "uniform_lpdf", Tnoclone;
-    "uniform_cdf", Tnoclone;
-    "uniform_lcdf", Tnoclone;
-    "uniform_lccdf", Tnoclone;
-    "uniform_rng", Tnoclone;
+    "uniform", (Tnoclone, lower_upper_constraint);
+    "uniform_lpdf", (Tnoclone, no_constraint);
+    "uniform_cdf", (Tnoclone, no_constraint);
+    "uniform_lcdf", (Tnoclone, no_constraint);
+    "uniform_lccdf", (Tnoclone, no_constraint);
+    "uniform_rng", (Tnoclone, no_constraint);
     (* 22 Distributions over Unbounded Vectors *)
     (* 22.1 Multivariate Normal Distribution *)
-    "multi_normal", Tnoclone;
-    "multi_normal_lpdf", Tnoclone;
-    "multi_normal_rng", Tnoclone;
+    "multi_normal", (Tnoclone, no_constraint);
+    "multi_normal_lpdf", (Tnoclone, no_constraint);
+    "multi_normal_rng", (Tnoclone, no_constraint);
     (* 23 Simplex Distributions *)
     (* 23.1 Dirichlet Distribution *)
-    "dirichlet", Tnoclone;
-    "dirichlet_lpdf", Tnoclone;
-    "dirichlet_rng", Tnoclone;
+    "dirichlet", (Tnoclone, simplex_constraint);
+    "dirichlet_lpdf", (Tnoclone, no_constraint);
+    "dirichlet_rng", (Tnoclone, no_constraint);
   ]
 
 let stanlib =
@@ -1729,7 +1805,7 @@ let keywords =
 let avoid =
   "_f" ::
   keywords @ pyro_dppllib @ numpyro_dppllib @ dppllib_networks @
-  (List.map ~f:fst distribution) @ (List.map ~f:fst stanlib)
+  (List.map ~f:fst distributions) @ (List.map ~f:fst stanlib)
 
 let trans_name ff name =
   let x =
@@ -1913,9 +1989,37 @@ let free_vars bv stmt =
   let _bv, fv = free_vars_stmt (bv, SSet.empty) stmt in
   fv
 
-let is_variable_sampling x stmt =
+let compare_untyped_expression' e1 e2 =
+  match compare_untyped_expression e1 e2 with
+  | 0 -> 0
+  | n ->
+    begin try match e1.expr, e2.expr with
+      | IntNumeral n1, IntNumeral n2 ->
+        compare (int_of_string n1) (int_of_string n2)
+      | RealNumeral n1, RealNumeral n2
+      | RealNumeral n1, IntNumeral n2
+      | IntNumeral n1, RealNumeral n2 ->
+        compare (float_of_string n1) (float_of_string n2)
+      | _ -> n
+      with _ -> n
+    end
+
+let same_support distribution args transformation =
+  match List.Assoc.find ~equal:(=) distributions distribution.name with
+  | Some (_, cstr) ->
+    let trans = cstr args in
+    let transformation =
+      Program.map_transformation
+        untyped_expression_of_typed_expression transformation
+    in
+    Program.compare_transformation compare_untyped_expression'
+      trans transformation = 0
+  | None -> false
+
+let is_variable_sampling x transformation stmt =
   match stmt.stmt with
-  | Tilde { arg = { expr = Variable y; _ }; _ } -> x = y.name
+  | Tilde { arg = { expr = Variable y; _ }; distribution; args; _ } ->
+    x = y.name && same_support distribution args transformation
   | _ -> false
 
 let is_variable_initialization x stmt =
@@ -1943,16 +2047,16 @@ let merge_decl_sample decl (stmt:typed_statement) =
       end
   | _, _ -> assert false
 
-let rec push_prior_stmts (x, decl) stmts =
+let rec push_prior_stmts (x, decl, transformation) stmts =
   match stmts with
   | [] -> Some decl, [ ]
   | stmt :: stmts ->
-      if is_variable_sampling x stmt then
+      if is_variable_sampling x transformation stmt then
         None, merge_decl_sample decl stmt :: stmts
       else if SSet.mem (free_vars SSet.empty stmt) x then
         Some decl, stmt :: stmts
       else
-        let prior, stmts = push_prior_stmts (x, decl) stmts in
+        let prior, stmts = push_prior_stmts (x, decl, transformation) stmts in
         prior, stmt ::  stmts
 
 let push_priors priors stmts =
@@ -1960,13 +2064,12 @@ let push_priors priors stmts =
     ~f:(fun (priors, stmts) decl ->
         match decl.stmt with
         | VarDecl { identifier = id; initial_value = None;
-                    transformation = Identity; _ } ->
+                    transformation = trans; _ } ->
 
-            begin match push_prior_stmts (id.name, decl) stmts with
+            begin match push_prior_stmts (id.name, decl, trans) stmts with
             | Some prior, stmts -> priors @ [prior], stmts
             | None, stmts -> priors, stmts
             end
-        | VarDecl _ -> priors @ [decl], stmts
         | _ -> assert false)
     ~init:([], stmts) priors
 
@@ -2240,10 +2343,10 @@ let rec trans_expr ctx ff (e: typed_expression) : unit =
       trans_fun_app ctx fn_kind id ff args
   | CondDistApp (fn_kind, id, args) ->
       let ctx =
-        match List.Assoc.find ~equal:(=) distribution
+        match List.Assoc.find ~equal:(=) distributions
                 (function_id fn_kind id args) with
-        | Some Tclone -> set_ctx_mutation (set_to_clone ctx)
-        | Some Tnoclone | None -> ctx
+        | Some (Tclone, _) -> set_ctx_mutation (set_to_clone ctx)
+        | Some (Tnoclone, _) | None -> ctx
       in
       trans_cond_dist_app ctx fn_kind id ff args
   | GetLP | GetTarget -> fprintf ff "stanlib.target()" (* XXX TODO XXX *)
