@@ -88,17 +88,17 @@ let no_constraint _ =
 
 let lower_constraint args =
   match List.map ~f:untyped_expression_of_typed_expression args with
-  | [ lb ] -> Program.Lower lb
+  | lb :: _ -> Program.Lower lb
   | _ -> assert false
 
 let upper_constraint args =
   match List.map ~f:untyped_expression_of_typed_expression args with
-  | [ ub ] -> Program.Upper ub
+  | ub :: _ -> Program.Upper ub
   | _ -> assert false
 
 let lower_upper_constraint args =
   match List.map ~f:untyped_expression_of_typed_expression args with
-  | [ lb; ub ] -> Program.LowerUpper (lb, ub)
+  | lb :: ub :: _ -> Program.LowerUpper (lb, ub)
   | _ -> assert false
 
 let simplex_constraint _ =
@@ -385,7 +385,7 @@ let distributions =
     "inv_gamma_rng", (Tnoclone, no_constraint);
     (* 18 Positive Lower-Bounded Distributions *)
     (* 18.1 Pareto Distribution *)
-    "pareto", (Tnoclone, no_constraint);
+    "pareto", (Tnoclone, upper_constraint);
     "pareto_lpdf", (Tnoclone, no_constraint);
     "pareto_cdf", (Tnoclone, no_constraint);
     "pareto_lcdf", (Tnoclone, no_constraint);
