@@ -385,7 +385,7 @@ let distributions =
     "inv_gamma_rng", (Tnoclone, no_constraint);
     (* 18 Positive Lower-Bounded Distributions *)
     (* 18.1 Pareto Distribution *)
-    "pareto", (Tnoclone, upper_constraint);
+    "pareto", (Tnoclone, lower_constraint);
     "pareto_lpdf", (Tnoclone, no_constraint);
     "pareto_cdf", (Tnoclone, no_constraint);
     "pareto_lcdf", (Tnoclone, no_constraint);
