@@ -2585,21 +2585,30 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
             trans_id id
             (trans_rhs (expr_of_lval assign_lhs)) assign_rhs
       | { lval= LIndexed _; _ } ->
-          let trans_indices ff l =
-            fprintf ff "%a"
-              (pp_print_list ~pp_sep:(fun _ () -> ())
-                 (fun ff idx ->
-                    fprintf ff "[%a]" (print_list_comma (trans_idx ctx)) idx))
-              l
-          in
           let id, indices = split_lval assign_lhs in
           begin match ctx.ctx_backend with
           | Pyro | Pyro_cuda ->
+              let trans_indices ff l =
+                fprintf ff "%a"
+                  (pp_print_list ~pp_sep:(fun _ () -> ())
+                     (fun ff idx ->
+                        fprintf ff "[%a]"
+                          (print_list_comma (trans_idx ctx)) idx))
+                  l
+              in
               fprintf ff "%a%a = %a"
                 trans_id id trans_indices indices
                 (trans_rhs (expr_of_lval assign_lhs)) assign_rhs
           | Numpyro ->
-              fprintf ff "%a = ops_index_update(%a, ops_index%a, %a)"
+              let trans_indices ff l =
+                fprintf ff "%a"
+                  (print_list_comma
+                     (fun ff idx ->
+                        fprintf ff "ops_index[%a]"
+                          (print_list_comma (trans_idx ctx)) idx))
+                  l
+              in
+              fprintf ff "%a = ops_index_update(%a, ops_index[%a], %a)"
                 trans_id id
                 trans_id id trans_indices indices
                 (trans_rhs (expr_of_lval assign_lhs)) assign_rhs
