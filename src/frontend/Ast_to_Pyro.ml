@@ -2601,12 +2601,15 @@ let rec trans_stmt ctx ff (ts : typed_statement) =
                 (trans_rhs (expr_of_lval assign_lhs)) assign_rhs
           | Numpyro ->
               let trans_indices ff l =
-                fprintf ff "%a"
-                  (print_list_comma
-                     (fun ff idx ->
-                        fprintf ff "ops_index[%a]"
-                          (print_list_comma (trans_idx ctx)) idx))
-                  l
+                match l with
+                | [ idx ] -> print_list_comma (trans_idx ctx) ff idx
+                | _ ->
+                    fprintf ff "%a"
+                      (print_list_comma
+                         (fun ff idx ->
+                            fprintf ff "ops_index[%a]"
+                              (print_list_comma (trans_idx ctx)) idx))
+                      l
               in
               fprintf ff "%a = ops_index_update(%a, ops_index[%a], %a)"
                 trans_id id
