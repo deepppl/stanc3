@@ -142,11 +142,11 @@ generated_quantities_block:
 
 guide_block:
   | GUIDEBLOCK LBRACE vds=list(vardecl_or_statement) RBRACE
-    { grammar_logger "guide_block"; vds }
+    { grammar_logger "guide_block"; List.concat vds }
 
 guide_parameters_block:
   | GUIDEPARAMETERSBLOCK LBRACE tvd=list(top_var_decl) RBRACE
-    {grammar_logger "guide_parameters_block" ; tvd }
+    {grammar_logger "guide_parameters_block" ; List.concat tvd }
 
 (* network declarations *)
 network_decl:
