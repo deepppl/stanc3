@@ -16,6 +16,7 @@ let usage = "Usage: " ^ name ^ " [option] ... <model_file.stan>"
 
 let model_file = ref ""
 let pretty_print_program = ref false
+let print_info_json = ref false
 let filename_for_msg = ref ""
 let canonicalize_program = ref false
 let print_model_cpp = ref false
@@ -155,7 +156,10 @@ let options =
       , " If set, generate NumPyro code." )
     ; ("--mode"
       , Arg.Set_string compilation_mode
-      , " Compilation mode for [num]pyro backends (can be comprehensive, generative, or mixed)") ]
+      , " Compilation mode for [num]pyro backends (can be comprehensive, generative, or mixed)")
+    ; ( "--info"
+      , Arg.Set print_info_json
+      , " If set, print information about the model." ) ]
 
 let print_deprecated_arg_warning =
   (* is_prefix is used to also cover the --include-paths=... *)
@@ -198,6 +202,9 @@ let use_file filename =
   if !pretty_print_program then
     print_endline (Pretty_printing.pretty_print_program ast) ;
   let typed_ast = Frontend_utils.type_ast_or_exit ast in
+  if !print_info_json then (
+    print_endline (Info.info typed_ast) ;
+    exit 0 ) ;
   let printed_filename =
     match !filename_for_msg with "" -> None | s -> Some s
   in
