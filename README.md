@@ -9,15 +9,27 @@ This is a fork of the [Stanc3 compiler](https://github.com/stan-dev/stanc3) (see
 
 Installation instructions can be found in Section _"Getting development on stanc3 up and running locally"_ of the Stanc3 README below.
 
-The compiler can be invoked with:
+Alternatively, the compiler can be installed using the [opam](http://opam.ocaml.org/) OCaml package manager.
+Stanc requires version 4.07.0 of OCaml which can be installed with:
 ```
-dune exec stanc -- --help
+opam switch create 4.07.0
+opam switch 4.07.0
 ```
-Alternatively, the executable should be located in `_build/default/src/stanc/stanc.exe`
+Then add the current directory to the opam database:
+```
+opam pin -y -k .
+```
+Finally, install the compiler.
+```
+opam install -y stanc
+```
 
-The two new options `--pyro` and `--numpyro` can be used to generate Pyro and Numpyro code.
+Once the compiler installed, you will need the Python runtime to execute the inference:
+- stan-num-pyro: https://github.com/deepppl/stan-num-pyro
 
 ### Compilation
+
+The compiler has two new options `--pyro` and `--numpyro` that can be used to generate Pyro and Numpyro code.
 
 Let start with the simple eight schools example from Gelman et al (Bayesian Data Analysis: Sec. 5.5, 2003).
 First save the following Stan code, e.g., in a file `8schools.stan`:
@@ -42,39 +54,47 @@ model {
 
 To compile this example with both backend:
 ```
-dune exec stanc -- --pyro --o 8schools_pyro.py 8schools.stan
-dune exec stanc -- --numpyro --o 8schools_numpyro.py 8schools.stan
+stanc --pyro --o 8schools_pyro.py 8schools.stan
+stanc --numpyro --o 8schools_numpyro.py 8schools.stan
 ```
 The compiled code is in the files `8schools_pyro.py` and `8schools_numpyro.py`
-The libraries required to run this examples are located in `runtimes`
 
 ### Inference
 
-To compile and run inference on an example you can also use the Python interface.
+To compile and run inference on an example you can use the [stan-num-pyro](https://github.com/deepppl/stan-num-pyro) Python interface.
 
+To use the Pyro backend you can use the following Python scrip:
 ```python
-from runtimes.dppl import PyroModel, NumpyroModel
+from stanpyro.dppl import PyroModel
+import jax.random
 
-if __name__ == "__main__":
+data = {
+    "J": 8,
+    "y": [28.0, 8.0, -3.0, 7.0, -1.0, 1.0, 18.0, 12.0],
+    "sigma": [15.0, 10.0, 16.0, 11.0, 9.0, 11.0, 10.0, 18.0],
+}
 
-    stanfile = "8schools.stan"
-    data = {
-        'J': 8,
-        'y': [28.0, 8.0, -3.0, 7.0, -1.0, 1.0, 18.0, 12.0],
-        'sigma': [15.0, 10.0, 16.0, 11.0, 9.0, 11.0, 10.0, 18.0]
-    }
+pyro_model = PyroModel("8schools.stan")
+mcmc = pyro_model.mcmc(samples=100, warmups=100)
+mcmc.run(data)
+print(mcmc.summary())
+```
 
-    # model = PyroModel(stanfile)
-    model = NumpyroModel(stanfile)
-    mcmc = model.mcmc(
-        samples = 1000,
-        warmups = 100,
-        chains=2,
-        thin=2,
-    )
+Similarly, to use the NumPyro backend you can use the `NumPyroModel` instead of `PyroModel`:
+```python
+from stannumpyro.dppl import NumPyroModel
+import jax.random
 
-    mcmc.run(data)
-    print(mcmc.summary())
+data = {
+    "J": 8,
+    "y": [28.0, 8.0, -3.0, 7.0, -1.0, 1.0, 18.0, 12.0],
+    "sigma": [15.0, 10.0, 16.0, 11.0, 9.0, 11.0, 10.0, 18.0],
+}
+
+numpyro_model = NumPyroModel("schools.stan")
+mcmc = numpyro_model.mcmc(samples=100, warmups=100)
+mcmc.run(jax.random.PRNGKey(0), data)
+print(mcmc.summary())
 ```
 
 The compiled files are then stored in the `_tmp` directory.
