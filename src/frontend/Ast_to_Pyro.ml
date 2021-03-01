@@ -1771,8 +1771,8 @@ let stanlib =
     (* 9.3 1D integrator *)
     (* 9.3.1 Specifying an integrand as a function *)
     (* 9.3.2 Call to the 1D integrator *)
-    "integrate_1d_function", Tnoclone;
-    "integrate_1d_function", Tnoclone;
+    "integrate_1d_function_real_real_array_array_array", Tnoclone;
+    "integrate_1d_function_real_real_array_array_array_real", Tnoclone;
     (* 9.4 Reduce-sum function *)
     (* 9.4.1 Specifying the reduce-sum function *)
     "reduce_sum_function", Tnoclone;
@@ -1789,9 +1789,10 @@ let stanlib =
     "integrate_ode_rk45_function_array_int_array_array_array_array", Tnoclone;
     "integrate_ode_rk45_function_array_real_array_array_array_array_real_real_int", Tnoclone;
     "integrate_ode_rk45_function_array_int_array_array_array_array_real_real_int", Tnoclone;
-    "integrate_ode_function", Tnoclone;
-    "integrate_ode_adams_function", Tnoclone;
-    "integrate_ode_adams_function", Tnoclone;
+    "integrate_ode_rk45_function_array_int_array_array_array_array_real_real_real", Tnoclone;
+    "integrate_ode_function_array_real_array_array_array_array", Tnoclone;
+    "integrate_ode_adams_function_array_real_array_array_array_array", Tnoclone;
+    "integrate_ode_adams_function_array_real_array_array_array_array_real_real_int", Tnoclone;
     (* 10.1.3 Stiff solver *)
     "integrate_ode_bdf_function_array_real_array_array_array_array", Tnoclone;
     "integrate_ode_bdf_function_array_int_array_array_array_array", Tnoclone;
