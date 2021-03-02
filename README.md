@@ -91,7 +91,7 @@ data = {
     "sigma": [15.0, 10.0, 16.0, 11.0, 9.0, 11.0, 10.0, 18.0],
 }
 
-numpyro_model = NumPyroModel("schools.stan")
+numpyro_model = NumPyroModel("8schools.stan")
 mcmc = numpyro_model.mcmc(samples=100, warmups=100)
 mcmc.run(jax.random.PRNGKey(0), data)
 print(mcmc.summary())
