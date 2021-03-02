@@ -2005,7 +2005,8 @@ let compare_untyped_expression' e1 e2 =
       with _ -> n
     end
 
-let same_support distribution args transformation =
+let same_support ctx distribution args transformation =
+  ctx.ctx_mode = Generative ||
   match List.Assoc.find ~equal:(=) distributions distribution.name with
   | Some (_, cstr) ->
     let trans = cstr args in
@@ -2017,10 +2018,10 @@ let same_support distribution args transformation =
       trans transformation = 0
   | None -> false
 
-let is_variable_sampling x transformation stmt =
+let is_variable_sampling ctx x transformation stmt =
   match stmt.stmt with
   | Tilde { arg = { expr = Variable y; _ }; distribution; args; _ } ->
-    x = y.name && same_support distribution args transformation
+    x = y.name && same_support ctx distribution args transformation
   | _ -> false
 
 let is_variable_initialization x stmt =
@@ -2048,26 +2049,28 @@ let merge_decl_sample decl (stmt:typed_statement) =
       end
   | _, _ -> assert false
 
-let rec push_prior_stmts (x, decl, transformation) stmts =
+let rec push_prior_stmts ctx (x, decl, transformation) stmts =
   match stmts with
   | [] -> Some decl, [ ]
   | stmt :: stmts ->
-      if is_variable_sampling x transformation stmt then
+      if is_variable_sampling ctx x transformation stmt then
         None, merge_decl_sample decl stmt :: stmts
       else if SSet.mem (free_vars SSet.empty stmt) x then
         Some decl, stmt :: stmts
       else
-        let prior, stmts = push_prior_stmts (x, decl, transformation) stmts in
+        let prior, stmts =
+          push_prior_stmts ctx (x, decl, transformation) stmts
+        in
         prior, stmt ::  stmts
 
-let push_priors priors stmts =
+let push_priors ctx priors stmts =
   List.fold_left
     ~f:(fun (priors, stmts) decl ->
         match decl.stmt with
         | VarDecl { identifier = id; initial_value = None;
                     transformation = trans; _ } ->
 
-            begin match push_prior_stmts (id.name, decl, trans) stmts with
+            begin match push_prior_stmts ctx (id.name, decl, trans) stmts with
             | Some prior, stmts -> priors @ [prior], stmts
             | None, stmts -> priors, stmts
             end
@@ -3252,9 +3255,9 @@ let trans_modelblock ctx networks data tdata parameters tparameters ff model =
         | None -> parameters, None
         | Some model ->
           let model = moveup_observes model in
-          let parameters, model = push_priors parameters model in
+          let parameters, model = push_priors ctx parameters model in
           let model = moveup_observes model in
-          let parameters, model = push_priors parameters model in
+          let parameters, model = push_priors ctx parameters model in
           parameters, Some model
       in
       fprintf ff "@[<v 4>def model(%a%a):@,%a%a%a@]@,@,@."
@@ -3270,9 +3273,9 @@ let trans_modelblock ctx networks data tdata parameters tparameters ff model =
         | None -> parameters, None
         | Some model ->
           let model = moveup_observes model in
-          let parameters, model = push_priors parameters model in
+          let parameters, model = push_priors ctx parameters model in
           let model = moveup_observes model in
-          let parameters, model = push_priors parameters model in
+          let parameters, model = push_priors ctx parameters model in
           parameters, Some model
       in
       fprintf ff "@[<v 4>def model(%a%a):@,%a%a%a@]@,@,@."
