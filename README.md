@@ -24,15 +24,16 @@ Finally, install the compiler.
 opam install -y stanc
 ```
 
+The compiler has two new options `--pyro` and `--numpyro` that can be used to generate Pyro and Numpyro code.
+
 Once the compiler installed, you will need the Python runtime to execute the inference:
 - stan-num-pyro: https://github.com/deepppl/stan-num-pyro
 
-### Compilation
-
-The compiler has two new options `--pyro` and `--numpyro` that can be used to generate Pyro and Numpyro code.
+### Example
 
 Let start with the simple eight schools example from Gelman et al (Bayesian Data Analysis: Sec. 5.5, 2003).
 First save the following Stan code, e.g., in a file `8schools.stan`:
+
 ```stan
 data {
   int <lower=0> J; // number of schools
@@ -52,18 +53,10 @@ model {
 }
 ```
 
-To compile this example with both backend:
-```
-stanc --pyro --o 8schools_pyro.py 8schools.stan
-stanc --numpyro --o 8schools_numpyro.py 8schools.stan
-```
-The compiled code is in the files `8schools_pyro.py` and `8schools_numpyro.py`
+To compile and run the inference you can use the [stan-num-pyro](https://github.com/deepppl/stan-num-pyro) Python interface.
+Let's illustrate it first with the Pyro backend.
+You can use the following Python script:
 
-### Inference
-
-To compile and run inference on an example you can use the [stan-num-pyro](https://github.com/deepppl/stan-num-pyro) Python interface.
-
-To use the Pyro backend you can use the following Python script:
 ```python
 from stanpyro.dppl import PyroModel
 import jax.random
@@ -79,6 +72,10 @@ mcmc = pyro_model.mcmc(samples=100, warmups=100)
 mcmc.run(data)
 print(mcmc.summary())
 ```
+
+This script compiles the file `8schools.stan`, load the generated Pyro model, and launches 100 warmups iterations (discarded) and the 100 iteration of the NUTS sampler.
+The `mcmc.summary` method print a summary of the posterior distribution.
+The compiled Pyro code is stored in the `_tmp` directory.
 
 Similarly, to use the NumPyro backend you can use the `NumPyroModel` instead of `PyroModel`:
 ```python
@@ -97,7 +94,47 @@ mcmc.run(jax.random.PRNGKey(0), data)
 print(mcmc.summary())
 ```
 
-The compiled files are then stored in the `_tmp` directory.
+Instead of using the high-level interface, the Stan program can be compiled to Pyro and NumPyro using the command line compiler to generate the `8schools_pyro.py` and `8schools_numpyro.py`:
+
+```
+stanc --pyro --o 8schools_pyro.py 8schools.stan
+stanc --numpyro --o 8schools_numpyro.py 8schools.stan
+```
+
+The compiler generates up to 6 functions:
+- `convert_inputs`: convert a dictionary of inputs to the correct names and type
+- `transformed_data` (optional): proprocess the data
+- `model`: the probabilistic model
+- `guide` (optional): the guide for variational inference
+- `generated_quantities` (optional): generate one sample of the generated quantities
+- `map_generated_quantities` (optional): generated multiple samples of the generated quantities
+
+You can then use these functions with the Pyro and NumPyro inference algorithms.
+The following scipt uses NumPyro to run the inference on the schools example:
+
+```python
+import numpyro
+from numpyro.infer import MCMC, NUTS
+from numpyro.diagnostics import print_summary
+import schools_numpyro as schools
+import jax.random
+
+data = {
+    "J": 8,
+    "y": [28.0, 8.0, -3.0, 7.0, -1.0, 1.0, 18.0, 12.0],
+    "sigma": [15.0, 10.0, 16.0, 11.0, 9.0, 11.0, 10.0, 18.0],
+}
+
+mcmc = MCMC(NUTS(schools.model), 100, 100)
+data = schools.convert_inputs(data)
+# data = schools.transformed_data(data)  # Not needed for this example
+mcmc.run(jax.random.PRNGKey(0), **data)
+samples = mcmc.get_samples()
+gen = schools.map_generated_quantities(mcmc.get_samples(), **data)
+samples.update(gen)
+print_summary(samples, group_by_chain=False)
+```
+
 
 -------------------------------------------------------------------------------
 
