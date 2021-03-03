@@ -63,7 +63,7 @@ The compiled code is in the files `8schools_pyro.py` and `8schools_numpyro.py`
 
 To compile and run inference on an example you can use the [stan-num-pyro](https://github.com/deepppl/stan-num-pyro) Python interface.
 
-To use the Pyro backend you can use the following Python scrip:
+To use the Pyro backend you can use the following Python script:
 ```python
 from stanpyro.dppl import PyroModel
 import jax.random
