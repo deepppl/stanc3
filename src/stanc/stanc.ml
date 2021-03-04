@@ -5,6 +5,7 @@ open Frontend
 open Stan_math_backend
 open Analysis_and_optimization
 open Middle
+open Gppl_backend
 
 (** The main program. *)
 let version = "%%NAME%%3 %%VERSION%%"
