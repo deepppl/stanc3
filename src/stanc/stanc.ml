@@ -151,7 +151,7 @@ let options =
       , " If set, generate Pyro code." )
     ; ( "--pyro-cuda"
       , Arg.Unit (fun () -> backend := Some Ast_to_Pyro.Pyro_cuda)
-      , " If set, generate Pyro code." )
+      , " If set, generate Pyro code with Cuda enabled." )
     ; ( "--numpyro"
       , Arg.Unit (fun () -> backend := Some Ast_to_Pyro.Numpyro)
       , " If set, generate NumPyro code." )
