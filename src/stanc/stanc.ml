@@ -5,6 +5,7 @@ open Frontend
 open Stan_math_backend
 open Analysis_and_optimization
 open Middle
+open Gppl_backend
 
 (** The main program. *)
 let version = "%%NAME%%3 %%VERSION%%"
@@ -150,7 +151,7 @@ let options =
       , " If set, generate Pyro code." )
     ; ( "--pyro-cuda"
       , Arg.Unit (fun () -> backend := Some Ast_to_Pyro.Pyro_cuda)
-      , " If set, generate Pyro code." )
+      , " If set, generate Pyro code with Cuda enabled." )
     ; ( "--numpyro"
       , Arg.Unit (fun () -> backend := Some Ast_to_Pyro.Numpyro)
       , " If set, generate NumPyro code." )

@@ -1,6 +1,6 @@
 (executable
  (name stanc)
- (libraries frontend stan_math_backend)
+ (libraries frontend stan_math_backend gppl_backend)
  (modules Stanc)
  (public_name stanc)
  (preprocess (pps ppx_jane))
